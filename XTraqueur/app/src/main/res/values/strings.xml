@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">XTraqueur</string>
+    <string name="task1">Vaskemaskin</string>
+    <string name="task2">Oppvask</string>
+    <string name="task3">Bad</string>
+    <string name="task4">Annet</string>
+    <string name="task5">Manuelt</string>
+
+    <string name="task1Count">5</string>
+    <string name="task2Count">2</string>
+    <string name="task3Count">0</string>
+    <string name="task4Count">0</string>
+    <string name="task5Count">0</string>
+
+    <string name="totalCount">0</string>
+
+    <string name="addTask">+</string>
+    <string name="subTask">-</string>
+</resources>

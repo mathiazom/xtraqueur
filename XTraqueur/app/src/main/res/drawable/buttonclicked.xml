@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_focused="true"
+        android:state_pressed="false"
+        android:drawable="@drawable/mi_thumb_up" />
+    <item android:state_focused="true"
+        android:state_pressed="true"
+        android:drawable="@drawable/ic_thumb_up_white_24px" />
+    <item android:state_focused="false"
+        android:state_pressed="true"
+        android:drawable="@drawable/ic_thumb_up_white_24px" />
+    <item android:drawable="@drawable/mi_thumb_up" />
+</selector>
