@@ -9,4 +9,6 @@
     <color name="badColor">#64dd17</color>
     <color name="xtaskColor">#ff8f00</color>
     <color name="mauneltColor">#757575</color>
+
+    <color name="deny">#f44242</color>
 </resources>

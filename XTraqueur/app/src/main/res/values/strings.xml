@@ -6,14 +6,13 @@
     <string name="task4">Annet</string>
     <string name="task5">Manuelt</string>
 
-    <string name="task1Count">5</string>
-    <string name="task2Count">2</string>
-    <string name="task3Count">0</string>
-    <string name="task4Count">0</string>
-    <string name="task5Count">0</string>
+    <string name="taskXCount">0</string>
 
-    <string name="totalCount">0</string>
+    <string name="totalCount">0kr</string>
 
     <string name="addTask">+</string>
     <string name="subTask">-</string>
+    <string name="histHead">Din historikk</string>
+    <string name="clearHist">Slett historikk</string>
+    <string name="clearHistSolo">Slett solo</string>
 </resources>

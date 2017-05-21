@@ -1,13 +1,20 @@
 package com.xtraqueur.mzom.xtraqueur;
 
-import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import com.vstechlab.easyfonts.EasyFonts;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.List;
 
 public class IndexActivity extends AppCompatActivity {
 
@@ -15,116 +22,209 @@ public class IndexActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_index);
-
-        final SharedPreferences countStorage = PreferenceManager.getDefaultSharedPreferences(this);
-
-        ImageButton addTask1 = (ImageButton) findViewById(R.id.addButton1);
-        addTask1.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                TextView taskCount = (TextView) findViewById(R.id.task1Count);
-                int intCount = Integer.parseInt(taskCount.getText().toString());
-                intCount = intCount + 1;
-                System.out.println(intCount);
-
-                taskCount.setText(String.valueOf(intCount));
-
-                storeCount1(intCount);
-
-                totalDisplay();
-            }
-        });
-
-        ImageButton subTask1 = (ImageButton) findViewById(R.id.subButton1);
-        subTask1.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                TextView taskCount = (TextView) findViewById(R.id.task1Count);
-                int intCount = Integer.parseInt(taskCount.getText().toString());
-                if (intCount > 0) {
-                    intCount = intCount - 1;
-                }
-                taskCount.setText(String.valueOf(intCount));
-
-                storeCount1(intCount);
-
-                totalDisplay();
-            }
-        });
-
-        ImageButton addTask2 = (ImageButton) findViewById(R.id.addButton2);
-        addTask2.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                TextView taskCount = (TextView) findViewById(R.id.task2Count);
-                int intCount = Integer.parseInt(taskCount.getText().toString());
-                intCount = intCount + 1;
-                taskCount.setText(String.valueOf(intCount));
-
-                storeCount2(intCount);
-
-                totalDisplay();
-            }
-        });
-
-        ImageButton subTask2 = (ImageButton) findViewById(R.id.subButton2);
-        subTask2.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                TextView taskCount = (TextView) findViewById(R.id.task2Count);
-                int intCount = Integer.parseInt(taskCount.getText().toString());
-                if (intCount > 0) {
-                    intCount = intCount - 1;
-                }
-                taskCount.setText(String.valueOf(intCount));
-
-                storeCount2(intCount);
-
-                totalDisplay();
-            }
-        });}
-
-        public void totalDisplay(){
-            TextView taskCount1 = (TextView) findViewById(R.id.task1Count);
-            TextView taskCount2 = (TextView) findViewById(R.id.task2Count);
-            int intCount1 = Integer.parseInt(taskCount1.getText().toString());
-            int intCount2 = Integer.parseInt(taskCount2.getText().toString());
-            int totalCount = (intCount1 + intCount2)*10;
-            TextView totalCountView = (TextView) findViewById(R.id.totalCount);
-            totalCountView.setText(String.valueOf(totalCount));
     }
-    public void storeCount1(int intCount){
+
+    public void commitCount(TextView taskCount,int intCount, int taskNum, int totalTasks, String sign,int taskInputInt){
         SharedPreferences countStorage = PreferenceManager.getDefaultSharedPreferences(this);
+
+        String[] taskHeads = new String[6];
+
+        taskHeads[0] = "";
+        taskHeads[1] = "Vaskemaskin";
+        taskHeads[2] = "Oppvask";
+        taskHeads[3] = "Bad";
+        taskHeads[4] = "Annet";
+        taskHeads[5] = "Manuelt";
+
+        taskCount.setText(String.valueOf(intCount));
+        String storageId = "SPC" + taskNum;
         SharedPreferences.Editor editor = countStorage.edit();
-        editor.putInt("SPC1",intCount);
+        editor.putInt(storageId,intCount);
         editor.apply();
-    }
-    public void storeCount2(int intCount){
-        SharedPreferences countStorage = PreferenceManager.getDefaultSharedPreferences(this);
-        SharedPreferences.Editor editor = countStorage.edit();
-        editor.putInt("SPC2",intCount);
-        editor.apply();
-    }
-    protected void onStart(){
-        final SharedPreferences countStorage = PreferenceManager.getDefaultSharedPreferences(this);
-        if(countStorage.getInt("SPC1",-1)%1 != 0){
-            SharedPreferences.Editor editor = countStorage.edit();
-            editor.putInt("SPC1",9);
-            editor.putInt("SPC2",0);
-            editor.apply();
+        String time = new SimpleDateFormat("hh:mm dd.MM").format(Calendar.getInstance().getTime());
+        String timeD = new SimpleDateFormat("hh:mm:ss dd.MM").format(Calendar.getInstance().getTime());
+        String histItem;
+        String histDetail;
+        String prefix;
+
+        if(sign == "+"){
+            prefix = "La til";
+        }else{
+            prefix = "Trakk fra";
         }
 
-        int spCount1 = countStorage.getInt("SPC1",-1);
-        System.out.println(spCount1);
-        int spCount2 = countStorage.getInt("SPC2",-1);
-        System.out.println(spCount2);
+        if(taskNum == 5){
+            histItem = sign+ " " + taskHeads[taskNum] + " (" + taskInputInt + "kr)" + " (" + time + ")";
+            histDetail = prefix + "\n" + "Type: " + taskHeads[taskNum] + "\n" + taskInputInt + "kr" + "\n" + "Tid: " + timeD;
+        }else{
+            histItem = sign+ " " + taskHeads[taskNum] + " (" + time + ")";
+            histDetail = prefix + "\n" + "Type: " + taskHeads[taskNum] + "\n" + "Tid: " + timeD;
+        }
 
-        TextView task1Count = (TextView) findViewById(R.id.task1Count);
-        TextView task2Count = (TextView) findViewById(R.id.task2Count);
+        totalDisplay(totalTasks);
 
-        task1Count.setText(String.valueOf(spCount1));
-        task2Count.setText(String.valueOf(spCount2));
+        packHistory(histItem,histDetail);
+    }
 
-        totalDisplay();
+    protected void onStart(){
+
+        final int totalTasks = 5;
+
+        for(int f=1;f<totalTasks+1;f++){
+            String headFontId = "task" + f + "Head";
+            TextView headFont= (TextView) findViewById(getResources().getIdentifier(headFontId, "id", getPackageName()));
+            headFont.setTypeface(EasyFonts.robotoLight(this));
+
+            String countFontId = "task" + f + "Count";
+            TextView countFont = (TextView) findViewById(getResources().getIdentifier(countFontId, "id", getPackageName()));
+            countFont.setTypeface(EasyFonts.robotoLight(this));
+        }
+
+        for(int i=1;i<totalTasks+1;i++){
+            final int taskNum = i;
+            final String countId = "task" + i + "Count";
+
+            String addButtonId = "addButton" + i;
+            String subButtonId = "subButton" + i;
+
+            if(i!=5){
+                ImageButton addTask = (ImageButton) findViewById(getResources().getIdentifier(addButtonId, "id", getPackageName()));
+                addTask.setOnClickListener(new View.OnClickListener() {
+                    public void onClick(View v) {
+                        TextView taskCount = (TextView) findViewById(getResources().getIdentifier(countId, "id", getPackageName()));
+                        int intCount = Integer.parseInt(taskCount.getText().toString());
+                        intCount = intCount + 1;
+                        String sign = "+";
+                        commitCount(taskCount,intCount,taskNum,totalTasks,sign,0);
+                    }
+                });
+                ImageButton subTask = (ImageButton) findViewById(getResources().getIdentifier(subButtonId, "id", getPackageName()));
+                subTask.setOnClickListener(new View.OnClickListener() {
+                    public void onClick(View v) {
+                        TextView taskCount = (TextView) findViewById(getResources().getIdentifier(countId, "id", getPackageName()));
+                        int intCount = Integer.parseInt(taskCount.getText().toString());
+                        if(intCount > 0){
+                            intCount = intCount - 1;
+                            String sign = "-";
+                            commitCount(taskCount,intCount,taskNum,totalTasks,sign,0);
+                        }
+
+                    }
+                });
+            }else{
+                ImageButton addTask = (ImageButton) findViewById(getResources().getIdentifier(addButtonId, "id", getPackageName()));
+                addTask.setOnClickListener(new View.OnClickListener() {
+                    public void onClick(View v) {
+                        EditText taskInput = (EditText) findViewById(R.id.taskInput);
+                        String taskInputValue = taskInput.getText().toString();
+                        if(!taskInputValue.matches("")){
+                            int taskInputInt = Integer.parseInt(taskInputValue);
+                            TextView taskCount = (TextView) findViewById(getResources().getIdentifier(countId, "id", getPackageName()));
+                            int intCount = Integer.parseInt(taskCount.getText().toString());
+                            intCount = intCount + taskInputInt;
+                            String sign = "+";
+                            commitCount(taskCount,intCount,taskNum,totalTasks,sign,taskInputInt);
+                            taskInput.setText("", TextView.BufferType.EDITABLE);
+                        }
+                    }
+                });
+                ImageButton subTask = (ImageButton) findViewById(getResources().getIdentifier(subButtonId, "id", getPackageName()));
+                subTask.setOnClickListener(new View.OnClickListener() {
+                    public void onClick(View v) {
+                        EditText taskInput = (EditText) findViewById(R.id.taskInput);
+                        String taskInputValue = taskInput.getText().toString();
+                        if(!taskInputValue.matches("")){
+                        int taskInputInt = Integer.parseInt(taskInputValue);
+                        TextView taskCount = (TextView) findViewById(getResources().getIdentifier(countId, "id", getPackageName()));
+                        int intCount = Integer.parseInt(taskCount.getText().toString());
+                        if(intCount >= taskInputInt){
+                            intCount = intCount - taskInputInt;
+                            String sign = "-";
+                            commitCount(taskCount,intCount,taskNum,totalTasks,sign,taskInputInt);
+                        }
+                        taskInput.setText("", TextView.BufferType.EDITABLE);}
+                    }
+                });
+            }
+
+
+        }
+
+        SharedPreferences countStorage = PreferenceManager.getDefaultSharedPreferences(this);
+
+        for(int t=0;t<totalTasks+1;t++){
+            String storageId = "SPC" + t;
+            if(countStorage.getInt(storageId,-1) == -1){
+                SharedPreferences.Editor editor = countStorage.edit();
+                editor.putInt(storageId,0);
+                editor.apply();
+            }
+        }
+
+        totalDisplay(totalTasks);
 
         super.onStart();
     }
+
+    public void totalDisplay(int totalTasks){
+        SharedPreferences countStorage = PreferenceManager.getDefaultSharedPreferences(this);
+
+        int totalCount = 0;
+
+        int[] taskFees = new int[totalTasks+1];
+
+        taskFees[0]=0;
+        taskFees[1]=10;
+        taskFees[2]=10;
+        taskFees[3]=50;
+        taskFees[4]=10;
+        taskFees[5]=1;
+
+        for(int j=1;j<totalTasks+1;j++){
+            String storageId = "SPC" + j;
+            String countId = "task" + j + "Count";
+            int spCount = countStorage.getInt(storageId,-1);
+            TextView taskCount = (TextView) findViewById(getResources().getIdentifier(countId, "id", getPackageName()));
+            taskCount.setText(String.valueOf(spCount));
+            totalCount = totalCount + (spCount*taskFees[j]);
+        }
+
+        TextView totalCountView = (TextView) findViewById(R.id.totalCount);
+        totalCountView.setText(String.valueOf(totalCount) + "kr");
     }
+
+    public void loadHistory(View view) {
+        SharedPreferences countStorage = PreferenceManager.getDefaultSharedPreferences(this);
+        String histStorage = countStorage.getString("histStorage","");
+
+        Intent intent = new Intent(this, HistoryActivity.class);
+        intent.putExtra("EXTRA_MESSAGE", histStorage);
+        startActivity(intent);
+    }
+
+    private void packHistory(String histItem,String histDetail) {
+        SharedPreferences countStorage = PreferenceManager.getDefaultSharedPreferences(this);
+        String histStorage = countStorage.getString("histStorage","");
+        String histDetailStorage = countStorage.getString("histDetailStorage","");
+
+        List<String> histList = new ArrayList<>(Arrays.asList(histStorage.split(",")));
+        List<String> histDetailList = new ArrayList<>(Arrays.asList(histDetailStorage.split(",")));
+
+        histList.add(histItem);
+        histDetailList.add(histDetail);
+
+        histStorage = histItem + "," + histStorage;
+        histDetailStorage = histDetail + "," + histDetailStorage;
+
+        SharedPreferences.Editor editor = countStorage.edit();
+        editor.putString("histStorage", histStorage);
+        editor.putString("histDetailStorage", histDetailStorage);
+        editor.apply();
+
+        String print = countStorage.getString("histStorage",null);
+        String printD = countStorage.getString("histDetailStorage",null);
+
+    }
+}
 
 
