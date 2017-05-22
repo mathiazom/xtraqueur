@@ -24,48 +24,6 @@ public class IndexActivity extends AppCompatActivity {
         setContentView(R.layout.activity_index);
     }
 
-    public void commitCount(TextView taskCount,int intCount, int taskNum, int totalTasks, String sign,int taskInputInt){
-        SharedPreferences countStorage = PreferenceManager.getDefaultSharedPreferences(this);
-
-        String[] taskHeads = new String[6];
-
-        taskHeads[0] = "";
-        taskHeads[1] = "Vaskemaskin";
-        taskHeads[2] = "Oppvask";
-        taskHeads[3] = "Bad";
-        taskHeads[4] = "Annet";
-        taskHeads[5] = "Manuelt";
-
-        taskCount.setText(String.valueOf(intCount));
-        String storageId = "SPC" + taskNum;
-        SharedPreferences.Editor editor = countStorage.edit();
-        editor.putInt(storageId,intCount);
-        editor.apply();
-        String time = new SimpleDateFormat("hh:mm dd.MM").format(Calendar.getInstance().getTime());
-        String timeD = new SimpleDateFormat("hh:mm:ss dd.MM").format(Calendar.getInstance().getTime());
-        String histItem;
-        String histDetail;
-        String prefix;
-
-        if(sign == "+"){
-            prefix = "La til";
-        }else{
-            prefix = "Trakk fra";
-        }
-
-        if(taskNum == 5){
-            histItem = sign+ " " + taskHeads[taskNum] + " (" + taskInputInt + "kr)" + " (" + time + ")";
-            histDetail = prefix + "\n" + "Type: " + taskHeads[taskNum] + "\n" + taskInputInt + "kr" + "\n" + "Tid: " + timeD;
-        }else{
-            histItem = sign+ " " + taskHeads[taskNum] + " (" + time + ")";
-            histDetail = prefix + "\n" + "Type: " + taskHeads[taskNum] + "\n" + "Tid: " + timeD;
-        }
-
-        totalDisplay(totalTasks);
-
-        packHistory(histItem,histDetail);
-    }
-
     protected void onStart(){
 
         final int totalTasks = 5;
@@ -166,6 +124,48 @@ public class IndexActivity extends AppCompatActivity {
         super.onStart();
     }
 
+    public void commitCount(TextView taskCount,int intCount, int taskNum, int totalTasks, String sign,int taskInputInt){
+        SharedPreferences countStorage = PreferenceManager.getDefaultSharedPreferences(this);
+
+        String[] taskHeads = new String[6];
+
+        taskHeads[0] = "";
+        taskHeads[1] = "Vaskemaskin";
+        taskHeads[2] = "Oppvask";
+        taskHeads[3] = "Bad";
+        taskHeads[4] = "Annet";
+        taskHeads[5] = "Manuelt";
+
+        taskCount.setText(String.valueOf(intCount));
+        String storageId = "SPC" + taskNum;
+        SharedPreferences.Editor editor = countStorage.edit();
+        editor.putInt(storageId,intCount);
+        editor.apply();
+        String time = new SimpleDateFormat("hh:mm dd.MM").format(Calendar.getInstance().getTime());
+        String timeD = new SimpleDateFormat("hh:mm:ss dd.MM").format(Calendar.getInstance().getTime());
+        String histItem;
+        String histDetail;
+        String prefix;
+
+        if(sign == "+"){
+            prefix = "La til";
+        }else{
+            prefix = "Trakk fra";
+        }
+
+        if(taskNum == 5){
+            histItem = taskHeads[taskNum] + " (" + taskInputInt + "kr)" + " (" + time + ")";
+            histDetail = prefix + "\n" + "Type: " + taskHeads[taskNum] + "\n" + taskInputInt + "kr" + "\n" + "Tid: " + timeD;
+        }else{
+            histItem = taskHeads[taskNum] + " (" + time + ")";
+            histDetail = prefix + "\n" + "Type: " + taskHeads[taskNum] + "\n" + "Tid: " + timeD;
+        }
+
+        totalDisplay(totalTasks);
+
+        packHistory(histItem,histDetail);
+    }
+
     public void totalDisplay(int totalTasks){
         SharedPreferences countStorage = PreferenceManager.getDefaultSharedPreferences(this);
 
@@ -194,11 +194,7 @@ public class IndexActivity extends AppCompatActivity {
     }
 
     public void loadHistory(View view) {
-        SharedPreferences countStorage = PreferenceManager.getDefaultSharedPreferences(this);
-        String histStorage = countStorage.getString("histStorage","");
-
         Intent intent = new Intent(this, HistoryActivity.class);
-        intent.putExtra("EXTRA_MESSAGE", histStorage);
         startActivity(intent);
     }
 
@@ -220,9 +216,6 @@ public class IndexActivity extends AppCompatActivity {
         editor.putString("histStorage", histStorage);
         editor.putString("histDetailStorage", histDetailStorage);
         editor.apply();
-
-        String print = countStorage.getString("histStorage",null);
-        String printD = countStorage.getString("histDetailStorage",null);
 
     }
 }
