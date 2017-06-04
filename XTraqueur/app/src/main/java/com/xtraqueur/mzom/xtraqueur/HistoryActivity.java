@@ -1,13 +1,8 @@
 package com.xtraqueur.mzom.xtraqueur;
 
-import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Paint;
-import android.os.Build;
 import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
@@ -50,7 +45,7 @@ public class HistoryActivity extends AppCompatActivity {
             TextView dynamicTextView = new TextView(this);
             dynamicTextView.setLayoutParams(new ActionBar.LayoutParams(ActionBar.LayoutParams.WRAP_CONTENT, ActionBar.LayoutParams.WRAP_CONTENT));
             dynamicTextView.setGravity(Gravity.CENTER_HORIZONTAL);
-            dynamicTextView.setText("Ingen historikk.");
+            dynamicTextView.setText("\n" + "Ingen historikk");
             dynamicTextView.setLayoutParams(new TableRow.LayoutParams(1));
 
             mainlayout = (LinearLayout) findViewById(R.id.mainLayout);
@@ -77,16 +72,33 @@ public class HistoryActivity extends AppCompatActivity {
                     dynamicTextView.setText(text);
                     dynamicTextView.setId(t);
                     dynamicTextView.setTextSize(17);
-                    String detail = histDetailList.get(t);
-                    String prefix = detail.substring(0,1);
-                    if(prefix.equals("T")){
-                        dynamicTextView.setBackgroundColor(Color.parseColor("#f44242"));
+                    dynamicTextView.setBackgroundColor(Color.parseColor("#323232"));
+                    dynamicTextView.setTextColor(Color.parseColor("#eeeeee"));
+
+                    /*
+                    String prefix = text.substring(0,1);
+                    if(prefix.equals("V")){
+                        dynamicTextView.setBackgroundColor(getResources().getColor(R.color.vmaskinColor));
                         dynamicTextView.setTextColor(Color.parseColor("#eeeeee"));
-                    }else{
+                    }
+                    else if(prefix.equals("O")){
+                        dynamicTextView.setBackgroundColor(getResources().getColor(R.color.oppvaskColor));
+                        dynamicTextView.setTextColor(Color.parseColor("#eeeeee"));
+                    }
+                    else if(prefix.equals("B")){
+                        dynamicTextView.setBackgroundColor(getResources().getColor(R.color.badColor));
+                        dynamicTextView.setTextColor(Color.parseColor("#eeeeee"));
+                    }
+                    else if(prefix.equals("A")){
+                        dynamicTextView.setBackgroundColor(getResources().getColor(R.color.xtaskColor));
+                        dynamicTextView.setTextColor(Color.parseColor("#eeeeee"));
+                    }
+                    else{
                         dynamicTextView.setBackgroundColor(Color.parseColor("#0277bd"));
                         dynamicTextView.setTextColor(Color.parseColor("#eeeeee"));
 
                     }
+                    */
 
                     dynamicTextView.setPadding(50, 50, 50, 50);
 
@@ -180,6 +192,7 @@ public class HistoryActivity extends AppCompatActivity {
         editor.apply();
 
         finish();
+        overridePendingTransition( R.anim.slide_in_right, R.anim.slide_out_left );
 
     }
 

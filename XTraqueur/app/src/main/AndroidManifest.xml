@@ -9,16 +9,16 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name="com.xtraqueur.mzom.xtraqueur.IndexActivity">
+        <activity android:name=".IndexActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
-            android:name="com.xtraqueur.mzom.xtraqueur.HistoryActivity"
-            android:parentActivityName="com.xtraqueur.mzom.xtraqueur.IndexActivity"
+            android:name=".HistoryActivity"
+            android:parentActivityName=".IndexActivity"
             android:title="Din historikk">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"

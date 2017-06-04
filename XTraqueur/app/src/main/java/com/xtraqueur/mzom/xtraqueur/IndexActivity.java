@@ -1,14 +1,26 @@
 package com.xtraqueur.mzom.xtraqueur;
 
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.Html;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import com.flask.colorpicker.ColorPickerView;
+import com.flask.colorpicker.builder.ColorPickerClickListener;
+import com.flask.colorpicker.builder.ColorPickerDialogBuilder;
 import com.vstechlab.easyfonts.EasyFonts;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -22,6 +34,32 @@ public class IndexActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_index);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_addTaskType:
+                addTaskType();
+                return true;
+
+            case R.id.action_history:
+                Intent intent = new Intent(this, HistoryActivity.class);
+                startActivity(intent);
+                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+                return true;
+
+            default:
+                return super.onOptionsItemSelected(item);
+
+        }
     }
 
     protected void onStart(){
@@ -141,29 +179,25 @@ public class IndexActivity extends AppCompatActivity {
         SharedPreferences.Editor editor = countStorage.edit();
         editor.putInt(storageId,intCount);
         editor.apply();
+
         String time = new SimpleDateFormat("hh:mm dd.MM").format(Calendar.getInstance().getTime());
         String timeD = new SimpleDateFormat("hh:mm:ss dd.MM").format(Calendar.getInstance().getTime());
         String histItem;
         String histDetail;
-        String prefix;
-
-        if(sign == "+"){
-            prefix = "La til";
-        }else{
-            prefix = "Trakk fra";
-        }
 
         if(taskNum == 5){
             histItem = taskHeads[taskNum] + " (" + taskInputInt + "kr)" + " (" + time + ")";
-            histDetail = prefix + "\n" + "Type: " + taskHeads[taskNum] + "\n" + taskInputInt + "kr" + "\n" + "Tid: " + timeD;
+            histDetail = "Type: " + taskHeads[taskNum] + "\n" + taskInputInt + "kr" + "\n" + "Tid: " + timeD;
         }else{
             histItem = taskHeads[taskNum] + " (" + time + ")";
-            histDetail = prefix + "\n" + "Type: " + taskHeads[taskNum] + "\n" + "Tid: " + timeD;
+            histDetail = "Type: " + taskHeads[taskNum] + "\n" + "Tid: " + timeD;
         }
 
         totalDisplay(totalTasks);
 
-        packHistory(histItem,histDetail);
+        if(sign.equals("+")){
+            packHistory(histItem,histDetail);
+        }
     }
 
     public void totalDisplay(int totalTasks){
@@ -196,6 +230,7 @@ public class IndexActivity extends AppCompatActivity {
     public void loadHistory(View view) {
         Intent intent = new Intent(this, HistoryActivity.class);
         startActivity(intent);
+        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
     }
 
     private void packHistory(String histItem,String histDetail) {
@@ -218,6 +253,59 @@ public class IndexActivity extends AppCompatActivity {
         editor.apply();
 
     }
+
+    private void addTaskType(){
+        final Context context = this;
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setCancelable(true);
+        builder.setTitle("Legg til en ny oppgave-type");
+        LayoutInflater inflater = (LayoutInflater)getApplicationContext().getSystemService
+                (Context.LAYOUT_INFLATER_SERVICE);
+        View view = inflater.inflate(R.layout.add_task_type,null);
+        Button cpb = (Button) view.findViewById(R.id.pickColourButton);
+        System.out.println(cpb.getBackground());
+        builder.setView(view);
+        builder.setPositiveButton(Html.fromHtml("<font color='#FF7F27'>Legg til</font>"),
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                    }
+                });
+        builder.setNegativeButton("Avbryt", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+            }
+        });
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+
+    public void colorPicker(View v){
+        System.out.println("test");
+        /*final Context context = this;
+
+        ColorPickerDialogBuilder
+                .with(context)
+                .setTitle("Velg farge")
+                .wheelType(ColorPickerView.WHEEL_TYPE.FLOWER)
+                .density(12)
+                .setPositiveButton("Velg", new ColorPickerClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int selectedColor, Integer[] allColors) {
+                    }
+                })
+                .setNegativeButton("Avbryt", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                    }
+                })
+                .build()
+                .show();*/
+    }
+
+
 }
 
 

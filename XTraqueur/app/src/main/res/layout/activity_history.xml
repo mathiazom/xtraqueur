@@ -28,7 +28,7 @@
         android:id="@+id/clearHist"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="#f44242"
+        android:background="@color/oppvaskColor"
         android:fontFamily="sans-serif-light"
         android:gravity="center"
         android:onClick="clearHistory"
