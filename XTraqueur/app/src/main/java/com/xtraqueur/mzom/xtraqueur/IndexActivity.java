@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AlertDialog;
@@ -16,9 +15,11 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import com.flask.colorpicker.ColorPickerView;
 import com.flask.colorpicker.builder.ColorPickerClickListener;
@@ -264,6 +265,8 @@ public class IndexActivity extends AppCompatActivity {
         builder.setTitle("Legg til en ny oppgave-type");
         LayoutInflater inflater = this.getLayoutInflater();
         View dialogView = LayoutInflater.from(context).inflate(R.layout.add_task_type,null);
+        final EditText tne = (EditText) dialogView.findViewById(R.id.taskName);
+        final EditText tfe = (EditText) dialogView.findViewById(R.id.taskFee);
         final Button cpb = (Button) dialogView.findViewById(R.id.pickColourButton);
         cpb.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -274,8 +277,22 @@ public class IndexActivity extends AppCompatActivity {
                 new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
+                        String taskName = tne.getEditableText().toString();
+                        taskName = taskName.substring(0, 1).toUpperCase() + taskName.substring(1).toLowerCase();
+                        String taskFee = tfe.getEditableText().toString();
                         Drawable taskCol = cpb.getBackground();
-                        System.out.println(taskCol);
+
+                        LayoutInflater vi = (LayoutInflater) getApplicationContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                        View v = vi.inflate(R.layout.new_task, null);
+
+                        TextView textView = (TextView) v.findViewById(R.id.task0Head);
+                        textView.setText(taskName);
+
+                        RelativeLayout taskLayout = (RelativeLayout) v.findViewById(R.id.task0Layout);
+                        taskLayout.setBackground(taskCol);
+
+                        ViewGroup insertPoint = (ViewGroup) findViewById(R.id.tasksLayout);
+                        insertPoint.addView(v, 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
                     }
                 });
         builder.setNegativeButton("Avbryt", new DialogInterface.OnClickListener() {
@@ -300,8 +317,6 @@ public class IndexActivity extends AppCompatActivity {
                 .setPositiveButton("Velg", new ColorPickerClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int selectedColor, Integer[] allColors) {
-                        String hexc = "0x" + Integer.toHexString(selectedColor);
-                        System.out.println(hexc);
                         cpb.setBackgroundColor(selectedColor);
                     }
                 })

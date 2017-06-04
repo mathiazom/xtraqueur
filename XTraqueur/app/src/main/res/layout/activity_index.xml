@@ -38,7 +38,7 @@
                 android:layout_marginRight="8dp"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
-                android:background="@drawable/rounded_corners1"
+                android:background="@color/vmaskinColor"
                 android:paddingBottom="18dp"
                 android:paddingLeft="28dp"
                 android:paddingRight="28dp"

@@ -16,7 +16,7 @@
         android:paddingBottom="0dp"/>
 
     <EditText
-        android:id="@+id/typeName"
+        android:id="@+id/taskName"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:gravity="top"
@@ -37,7 +37,7 @@
         android:paddingBottom="0dp"/>
 
     <EditText
-        android:id="@+id/editText3"
+        android:id="@+id/taskFee"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:ems="10"
