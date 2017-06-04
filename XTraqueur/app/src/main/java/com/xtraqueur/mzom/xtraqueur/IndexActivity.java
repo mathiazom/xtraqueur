@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -260,16 +262,20 @@ public class IndexActivity extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setCancelable(true);
         builder.setTitle("Legg til en ny oppgave-type");
-        LayoutInflater inflater = (LayoutInflater)getApplicationContext().getSystemService
-                (Context.LAYOUT_INFLATER_SERVICE);
-        View view = inflater.inflate(R.layout.add_task_type,null);
-        Button cpb = (Button) view.findViewById(R.id.pickColourButton);
-        System.out.println(cpb.getBackground());
-        builder.setView(view);
+        LayoutInflater inflater = this.getLayoutInflater();
+        View dialogView = LayoutInflater.from(context).inflate(R.layout.add_task_type,null);
+        final Button cpb = (Button) dialogView.findViewById(R.id.pickColourButton);
+        cpb.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                colorPicker(cpb);
+        }});
+        builder.setView(dialogView);
         builder.setPositiveButton(Html.fromHtml("<font color='#FF7F27'>Legg til</font>"),
                 new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
+                        Drawable taskCol = cpb.getBackground();
+                        System.out.println(taskCol);
                     }
                 });
         builder.setNegativeButton("Avbryt", new DialogInterface.OnClickListener() {
@@ -282,9 +288,9 @@ public class IndexActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    public void colorPicker(View v){
-        System.out.println("test");
-        /*final Context context = this;
+    public void colorPicker(Button button){
+        final Context context = this;
+        final Button cpb = button;
 
         ColorPickerDialogBuilder
                 .with(context)
@@ -294,6 +300,9 @@ public class IndexActivity extends AppCompatActivity {
                 .setPositiveButton("Velg", new ColorPickerClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int selectedColor, Integer[] allColors) {
+                        String hexc = "0x" + Integer.toHexString(selectedColor);
+                        System.out.println(hexc);
+                        cpb.setBackgroundColor(selectedColor);
                     }
                 })
                 .setNegativeButton("Avbryt", new DialogInterface.OnClickListener() {
@@ -302,7 +311,7 @@ public class IndexActivity extends AppCompatActivity {
                     }
                 })
                 .build()
-                .show();*/
+                .show();
     }
 
 
