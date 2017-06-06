@@ -28,7 +28,7 @@
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent">
-
+<!--
             <RelativeLayout
                 android:id="@+id/task1Layout"
                 android:layout_width="match_parent"
@@ -466,7 +466,7 @@
                 </LinearLayout>
 
             </RelativeLayout>
-
+-->
         </LinearLayout>
     </ScrollView>
 

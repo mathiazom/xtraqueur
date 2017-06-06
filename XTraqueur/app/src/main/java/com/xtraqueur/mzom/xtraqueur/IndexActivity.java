@@ -29,7 +29,14 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+
+import static com.xtraqueur.mzom.xtraqueur.Task.newTask;
+import static com.xtraqueur.mzom.xtraqueur.Task.randInt;
 
 public class IndexActivity extends AppCompatActivity {
 
@@ -66,8 +73,28 @@ public class IndexActivity extends AppCompatActivity {
     }
 
     protected void onStart(){
+        SharedPreferences appStorage = PreferenceManager.getDefaultSharedPreferences(this);
 
-        final int totalTasks = 5;
+        String objStorage = appStorage.getString("OBJSTORAGE","");
+        objStorage.split(",");
+
+        List<Object> objStorageList;
+
+       if(!true) {
+            objStorageList = new ArrayList<>();
+            newTask(objStorageList, "VASKEMASKIN", "BLUE", 0, 10);
+            newTask(objStorageList, "OPPVASK", "RED", 0, 10);
+            newTask(objStorageList, "BAD", "LIME", 0, 10);
+        }else{
+           objStorageList = new ArrayList<Object>(Arrays.asList(objStorage));
+       }
+        System.out.println(objStorage);
+
+        SharedPreferences.Editor editor = appStorage.edit();
+        editor.putString("OBJSTORAGE",objStorage);
+        editor.apply();
+
+        /* final int totalTasks = 5;
 
         for(int f=1;f<totalTasks+1;f++){
             String headFontId = "task" + f + "Head";
@@ -161,7 +188,7 @@ public class IndexActivity extends AppCompatActivity {
         }
 
         totalDisplay(totalTasks);
-
+*/
         super.onStart();
     }
 
