@@ -49,7 +49,7 @@
             android:layout_marginTop="34dp"
             android:background="@android:color/transparent"
             android:tint="#ffffff"
-            app:srcCompat="@drawable/ic_arrow_upward_black_48dp" />
+            android:src="@drawable/arrowupward" />
 
         <ImageButton
             android:id="@+id/subButton0"
@@ -61,7 +61,7 @@
             android:background="@android:color/transparent"
             android:textSize="50sp"
             android:tint="#ffffff"
-            app:srcCompat="@drawable/ic_arrow_downward_black_48dp" />
+            android:src="@drawable/arrowdownward" />
 
         <LinearLayout
             android:id="@+id/linearLayout0"
