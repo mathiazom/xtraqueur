@@ -36,10 +36,8 @@ public class HistoryActivity extends AppCompatActivity {
 
         SharedPreferences countStorage = PreferenceManager.getDefaultSharedPreferences(this);
         String histStorage = countStorage.getString("histStorage","");
-        String histDetailStorage = countStorage.getString("histDetailStorage","");
 
         final List<String> histList = new ArrayList<>(Arrays.asList(histStorage.split(",")));
-        final List<String> histDetailList = new ArrayList<>(Arrays.asList(histDetailStorage.split(",")));
 
         if(histList.size() == 0 || histStorage.equals("")){
             TextView dynamicTextView = new TextView(this);
@@ -74,31 +72,6 @@ public class HistoryActivity extends AppCompatActivity {
                     dynamicTextView.setTextSize(17);
                     dynamicTextView.setBackgroundColor(Color.parseColor("#323232"));
                     dynamicTextView.setTextColor(Color.parseColor("#eeeeee"));
-
-                    /*
-                    String prefix = text.substring(0,1);
-                    if(prefix.equals("V")){
-                        dynamicTextView.setBackgroundColor(getResources().getColor(R.color.vmaskinColor));
-                        dynamicTextView.setTextColor(Color.parseColor("#eeeeee"));
-                    }
-                    else if(prefix.equals("O")){
-                        dynamicTextView.setBackgroundColor(getResources().getColor(R.color.oppvaskColor));
-                        dynamicTextView.setTextColor(Color.parseColor("#eeeeee"));
-                    }
-                    else if(prefix.equals("B")){
-                        dynamicTextView.setBackgroundColor(getResources().getColor(R.color.badColor));
-                        dynamicTextView.setTextColor(Color.parseColor("#eeeeee"));
-                    }
-                    else if(prefix.equals("A")){
-                        dynamicTextView.setBackgroundColor(getResources().getColor(R.color.xtaskColor));
-                        dynamicTextView.setTextColor(Color.parseColor("#eeeeee"));
-                    }
-                    else{
-                        dynamicTextView.setBackgroundColor(Color.parseColor("#0277bd"));
-                        dynamicTextView.setTextColor(Color.parseColor("#eeeeee"));
-
-                    }
-                    */
 
                     dynamicTextView.setPadding(50, 50, 50, 50);
 
@@ -204,7 +177,7 @@ public class HistoryActivity extends AppCompatActivity {
         builder.setCancelable(true);
         builder.setTitle("Er du sikker?");
         builder.setMessage(Html.fromHtml("All din historikk vil bli slettet. <br/>Dette kan <u>ikke</u> angres."));
-        builder.setPositiveButton(Html.fromHtml("<font color='#FF7F27'>Ja</font>"),
+        builder.setPositiveButton(Html.fromHtml("Ja"),
                 new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {

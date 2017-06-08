@@ -5,18 +5,28 @@
     <item
         android:id="@+id/action_addTaskType"
         android:icon="@drawable/ic_add_black_24dp"
-        android:title="History"
+        android:title="Ny oppgave"
         app:showAsAction="always"/>
 
     <item
         android:id="@+id/action_history"
         android:icon="@drawable/ic_history_black_24dp"
-        android:title="History"
+        android:title="Historie"
         app:showAsAction="always"/>
 
-    <!-- <item android:id="@+id/action_settings"
+    <item android:id="@+id/action_settings"
         android:icon="@drawable/ic_settings_black_24dp"
-        android:title="Settings"
-        app:showAsAction="always"/> -->
+        android:title="Innstillinger"
+            app:showAsAction="never"/>
+
+    <item android:id="@+id/action_edittasks"
+        android:icon="@drawable/editbutton"
+        android:title="Rediger"
+        app:showAsAction="never"/>
+
+    <item android:id="@+id/action_editdone"
+        android:icon="@drawable/editdone"
+        android:title="Ferdig"
+        app:showAsAction="always"/>
 
 </menu>

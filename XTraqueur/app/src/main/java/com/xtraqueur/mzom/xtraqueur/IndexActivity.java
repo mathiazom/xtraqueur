@@ -5,7 +5,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -20,6 +19,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import com.flask.colorpicker.ColorPickerView;
@@ -27,17 +27,17 @@ import com.flask.colorpicker.builder.ColorPickerClickListener;
 import com.flask.colorpicker.builder.ColorPickerDialogBuilder;
 import com.vstechlab.easyfonts.EasyFonts;
 import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 
+// TASK CLASS METHODS
 import static com.xtraqueur.mzom.xtraqueur.Task.clearTask;
 import static com.xtraqueur.mzom.xtraqueur.Task.clearTasks;
 import static com.xtraqueur.mzom.xtraqueur.Task.editTask;
+import static com.xtraqueur.mzom.xtraqueur.Task.getTaskProp;
 import static com.xtraqueur.mzom.xtraqueur.Task.newTask;
 import static com.xtraqueur.mzom.xtraqueur.Task.loadTasks;
 import static com.xtraqueur.mzom.xtraqueur.Task.totalCount;
@@ -49,9 +49,11 @@ public class IndexActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_index);
     }
-
+    private Menu menu;
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        this.menu = menu;
+
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu, menu);
         return true;
@@ -59,6 +61,7 @@ public class IndexActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+
         switch (item.getItemId()) {
             case R.id.action_addTaskType:
                 addTaskType();
@@ -68,6 +71,10 @@ public class IndexActivity extends AppCompatActivity {
                 Intent intent = new Intent(this, HistoryActivity.class);
                 startActivity(intent);
                 overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+                return true;
+
+            case R.id.action_edittasks:
+                editMode(loadTasks(this));
                 return true;
 
             default:
@@ -81,106 +88,63 @@ public class IndexActivity extends AppCompatActivity {
 //        clearTasks(this);
 //
 //        newTask(this,"Terminator","#212121",10,10);
-//        newTask(this,"Terminator","#212121",10,10);
-//        newTask(this,"Terminator","#212121",10,10);
-//        newTask(this,"Terminator","#212121",10,10);
-
+//
 //        editTask(this,0,"count","12");
+//
+//       clearTask(this,tasksArray,0);
+//
+//        tasksArray = loadTasks(this);
+        if(((LinearLayout) findViewById(R.id.tasksLayout)).getChildCount() == 0){buildTasks(loadTasks(this));}
 
-        JSONArray tasksArray = loadTasks(this);
-
-//        clearTask(this,tasksArray,0);
-
-        for(int g=0;g<tasksArray.length();g++){
-            JSONObject taskobj = null;
-            try {
-                taskobj = tasksArray.getJSONObject(g);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-
-            System.out.println(taskobj);
-        }
-
-        tasksArray = loadTasks(this);
-
-        buildTasks(tasksArray);
-
-        int totalVal = totalCount(this,tasksArray);
-
-        TextView totalCountView = (TextView) findViewById(R.id.totalCount);
-        totalCountView.setText(String.valueOf(totalVal) + "kr");
+        ((TextView) findViewById(R.id.totalCount)).setText(String.valueOf(totalCount(this)) + "kr");
 
         super.onStart();
     }
 
-//    COMMIT COUNT (COMPLETE)
+    public void commitCount(TextView textCount, int taskNum, String sign)   {
 
-    public void commitCount(TextView taskCount,int intCount, int taskNum, String sign,int taskInputInt){
-        SharedPreferences countStorage = PreferenceManager.getDefaultSharedPreferences(this);
-
-        String[] taskHeads = new String[6];
-
-        taskHeads[0] = "";
-        taskHeads[1] = "Vaskemaskin";
-        taskHeads[2] = "Oppvask";
-        taskHeads[3] = "Bad";
-        taskHeads[4] = "Annet";
-        taskHeads[5] = "Manuelt";
-
-        taskCount.setText(String.valueOf(intCount));
-        String storageId = "SPC" + taskNum;
-        SharedPreferences.Editor editor = countStorage.edit();
-        editor.putInt(storageId,intCount);
-        editor.apply();
+        String taskName = getTaskProp(this,taskNum,"name");
+        String taskCount = getTaskProp(this,taskNum,"count");
 
         String time = new SimpleDateFormat("hh:mm dd.MM").format(Calendar.getInstance().getTime());
         String timeD = new SimpleDateFormat("hh:mm:ss dd.MM").format(Calendar.getInstance().getTime());
         String histItem;
         String histDetail;
 
-        if(taskNum == 5){
-            histItem = taskHeads[taskNum] + " (" + taskInputInt + "kr)" + " (" + time + ")";
-            histDetail = "Type: " + taskHeads[taskNum] + "\n" + taskInputInt + "kr" + "\n" + "Tid: " + timeD;
-        }else{
-            histItem = taskHeads[taskNum] + " (" + time + ")";
-            histDetail = "Type: " + taskHeads[taskNum] + "\n" + "Tid: " + timeD;
-        }
+        histItem = taskName + " (" + time + ")";
+        histDetail = "Type: " + taskName + "\n" + "Tid: " + timeD;
 
         if(sign.equals("+")){
+            taskCount = String.valueOf(Integer.parseInt(taskCount)+1);
             packHistory(histItem,histDetail);
+        }else{
+            taskCount = String.valueOf(Integer.parseInt(taskCount)-1);
         }
+
+        editTask(this,taskNum,"count",taskCount);
+
+        textCount.setText(taskCount);
+
+//        if(taskNum == 5){
+//            histItem = taskName + " (" + taskInputInt + "kr)" + " (" + time + ")";
+//            histDetail = "Type: " + taskName + "\n" + taskInputInt + "kr" + "\n" + "Tid: " + timeD;
+//        }
+
+        TextView totalCountView = (TextView) findViewById(R.id.totalCount);
+        totalCountView.setText(String.valueOf(totalCount(this)) + "kr");
     }
 
-//    LOAD TASK-INTERFACE
-
     public void buildTasks(JSONArray tasksArray){
+
+        final Context context = this;
 
         for(int h = 0;h<tasksArray.length();h++) {
 
             final int id = h;
 
-            String taskName = null;
-            try {
-                taskName = tasksArray.getJSONObject(h).getString("name");
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-
-            String taskColor = null;
-            try {
-                taskColor = tasksArray.getJSONObject(h).getString("col");
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-
-            String taskCount = null;
-            try {
-                taskCount = tasksArray.getJSONObject(h).getString("count");
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-            final int taskCountInt = Integer.parseInt(taskCount);
+            String taskName = getTaskProp(this,h,"name");
+            String taskColor = getTaskProp(this,h,"col");
+            String taskCount = getTaskProp(this,h,"count");
 
             LayoutInflater vi = (LayoutInflater) getApplicationContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             View v = vi.inflate(R.layout.new_task, null);
@@ -198,14 +162,21 @@ public class IndexActivity extends AppCompatActivity {
 
 //          CLICK-LISTENERS
 
-//            ImageButton addTask = (ImageButton) v.findViewById(R.id.addButton0);
-//            addTask.setOnClickListener(new View.OnClickListener() {
-//            public void onClick(View v) {
-//                int taskCountNew = taskCountInt + 1;
-//                String sign = "+";
-//                commitCount(textCountFin,taskCountNew,id,sign,0);
-//            }
-//        });
+            ImageButton addTask = (ImageButton) v.findViewById(R.id.addButton0);
+            addTask.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                String sign = "+";
+                commitCount(textCountFin,id,sign);
+             }
+            });
+
+            ImageButton subTask = (ImageButton) v.findViewById(R.id.subButton0);
+            subTask.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    String sign = "-";
+                    commitCount(textCountFin,id,sign);
+                }
+            });
 
             ViewGroup insertPoint = (ViewGroup) findViewById(R.id.tasksLayout);
             insertPoint.addView(v, 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
@@ -213,14 +184,14 @@ public class IndexActivity extends AppCompatActivity {
         }
     }
 
-//    ADD NEW TASK TYPE-INTERFACE (COMPLETE)
-
     private void addTaskType(){
         final Context context = this;
 
+        JSONArray tasksArray = loadTasks(this);
+
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setCancelable(true);
-        builder.setTitle("Legg til en ny oppgave-type");
+        builder.setTitle("Ny oppgave");
         View dialogView = LayoutInflater.from(context).inflate(R.layout.add_task_type,null);
         final EditText tne = (EditText) dialogView.findViewById(R.id.taskName);
         final EditText tfe = (EditText) dialogView.findViewById(R.id.taskFee);
@@ -234,22 +205,61 @@ public class IndexActivity extends AppCompatActivity {
                 new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
+
                         String taskName = tne.getEditableText().toString();
                         taskName = taskName.substring(0, 1).toUpperCase() + taskName.substring(1).toLowerCase();
-                        String taskFee = tfe.getEditableText().toString();
-                        Drawable taskCol = cpb.getBackground();
+                        int taskFee = Integer.parseInt(tfe.getEditableText().toString());
+                        String taskCol = String.valueOf(cpb.getTag());
+                        if(taskCol.equals("null")){
+                            taskCol = "#0277bd";
+                        }
 
-                        LayoutInflater vi = (LayoutInflater) getApplicationContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                        View v = vi.inflate(R.layout.new_task, null);
+                        newTask(context,taskName,taskCol,0,taskFee);
 
-                        TextView textView = (TextView) v.findViewById(R.id.task0Head);
-                        textView.setText(taskName);
+                        Intent intent = getIntent();
+                        finish();
+                        startActivity(intent);
 
-                        RelativeLayout taskLayout = (RelativeLayout) findViewById(R.id.task0Layout);
-                        taskLayout.setBackground(taskCol);
-
-                        ViewGroup insertPoint = (ViewGroup) findViewById(R.id.tasksLayout);
-                        insertPoint.addView(v, 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
+//                        LayoutInflater vi = (LayoutInflater) getApplicationContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+//                        View v = vi.inflate(R.layout.new_task, null);
+//
+//                        TextView textView = (TextView) v.findViewById(R.id.task0Head);
+//                        textView.setText(taskName);
+//
+//                        textView.setOnClickListener(new View.OnClickListener() {
+//                            public void onClick(View v) {
+//                                editTaskType(context,id);
+//                            }
+//                        });
+//
+//                        RelativeLayout taskLayout = (RelativeLayout) v.findViewById(R.id.task0Layout);
+//                        taskLayout.setBackgroundColor(Color.parseColor(taskCol));
+//
+//                        TextView textCount = (TextView) v.findViewById(R.id.task0Count);
+//                        textCount.setText("0");
+//
+//                        final TextView textCountFin = textCount;
+//
+////                        ONCLICK-LISTENERS
+//
+//                        ImageButton addTask = (ImageButton) v.findViewById(R.id.addButton0);
+//                        addTask.setOnClickListener(new View.OnClickListener() {
+//                            public void onClick(View v) {
+//                                String sign = "+";
+//                                commitCount(textCountFin,id,sign);
+//                            }
+//                        });
+//
+//                        ImageButton subTask = (ImageButton) v.findViewById(R.id.subButton0);
+//                        subTask.setOnClickListener(new View.OnClickListener() {
+//                            public void onClick(View v) {
+//                                String sign = "-";
+//                                commitCount(textCountFin,id,sign);
+//                            }
+//                        });
+//
+//                        ViewGroup insertPoint = (ViewGroup) findViewById(R.id.tasksLayout);
+//                        insertPoint.addView(v, 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
                     }
                 });
         builder.setNegativeButton("Avbryt", new DialogInterface.OnClickListener() {
@@ -266,6 +276,8 @@ public class IndexActivity extends AppCompatActivity {
         final Context context = this;
         final Button cpb = button;
 
+        cpb.setTag("");
+
         ColorPickerDialogBuilder
                 .with(context)
                 .setTitle("Velg farge")
@@ -275,6 +287,8 @@ public class IndexActivity extends AppCompatActivity {
                     @Override
                     public void onClick(DialogInterface dialog, int selectedColor, Integer[] allColors) {
                         cpb.setBackgroundColor(selectedColor);
+                        String tagColor = "#" + Integer.toHexString(selectedColor);
+                        cpb.setTag(tagColor);
                     }
                 })
                 .setNegativeButton("Avbryt", new DialogInterface.OnClickListener() {
@@ -286,36 +300,77 @@ public class IndexActivity extends AppCompatActivity {
                 .show();
     }
 
-//    TOTAL DISPLAY (COMPLETE)
+    public void editTaskType(Context context,int taskNum){
+        final Context contextFin = context;
 
-//    public void totalDisplay(int totalTasks){
-//        SharedPreferences countStorage = PreferenceManager.getDefaultSharedPreferences(this);
-//
-//        int totalCount = 0;
-//
-//        int[] taskFees = new int[totalTasks+1];
-//
-//        taskFees[0]=0;
-//        taskFees[1]=10;
-//        taskFees[2]=10;
-//        taskFees[3]=50;
-//        taskFees[4]=10;
-//        taskFees[5]=1;
-//
-//        for(int j=1;j<totalTasks+1;j++){
-//            String storageId = "SPC" + j;
-//            String countId = "task" + j + "Count";
-//            int spCount = countStorage.getInt(storageId,-1);
-//            TextView taskCount = (TextView) findViewById(getResources().getIdentifier(countId, "id", getPackageName()));
-//            taskCount.setText(String.valueOf(spCount));
-//            totalCount = totalCount + (spCount*taskFees[j]);
-//        }
-//
-//        TextView totalCountView = (TextView) findViewById(R.id.totalCount);
-//        totalCountView.setText(String.valueOf(totalCount) + "kr");
-//    }
+        final JSONArray tasksArray = loadTasks(context);
+        final int id = taskNum;
 
-//    HISTORY (COMPLETE)
+        String taskName = getTaskProp(this,id,"name");
+        String taskFee = getTaskProp(this,id,"fee");
+        final String taskCol = getTaskProp(this,id,"col");
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setCancelable(true);
+        builder.setTitle("Rediger oppgave");
+        View dialogView = LayoutInflater.from(context).inflate(R.layout.edit_task_type,null);
+        final EditText tne = (EditText) dialogView.findViewById(R.id.taskName);
+        tne.setText(taskName, TextView.BufferType.EDITABLE);
+        final EditText tfe = (EditText) dialogView.findViewById(R.id.taskFee);
+        tfe.setText(taskFee, TextView.BufferType.EDITABLE);
+        final Button cpb = (Button) dialogView.findViewById(R.id.pickColourButton);
+        cpb.setBackgroundColor(Color.parseColor(taskCol));
+        cpb.setTag(taskCol);
+        cpb.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                colorPicker(cpb);
+            }});
+        builder.setView(dialogView);
+        builder.setPositiveButton(Html.fromHtml("<font color='#FF7F27'>Lagre</font>"),
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                        String taskName = tne.getEditableText().toString();
+                        taskName = taskName.substring(0, 1).toUpperCase() + taskName.substring(1).toLowerCase();
+                        int taskFee = Integer.parseInt(tfe.getEditableText().toString());
+                        String newtaskCol = String.valueOf(cpb.getTag());
+                        if(newtaskCol.equals("null")){
+                            newtaskCol = taskCol;
+                        }
+
+                        editTask(contextFin,id,"name",taskName);
+                        editTask(contextFin,id,"col",newtaskCol);
+                        editTask(contextFin,id,"fee",String.valueOf(taskFee));
+
+                        Intent intent = getIntent();
+                        finish();
+                        startActivity(intent);
+                    }
+                });
+        builder.setNegativeButton("Avbryt", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+            }
+        });
+        builder.setNeutralButton(Html.fromHtml("<font color='#FF7F27'>Slett type</font>"),
+                new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                System.out.println(id);
+                clearTask(contextFin,tasksArray,id);
+                Intent intent = getIntent();
+                finish();
+                startActivity(intent);
+            }
+        });
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+
+        Button dP = dialog.getButton(DialogInterface.BUTTON_NEUTRAL);
+        dP.setTextColor(Color.parseColor("#f44242"));
+    }
 
     public void loadHistory(View view) {
         Intent intent = new Intent(this, HistoryActivity.class);
@@ -344,40 +399,54 @@ public class IndexActivity extends AppCompatActivity {
 
     }
 
-}
+    public void editMode(JSONArray tasksArray){
 
-//for(int i=1;i<totalTasks+1;i++){
+        final Context context = this;
+
+        ViewGroup insertPoint = (ViewGroup) findViewById(R.id.tasksLayout);
+        insertPoint.removeAllViews();
+
+        for(int h = 0;h<tasksArray.length();h++) {
+
+            final int id = h;
+
+            String taskName = getTaskProp(this, h, "name");
+            String taskColor = getTaskProp(this, h, "col");
+
+            LayoutInflater vi = (LayoutInflater) getApplicationContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            View v = vi.inflate(R.layout.edit_task, null);
+
+            TextView textView = (TextView) v.findViewById(R.id.task0Head);
+            textView.setText(taskName);
+
+            ImageButton editButton = (ImageButton) v.findViewById(R.id.editButton0);
+            editButton.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    editTaskType(context,id);
+                }
+            });
+
+            RelativeLayout taskLayout = (RelativeLayout) v.findViewById(R.id.task0Layout);
+            taskLayout.setBackgroundColor(Color.parseColor(taskColor));
+            insertPoint.addView(v, 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
+        }
+
+        menu.findItem(R.id.action_addTaskType).setVisible(false);
+        menu.findItem(R.id.action_history).setVisible(false);
+        menu.findItem(R.id.action_settings).setVisible(false);
+        menu.findItem(R.id.action_edittasks).setVisible(false);
+        menu.findItem(R.id.action_editdone).setVisible(true);
+
+    }
+    //for(int i=1;i<totalTasks+1;i++){
 //final int taskNum = i;
 //final String countId = "task" + i + "Count";
 //
 //        String addButtonId = "addButton" + i;
 //        String subButtonId = "subButton" + i;
 //
-//        if(i!=5){
-//        ImageButton addTask = (ImageButton) findViewById(getResources().getIdentifier(addButtonId, "id", getPackageName()));
-//        addTask.setOnClickListener(new View.OnClickListener() {
-//public void onClick(View v) {
-//        TextView taskCount = (TextView) findViewById(getResources().getIdentifier(countId, "id", getPackageName()));
-//        int intCount = Integer.parseInt(taskCount.getText().toString());
-//        intCount = intCount + 1;
-//        String sign = "+";
-//        commitCount(taskCount,intCount,taskNum,totalTasks,sign,0);
-//        }
-//        });
-//        ImageButton subTask = (ImageButton) findViewById(getResources().getIdentifier(subButtonId, "id", getPackageName()));
-//        subTask.setOnClickListener(new View.OnClickListener() {
-//public void onClick(View v) {
-//        TextView taskCount = (TextView) findViewById(getResources().getIdentifier(countId, "id", getPackageName()));
-//        int intCount = Integer.parseInt(taskCount.getText().toString());
-//        if(intCount > 0){
-//        intCount = intCount - 1;
-//        String sign = "-";
-//        commitCount(taskCount,intCount,taskNum,totalTasks,sign,0);
-//        }
-//
-//        }
-//        });
-//        }else{
+//        if(i!=5){}
+//          else{
 //        ImageButton addTask = (ImageButton) findViewById(getResources().getIdentifier(addButtonId, "id", getPackageName()));
 //        addTask.setOnClickListener(new View.OnClickListener() {
 //public void onClick(View v) {
@@ -416,5 +485,5 @@ public class IndexActivity extends AppCompatActivity {
 //        tasksArray = loadTasks(this);
 //
 //        }
-
+}
 

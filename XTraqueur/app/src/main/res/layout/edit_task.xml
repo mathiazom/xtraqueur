@@ -40,52 +40,15 @@
             app:layout_constraintTop_toTopOf="parent" />
 
         <ImageButton
-            android:id="@+id/addButton0"
+            android:id="@+id/editButton0"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:layout_alignLeft="@+id/task0Head"
-            android:layout_alignStart="@+id/task0Head"
-            android:layout_alignTop="@+id/linearLayout0"
-            android:layout_marginTop="34dp"
-            android:background="@android:color/transparent"
-            android:src="@drawable/arrowupward" />
-
-        <ImageButton
-            android:id="@+id/subButton0"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_alignEnd="@+id/task0Head"
-            android:layout_alignRight="@+id/task0Head"
-            android:layout_alignTop="@+id/addButton0"
             android:background="@android:color/transparent"
             android:textSize="50sp"
-            android:src="@drawable/arrowdownward" />
-
-        <LinearLayout
-            android:id="@+id/linearLayout0"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/task0Head"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="16dp"
-            android:orientation="horizontal">
-
-            <TextView
-                android:id="@+id/task0Count"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_weight="1"
-                android:fontFamily='"sans-serif-thin"'
-                android:text="@string/taskXCount"
-                android:textAlignment="center"
-                android:textColor="#ffffff"
-                android:textSize="80sp"
-                app:layout_constraintHorizontal_bias="0.497"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toRightOf="parent" />
-
-        </LinearLayout>
+            android:src="@drawable/editbutton"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true" />
 
     </RelativeLayout>
 
