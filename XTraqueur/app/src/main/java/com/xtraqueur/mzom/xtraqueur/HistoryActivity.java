@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-
 public class HistoryActivity extends AppCompatActivity {
 
     @Override
@@ -78,6 +77,13 @@ public class HistoryActivity extends AppCompatActivity {
                     mainlayout = (LinearLayout) findViewById(R.id.mainLayout);
 
                     mainlayout.addView(dynamicTextView);
+
+                    final TextView clearHist = (TextView) findViewById(R.id.clearHist);
+                    clearHist.setOnClickListener(new View.OnClickListener() {
+                        public void onClick(View v) {
+                            clearHistory();
+                        }
+                    });
             }}
             for(int k=0;k<histList.size();k++){
                 final int clearNum = k;
@@ -92,7 +98,7 @@ public class HistoryActivity extends AppCompatActivity {
         }
     }
 
-    public void showMore(final int infoNum){
+    private void showMore(final int infoNum){
         final SharedPreferences countStorage = PreferenceManager.getDefaultSharedPreferences(this);
         String histDetailStorage = countStorage.getString("histDetailStorage","");
         final List<String> histDetailList = new ArrayList<>(Arrays.asList(histDetailStorage.split(",")));
@@ -102,8 +108,8 @@ public class HistoryActivity extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setCancelable(true);
         builder.setTitle("Info om oppgave");
-        builder.setMessage(histDetailList.get(infoNum).toString());
-        builder.setPositiveButton(Html.fromHtml("<font color='#FF7F27'>Slett</font>"),
+        builder.setMessage(histDetailList.get(infoNum));
+        builder.setPositiveButton(("Slett"),
                 new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -124,7 +130,7 @@ public class HistoryActivity extends AppCompatActivity {
         dP.setTextColor(Color.parseColor("#f44242"));
     }
 
-    public void clearSolo(int clearNum){
+    private void clearSolo(int clearNum){
 
         SharedPreferences countStorage = PreferenceManager.getDefaultSharedPreferences(this);
         String histStorage = countStorage.getString("histStorage",null);
@@ -169,15 +175,15 @@ public class HistoryActivity extends AppCompatActivity {
 
     }
 
-    public void clearHistory(View view){
+    public void clearHistory(){
         final SharedPreferences countStorage = PreferenceManager.getDefaultSharedPreferences(this);
         final Context context = this;
 
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setCancelable(true);
         builder.setTitle("Er du sikker?");
-        builder.setMessage(Html.fromHtml("All din historikk vil bli slettet. <br/>Dette kan <u>ikke</u> angres."));
-        builder.setPositiveButton(Html.fromHtml("Ja"),
+        builder.setMessage((R.string.confirmDialogB));
+        builder.setPositiveButton((R.string.dialogJa),
                 new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -196,7 +202,7 @@ public class HistoryActivity extends AppCompatActivity {
                         finish();
                     }
                 });
-        builder.setNegativeButton("Nei", new DialogInterface.OnClickListener() {
+        builder.setNegativeButton(R.string.dialogNei, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
             }
@@ -206,7 +212,7 @@ public class HistoryActivity extends AppCompatActivity {
         dialog.show();
 
         Button dP = dialog.getButton(DialogInterface.BUTTON_POSITIVE);
-        dP.setTextColor(Color.parseColor("#f44242"));
+        dP.setTextColor(getResources().getColor(R.color.deny));
 
     }
 }

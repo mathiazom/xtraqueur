@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="themeArray">
+        <item>Lyst</item>
+        <item>Mørkt</item>
+        <!--<item>Eksperimentelt</item>-->
+    </string-array>
+    <string-array name="langArray">
+        <item>Norsk</item>
+        <item>English</item>
+        <item>Français</item>
+    </string-array>
+</resources>

@@ -24,6 +24,14 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.xtraqueur.mzom.xtraqueur.IndexActivity" />
         </activity>
+        <activity
+            android:name=".SettingsActivity"
+            android:parentActivityName=".IndexActivity"
+            android:title="Innstillinger">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.xtraqueur.mzom.xtraqueur.IndexActivity" />
+        </activity>
     </application>
 
 </manifest>

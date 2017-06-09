@@ -478,7 +478,6 @@
         android:background="#303030"
         android:fontFamily="sans-serif-light"
         android:gravity="center"
-        android:onClick="loadHistory"
         android:padding="10dp"
         android:text="@string/totalCount"
         android:textColor="#FFF"

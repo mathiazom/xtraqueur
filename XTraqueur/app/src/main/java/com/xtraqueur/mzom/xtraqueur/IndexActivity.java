@@ -9,7 +9,6 @@ import android.preference.PreferenceManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -27,20 +26,14 @@ import com.flask.colorpicker.builder.ColorPickerClickListener;
 import com.flask.colorpicker.builder.ColorPickerDialogBuilder;
 import com.vstechlab.easyfonts.EasyFonts;
 import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
-
-// TASK CLASS METHODS
-import static com.xtraqueur.mzom.xtraqueur.Task.clearTask;
-import static com.xtraqueur.mzom.xtraqueur.Task.clearTasks;
-import static com.xtraqueur.mzom.xtraqueur.Task.editTask;
-import static com.xtraqueur.mzom.xtraqueur.Task.getTaskProp;
-import static com.xtraqueur.mzom.xtraqueur.Task.newTask;
-import static com.xtraqueur.mzom.xtraqueur.Task.loadTasks;
-import static com.xtraqueur.mzom.xtraqueur.Task.totalCount;
 
 public class IndexActivity extends AppCompatActivity {
 
@@ -48,6 +41,8 @@ public class IndexActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_index);
+
+        invalidateOptionsMenu();
     }
     private Menu menu;
     @Override
@@ -56,6 +51,9 @@ public class IndexActivity extends AppCompatActivity {
 
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu, menu);
+        if(loadTasks().length() == 0){
+            menu.findItem(R.id.action_edittasks).setVisible(false);
+        }
         return true;
     }
 
@@ -68,13 +66,20 @@ public class IndexActivity extends AppCompatActivity {
                 return true;
 
             case R.id.action_history:
-                Intent intent = new Intent(this, HistoryActivity.class);
-                startActivity(intent);
-                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+                loadHistory();
                 return true;
 
             case R.id.action_edittasks:
-                editMode(loadTasks(this));
+                editMode();
+                return true;
+
+            case R.id.action_editdone:
+                reload();
+                return true;
+
+            case R.id.action_settings:
+                Intent intent = new Intent(this, SettingsActivity.class);
+                startActivity(intent);
                 return true;
 
             default:
@@ -85,34 +90,22 @@ public class IndexActivity extends AppCompatActivity {
 
     protected void onStart(){
 
-//        clearTasks(this);
-//
-//        newTask(this,"Terminator","#212121",10,10);
-//
-//        editTask(this,0,"count","12");
-//
-//       clearTask(this,tasksArray,0);
-//
-//        tasksArray = loadTasks(this);
-        if(((LinearLayout) findViewById(R.id.tasksLayout)).getChildCount() == 0){buildTasks(loadTasks(this));}
+        if(((LinearLayout) findViewById(R.id.tasksLayout)).getChildCount() == 0){buildTasks();}
 
-        ((TextView) findViewById(R.id.totalCount)).setText(String.valueOf(totalCount(this)) + "kr");
+        ((TextView) findViewById(R.id.totalCount)).setText(String.valueOf(totalCount()) + "kr");
 
         super.onStart();
     }
 
-    public void commitCount(TextView textCount, int taskNum, String sign)   {
+    private void commitCount(TextView textCount, int taskNum, String sign)   {
 
-        String taskName = getTaskProp(this,taskNum,"name");
-        String taskCount = getTaskProp(this,taskNum,"count");
+        String taskName = getTaskProp(taskNum,"name");
+        String taskCount = getTaskProp(taskNum,"count");
 
         String time = new SimpleDateFormat("hh:mm dd.MM").format(Calendar.getInstance().getTime());
         String timeD = new SimpleDateFormat("hh:mm:ss dd.MM").format(Calendar.getInstance().getTime());
-        String histItem;
-        String histDetail;
-
-        histItem = taskName + " (" + time + ")";
-        histDetail = "Type: " + taskName + "\n" + "Tid: " + timeD;
+        String histItem = taskName + " (" + time + ")";
+        String histDetail = "Type: " + taskName + "\n" + "Tid: " + timeD;
 
         if(sign.equals("+")){
             taskCount = String.valueOf(Integer.parseInt(taskCount)+1);
@@ -121,30 +114,25 @@ public class IndexActivity extends AppCompatActivity {
             taskCount = String.valueOf(Integer.parseInt(taskCount)-1);
         }
 
-        editTask(this,taskNum,"count",taskCount);
-
+        editTask(taskNum,"count",taskCount);
         textCount.setText(taskCount);
-
+        totalDisplay();
 //        if(taskNum == 5){
 //            histItem = taskName + " (" + taskInputInt + "kr)" + " (" + time + ")";
 //            histDetail = "Type: " + taskName + "\n" + taskInputInt + "kr" + "\n" + "Tid: " + timeD;
 //        }
 
-        TextView totalCountView = (TextView) findViewById(R.id.totalCount);
-        totalCountView.setText(String.valueOf(totalCount(this)) + "kr");
     }
 
-    public void buildTasks(JSONArray tasksArray){
+    private void buildTasks(){
 
-        final Context context = this;
-
-        for(int h = 0;h<tasksArray.length();h++) {
+        for(int h = 0;h<loadTasks().length();h++) {
 
             final int id = h;
 
-            String taskName = getTaskProp(this,h,"name");
-            String taskColor = getTaskProp(this,h,"col");
-            String taskCount = getTaskProp(this,h,"count");
+            String taskName = getTaskProp(h,"name");
+            String taskColor = getTaskProp(h,"col");
+            String taskCount = getTaskProp(h,"count");
 
             LayoutInflater vi = (LayoutInflater) getApplicationContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             View v = vi.inflate(R.layout.new_task, null);
@@ -179,20 +167,17 @@ public class IndexActivity extends AppCompatActivity {
             });
 
             ViewGroup insertPoint = (ViewGroup) findViewById(R.id.tasksLayout);
-            insertPoint.addView(v, 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
+            insertPoint.addView(v, 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 
         }
     }
 
     private void addTaskType(){
-        final Context context = this;
 
-        JSONArray tasksArray = loadTasks(this);
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setCancelable(true);
         builder.setTitle("Ny oppgave");
-        View dialogView = LayoutInflater.from(context).inflate(R.layout.add_task_type,null);
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.add_task_type,null);
         final EditText tne = (EditText) dialogView.findViewById(R.id.taskName);
         final EditText tfe = (EditText) dialogView.findViewById(R.id.taskFee);
         final Button cpb = (Button) dialogView.findViewById(R.id.pickColourButton);
@@ -201,7 +186,7 @@ public class IndexActivity extends AppCompatActivity {
                 colorPicker(cpb);
         }});
         builder.setView(dialogView);
-        builder.setPositiveButton(Html.fromHtml("<font color='#FF7F27'>Legg til</font>"),
+        builder.setPositiveButton(("Legg til"),
                 new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -214,7 +199,7 @@ public class IndexActivity extends AppCompatActivity {
                             taskCol = "#0277bd";
                         }
 
-                        newTask(context,taskName,taskCol,0,taskFee);
+                        newTask(taskName,taskCol,taskFee);
 
                         Intent intent = getIntent();
                         finish();
@@ -262,7 +247,7 @@ public class IndexActivity extends AppCompatActivity {
 //                        insertPoint.addView(v, 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
                     }
                 });
-        builder.setNegativeButton("Avbryt", new DialogInterface.OnClickListener() {
+        builder.setNegativeButton(R.string.negDialogB, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
             }
@@ -272,14 +257,13 @@ public class IndexActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    public void colorPicker(Button button){
-        final Context context = this;
+    private void colorPicker(Button button){
         final Button cpb = button;
 
         cpb.setTag("");
 
         ColorPickerDialogBuilder
-                .with(context)
+                .with(this)
                 .setTitle("Velg farge")
                 .wheelType(ColorPickerView.WHEEL_TYPE.FLOWER)
                 .density(12)
@@ -291,7 +275,7 @@ public class IndexActivity extends AppCompatActivity {
                         cpb.setTag(tagColor);
                     }
                 })
-                .setNegativeButton("Avbryt", new DialogInterface.OnClickListener() {
+                .setNegativeButton(R.string.negDialogB, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                     }
@@ -300,15 +284,15 @@ public class IndexActivity extends AppCompatActivity {
                 .show();
     }
 
-    public void editTaskType(Context context,int taskNum){
-        final Context contextFin = context;
+    private void editTaskType(int taskNum){
+        final Context context = this;
 
-        final JSONArray tasksArray = loadTasks(context);
+        final JSONArray tasksArray = loadTasks();
         final int id = taskNum;
 
-        String taskName = getTaskProp(this,id,"name");
-        String taskFee = getTaskProp(this,id,"fee");
-        final String taskCol = getTaskProp(this,id,"col");
+        String taskName = getTaskProp(id,"name");
+        String taskFee = getTaskProp(id,"fee");
+        final String taskCol = getTaskProp(id,"col");
 
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setCancelable(true);
@@ -326,42 +310,35 @@ public class IndexActivity extends AppCompatActivity {
                 colorPicker(cpb);
             }});
         builder.setView(dialogView);
-        builder.setPositiveButton(Html.fromHtml("<font color='#FF7F27'>Lagre</font>"),
+        builder.setPositiveButton(("Lagre"),
                 new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-
                         String taskName = tne.getEditableText().toString();
                         taskName = taskName.substring(0, 1).toUpperCase() + taskName.substring(1).toLowerCase();
-                        int taskFee = Integer.parseInt(tfe.getEditableText().toString());
+                        String taskFee = tfe.getEditableText().toString();
                         String newtaskCol = String.valueOf(cpb.getTag());
                         if(newtaskCol.equals("null")){
                             newtaskCol = taskCol;
                         }
 
-                        editTask(contextFin,id,"name",taskName);
-                        editTask(contextFin,id,"col",newtaskCol);
-                        editTask(contextFin,id,"fee",String.valueOf(taskFee));
-
-                        Intent intent = getIntent();
-                        finish();
-                        startActivity(intent);
+                        editTask(id,"name",taskName);
+                        editTask(id,"col",newtaskCol);
+                        editTask(id,"fee",taskFee);
+                        reload();
                     }
                 });
-        builder.setNegativeButton("Avbryt", new DialogInterface.OnClickListener() {
+        builder.setNegativeButton(R.string.negDialogB, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
             }
         });
-        builder.setNeutralButton(Html.fromHtml("<font color='#FF7F27'>Slett type</font>"),
+        builder.setNeutralButton(("Slett type"),
                 new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                System.out.println(id);
-                clearTask(contextFin,tasksArray,id);
-                Intent intent = getIntent();
-                finish();
-                startActivity(intent);
+                clearTask(tasksArray,id);
+                reload();
             }
         });
 
@@ -369,13 +346,7 @@ public class IndexActivity extends AppCompatActivity {
         dialog.show();
 
         Button dP = dialog.getButton(DialogInterface.BUTTON_NEUTRAL);
-        dP.setTextColor(Color.parseColor("#f44242"));
-    }
-
-    public void loadHistory(View view) {
-        Intent intent = new Intent(this, HistoryActivity.class);
-        startActivity(intent);
-        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+        dP.setTextColor(getResources().getColor(R.color.deny));
     }
 
     private void packHistory(String histItem,String histDetail) {
@@ -399,36 +370,36 @@ public class IndexActivity extends AppCompatActivity {
 
     }
 
-    public void editMode(JSONArray tasksArray){
+    private void loadHistory() {
+        Intent intent = new Intent(this, HistoryActivity.class);
+        startActivity(intent);
+        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+    }
 
-        final Context context = this;
+    private void editMode(){
 
         ViewGroup insertPoint = (ViewGroup) findViewById(R.id.tasksLayout);
         insertPoint.removeAllViews();
 
-        for(int h = 0;h<tasksArray.length();h++) {
+        for(int h = 0;h<loadTasks().length();h++) {
 
             final int id = h;
 
-            String taskName = getTaskProp(this, h, "name");
-            String taskColor = getTaskProp(this, h, "col");
-
-            LayoutInflater vi = (LayoutInflater) getApplicationContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            View v = vi.inflate(R.layout.edit_task, null);
+            View v = ((LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.edit_task, null);
 
             TextView textView = (TextView) v.findViewById(R.id.task0Head);
-            textView.setText(taskName);
+            textView.setText(getTaskProp(h, "name"));
 
             ImageButton editButton = (ImageButton) v.findViewById(R.id.editButton0);
             editButton.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
-                    editTaskType(context,id);
+                    editTaskType(id);
                 }
             });
 
             RelativeLayout taskLayout = (RelativeLayout) v.findViewById(R.id.task0Layout);
-            taskLayout.setBackgroundColor(Color.parseColor(taskColor));
-            insertPoint.addView(v, 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
+            taskLayout.setBackgroundColor(Color.parseColor(getTaskProp(h, "col")));
+            insertPoint.addView(v, 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         }
 
         menu.findItem(R.id.action_addTaskType).setVisible(false);
@@ -436,7 +407,6 @@ public class IndexActivity extends AppCompatActivity {
         menu.findItem(R.id.action_settings).setVisible(false);
         menu.findItem(R.id.action_edittasks).setVisible(false);
         menu.findItem(R.id.action_editdone).setVisible(true);
-
     }
     //for(int i=1;i<totalTasks+1;i++){
 //final int taskNum = i;
@@ -485,5 +455,174 @@ public class IndexActivity extends AppCompatActivity {
 //        tasksArray = loadTasks(this);
 //
 //        }
+    private void totalDisplay(){
+        TextView totalCountView = (TextView) findViewById(R.id.totalCount);
+        totalCountView.setText(String.valueOf(totalCount()) + "kr");
+    }
+
+    private void reload(){
+        Intent intent = getIntent();
+        finish();
+        startActivity(intent);
+    }
+
+    private JSONArray loadTasks() {
+        SharedPreferences appStorage = PreferenceManager.getDefaultSharedPreferences(this);
+        String jsontemp = appStorage.getString("TaskStorage","");
+        JSONArray jsonArray;
+        try {
+            jsonArray = new JSONArray(jsontemp);
+        } catch (JSONException e) {
+            jsonArray = new JSONArray();
+            e.printStackTrace();
+        }
+
+        return jsonArray;
+    }
+
+    private void newTask(String name, String col, int fee){
+        SharedPreferences appStorage = PreferenceManager.getDefaultSharedPreferences(this);
+        JSONArray tasksArray = loadTasks();
+
+        JSONObject newtask = new JSONObject();
+        try {
+            newtask.put("name",name);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        try {
+            newtask.put("count",0);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        try {
+            newtask.put("col",col);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        try {
+            newtask.put("fee",fee);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+
+        tasksArray.put(newtask);
+
+        SharedPreferences.Editor prefsEditor = appStorage.edit();
+        prefsEditor.putString("TaskStorage", tasksArray.toString());
+        prefsEditor.commit();
+    }
+
+    private void editTask(int taskNum, String taskProp,String propVal){
+        SharedPreferences appStorage = PreferenceManager.getDefaultSharedPreferences(this);
+        JSONArray tasksArray = loadTasks();
+
+        JSONObject task = null;
+        try {
+            task = tasksArray.getJSONObject(taskNum);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        if(taskProp.equals("count")){
+            int propCount = Integer.parseInt(propVal);
+
+            try {
+                assert task != null;
+                task.put(taskProp,propCount);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }else{
+            try {
+                assert task != null;
+                task.put(taskProp,propVal);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
+        SharedPreferences.Editor prefsEditor = appStorage.edit();
+        prefsEditor.putString("TaskStorage", tasksArray.toString());
+        prefsEditor.commit();
+    }
+
+    private String getTaskProp(int objectPos,String prop){
+        JSONArray tasksArray = loadTasks();
+
+        JSONObject task = null;
+        try {
+            task = tasksArray.getJSONObject(objectPos);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        String taskProp = "";
+        try {
+            assert task != null;
+            taskProp = task.getString(prop);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return taskProp;
+    }
+
+    private int totalCount(){
+        JSONArray tasksArray = loadTasks();
+
+        int totalVal = 0;
+
+        for(int y=0;y<tasksArray.length();y++){
+            JSONObject temptask = null;
+            try {
+                temptask = tasksArray.getJSONObject(y);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            int tempcountval = 0;
+            try {
+                assert temptask != null;
+                tempcountval = Integer.parseInt(temptask.getString("count"))*Integer.parseInt(temptask.getString("fee"));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            totalVal = totalVal + tempcountval;
+        }
+
+        return totalVal;
+
+
+    }
+
+    public void clearTasks(){
+        SharedPreferences appStorage = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor prefsEditor = appStorage.edit();
+        prefsEditor.putString("TaskStorage", "");
+        prefsEditor.commit();
+    }
+
+    private void clearTask(JSONArray taskArray,int taskNum){
+
+        JSONArray taskArrayTemp = new JSONArray();
+
+        for (int k = 0; k < taskArray.length(); k++)   {
+            if (k != taskNum) {
+                try {
+                    taskArrayTemp.put(taskArray.get(k));
+                } catch (JSONException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+
+        taskArray = taskArrayTemp;
+
+        SharedPreferences appStorage = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor prefsEditor = appStorage.edit();
+        prefsEditor.putString("TaskStorage", taskArray.toString());
+        prefsEditor.commit();
+    }
 }
 

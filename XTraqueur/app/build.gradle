@@ -39,5 +39,6 @@ dependencies {
     compile 'com.android.support:support-vector-drawable:25.3.1'
     compile 'com.github.QuadFlask:colorpicker:0.0.13'
     compile 'com.google.code.gson:gson:2.7'
+    compile 'com.github.amlcurran.showcaseview:library:5.4.3'
     testCompile 'junit:junit:4.12'
 }

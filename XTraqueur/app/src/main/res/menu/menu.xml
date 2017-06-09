@@ -27,6 +27,7 @@
     <item android:id="@+id/action_editdone"
         android:icon="@drawable/editdone"
         android:title="Ferdig"
+        android:visible="false"
         app:showAsAction="always"/>
 
 </menu>
