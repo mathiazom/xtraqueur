@@ -1,25 +1,69 @@
 <resources>
-    <string name="app_name">XTraqueur</string>
-    <string name="task1">Vaskemaskin</string>
-    <string name="task2">Oppvask</string>
-    <string name="task3">Bad</string>
-    <string name="task4">Annet</string>
-    <string name="task5">Manuelt</string>
+    <string name="app_name" translatable="false">XTraqueur</string>
 
-    <string name="taskXCount">0</string>
+    <string name="placeholder_xtask_name" translatable="false">XTEMPLATE</string>
+    <string name="placeholder_xtask_completions" translatable="false">0</string>
 
-    <string name="totalCount">0kr</string>
+    <string name="EDIT_TASK">EDIT TASK</string>
+    <string name="SUMMARY">Overview</string>
 
-    <string name="addTask">+</string>
-    <string name="subTask">-</string>
-    <string name="histHead">Din historikk</string>
-    <string name="clearHist">Slett historikk</string>
-    <string name="clearHistSolo">Slett solo</string>
-    <string name="title_activity_settings">Settings</string>
+    <string name="pre_new_task_hint">Add a new task</string>
+    <string name="new_task_name">Name</string>
+    <string name="new_task_fee">Fee</string>
+    <string name="new_task_completions">Completions</string>
+    <string name="new_task_value">Value</string>
+    <string name="new_task_color">Color</string>
 
-    <string name="negDialogB">Avbryt</string>
-    <string name="confirmDialogB">All din historikk vil bli slettet. <br />Dette kan <u>ikke</u> angres.</string>
-    <string name="dialogJa">Ja</string>
-    <string name="dialogNei">Nei</string>
+    <string name="new_task_name_placeholder">Task</string>
+    <string name="new_task_fee_placeholder" translatable="false">10</string>
 
+    <string name="total_sum">Total</string>
+    <string name="download_summary">Download spreadsheet</string>
+    <string name="delete_completions">Delete all completions</string>
+
+    <string name="statistics_title">Statistics</string>
+
+    <string name="completions_title">Completions</string>
+    <string name="manage_completions">Manage</string>
+    <string name="completions_message">List of a all completions of this task</string>
+    <string name="no_completions_msg">No completions for this task</string>
+
+    <string name="statistics_latest_occurrence_title">Latest completion</string>
+    <string name="no_completions">No completions</string>
+    <string name="today">Today</string>
+    <string name="days_ago">days ago</string>
+    <string name="hours_ago">hours ago</string>
+    <string name="minutes_ago">minutes ago</string>
+    <string name="just_now">Just now</string>
+    <string name="statistics_value_rank_title">Value rank</string>
+    <string name="statistics_tracking_rank_title">Completion rank</string>
+    <string name="delete_task">Delete task</string>
+    <string name="task_details">Task Details</string>
+
+    <string name="new_task">New Task</string>
+    <string name="all_completions">All completions</string>
+    <string name="delete">Delete</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete_all_completions_title">Delete all completions?</string>
+    <string name="delete_all_completions_message">This action can not be undone. Do you really want to delete all your completions?</string>
+    <string name="go_back_to_all_tasks">Go back to all tasks</string>
+    <string name="save_changes_to_task">Save changes to task</string>
+    <string name="create_new_task">Create new task</string>
+    <string name="delete_this_completion">Delete this completion</string>
+    <string name="remove_completion_from_task">Remove completion from task</string>
+    <string name="add_completion_to_task">Add completion to task</string>
+    <string name="discard_changes_dialog_title">Discard changes?</string>
+    <string name="discard_changes_dialog_message">Do you want to discard unsaved changes to this task?</string>
+    <string name="discard_option">Discard</string>
+    <string name="cancel_option">Cancel</string>
+    <string name="already_in_use">That name is already in use!</string>
+    <string name="collecting_tasks_data">Collecting tasks data</string>
+    <string name="invalid_name">That name is not valid!</string>
+    <string name="invalid_fee">That fee is not valid!</string>
+    <string name="menu_icon_title_settings">Settings</string>
+    <string name="menu_item_title_back">Back to tasks list</string>
+    <string name="menu_item_title_save_changes">Save changes</string>
+    <string name="menu_item_title_new_task">Create new task</string>
+    <string name="newtask_fee_placeholder" translatable="false">10</string>
+    <string name="you_have_earned">You have earned</string>
 </resources>

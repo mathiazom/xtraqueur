@@ -8,26 +8,14 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
-    <style name="AppTheme.NoActionBar">
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
+    <style name="SplashTheme" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowBackground">@drawable/splash</item>
     </style>
 
-    <style name="testTheme">
-        <item name="color">#f44242</item>
-    </style>
-
-    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
-
-    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
-
-    <style name="MyCustomTheme" parent="AppTheme">
-        <item name="android:actionOverflowButtonStyle">@style/MyCustomTheme.OverFlow</item>
-
-    </style>
-
-    <style name="MyCustomTheme.OverFlow">
-        <item name="color">#ffff</item>
+    <style name="CustomEditTextTheme">
+        <item name="colorControlNormal">#dddddd</item>
+        <item name="colorControlActivated">#eeeeee</item>
+        <item name="colorControlHighlight">#eeeeee</item>
     </style>
 
 </resources>
