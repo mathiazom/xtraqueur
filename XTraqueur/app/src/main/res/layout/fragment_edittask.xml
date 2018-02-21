@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorPrimaryDark"
+    android:orientation="vertical">
+
+    <include layout="@layout/toolbar_back_and_check"/>
+
+    <ScrollView
+        android:id="@+id/edittask_main_scroll"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar"
+        app:layout_constraintVertical_bias="0.0">
+
+        <android.support.constraint.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="16dp"
+            android:paddingEnd="50dp"
+            android:paddingStart="50dp"
+            android:paddingTop="16dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <android.support.design.widget.TextInputLayout
+                android:theme="@style/CustomEditTextTheme"
+                android:id="@+id/edittask_layout_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <android.support.design.widget.TextInputEditText
+                    android:id="@+id/edittask_edit_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/new_task_name"
+                    android:textSize="30sp" />
+
+            </android.support.design.widget.TextInputLayout>
+
+            <android.support.design.widget.TextInputLayout
+                android:theme="@style/CustomEditTextTheme"
+                android:id="@+id/edittask_layout_fee"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/edittask_layout_name">
+
+                <android.support.design.widget.TextInputEditText
+                    android:id="@+id/edittask_edit_fee"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/new_task_fee"
+                    android:inputType="numberSigned"
+                    android:maxLines="1" />
+
+            </android.support.design.widget.TextInputLayout>
+
+
+            <TextView
+                android:id="@+id/edittask_title_completions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="@string/new_task_completions"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/edittask_layout_fee" />
+
+            <Button
+                android:id="@+id/button_manage_completions"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:layout_marginTop="8dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:background="@drawable/dark_rounded_2dp"
+                android:text="@string/manage_completions"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/edittask_title_completions" />
+
+            <TextView
+                android:id="@+id/edittask_title_color"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="@string/new_task_color"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/button_manage_completions" />
+
+            <LinearLayout
+                android:id="@+id/edittask_field_color"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="15dp"
+                android:background="@drawable/dark_rounded"
+                android:orientation="horizontal"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/edittask_title_color" />
+
+            <Button
+                android:id="@+id/delete_task"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:layout_marginTop="48dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:background="@drawable/dark_rounded_2dp"
+                android:text="@string/delete_task"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/edittask_field_color" />
+
+        </android.support.constraint.ConstraintLayout>
+
+    </ScrollView>
+
+</android.support.constraint.ConstraintLayout>
