@@ -166,6 +166,8 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
         switch (requestCode) {
             case REQUEST_CODE_SIGN_IN:
                 Log.i(TAG, "Google Drive API: Sign in request code");
+                Log.i(TAG,"Google Drive API: Result code: " + resultCode);
+                Log.i(TAG,"Google Drive API: Data action: " + data.getAction());
                 // Called after user is signed in.
                 if (resultCode == RESULT_OK) {
                     Log.i(TAG, "Google Drive API: Signed in successfully.");
@@ -176,6 +178,8 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
                         Log.e(TAG, "Google Drive API: GoogleSignInAccount is null");
                         return;
                     }
+
+                    Log.i(TAG, "Google Drive API: Account: " + mGoogleSignInAccount.getDisplayName() + ", " + mGoogleSignInAccount.getEmail());
 
                     mDriveClient = Drive.getDriveClient(this, mGoogleSignInAccount);
 
