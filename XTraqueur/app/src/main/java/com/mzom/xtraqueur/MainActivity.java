@@ -5,8 +5,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.TypedArray;
+import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
 import android.support.v4.app.FragmentManager;
@@ -15,7 +15,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -48,6 +47,8 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 
+import de.hdodenhof.circleimageview.CircleImageView;
+
 public class MainActivity extends AppCompatActivity implements TasksFragment.TasksFragmentListener, SummaryFragment.SummaryFragmentListener, NewTaskFragment.NewTaskFragmentListener, EditTaskFragment.EditTaskFragmentListener, SettingsFragment.SettingsFragmentListener {
 
     // Data set storing all the tasks
@@ -58,6 +59,7 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
     private SummaryFragment summaryFragment;
     private EditTaskFragment editTaskFragment;
     private NewTaskFragment newTaskFragment;
+    private SettingsFragment settingsFragment;
 
     // Fragment identifiers used by the BackStack and instance saving
     private static final String TASKS_FRAGMENT_NAME = "TasksFragment";
@@ -72,8 +74,13 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
     // Tag used for debugging
     private static final String TAG = "Xtraqueur-MainActivity";
 
+
     // Google Drive SignIn request code
     private static final int REQUEST_CODE_SIGN_IN = 1337;
+
+    // Google sign in account
+    private GoogleSignInAccount mGoogleSignInAccount;
+    private Bitmap mGoogleAccountPhoto;
 
     // Google Drive Clients
     private DriveResourceClient mDriveResourceClient;
@@ -86,9 +93,6 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
 
         // Retrieve all data saved before configuration changes (onSaveInstanceState)
         boolean cont = handleSavedInstanceState(savedInstanceState);
-
-        // Make activity progress bar visible when data is loading
-        showActivityProgressBar();
 
         // Set listener for changes to the backStack
         onBackStackChangedListener();
@@ -109,6 +113,10 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
         if (temp_tasks_data != null) {
             tasks = new Gson().fromJson(temp_tasks_data, new TypeToken<ArrayList<XTask>>() {
             }.getType());
+        }
+
+        if(savedInstanceState.getParcelable("googleSignInAccount") != null){
+            mGoogleSignInAccount = savedInstanceState.getParcelable("googleSignInAccount");
         }
 
         if (getSupportFragmentManager().getFragment(savedInstanceState, TASKS_FRAGMENT_NAME) != null) {
@@ -134,6 +142,12 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
             newTaskFragment = (NewTaskFragment) getSupportFragmentManager().getFragment(savedInstanceState, NEWTASK_FRAGMENT_NAME);
             getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, newTaskFragment).commit();
         }
+
+        else if (getSupportFragmentManager().getFragment(savedInstanceState, SETTINGS_FRAGMENT_NAME) != null) {
+            Log.i(TAG, "SavedInstanceState: " + SETTINGS_FRAGMENT_NAME);
+            settingsFragment = (SettingsFragment) getSupportFragmentManager().getFragment(savedInstanceState, SETTINGS_FRAGMENT_NAME);
+            getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, settingsFragment).commit();
+        }
         else{
             cont = true;
         }
@@ -144,7 +158,7 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
 
 
     // Start Google Drive sign in
-    private void signIn() {
+    public void signIn() {
         Log.i(TAG, "Google Drive API: Start sign in");
         GoogleSignInClient mGoogleSignInClient = buildGoogleSignInClient();
         startActivityForResult(mGoogleSignInClient.getSignInIntent(), REQUEST_CODE_SIGN_IN);
@@ -155,6 +169,7 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
         GoogleSignInOptions signInOptions =
                 new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                         .requestScopes(Drive.SCOPE_APPFOLDER)
+                        .requestEmail()
                         .build();
         return GoogleSignIn.getClient(this, signInOptions);
     }
@@ -166,14 +181,13 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
         switch (requestCode) {
             case REQUEST_CODE_SIGN_IN:
                 Log.i(TAG, "Google Drive API: Sign in request code");
-                Log.i(TAG,"Google Drive API: Result code: " + resultCode);
-                Log.i(TAG,"Google Drive API: Data action: " + data.getAction());
+
                 // Called after user is signed in.
                 if (resultCode == RESULT_OK) {
                     Log.i(TAG, "Google Drive API: Signed in successfully.");
 
                     // Use the last signed in account
-                    GoogleSignInAccount mGoogleSignInAccount = GoogleSignIn.getLastSignedInAccount(this);
+                    mGoogleSignInAccount = GoogleSignIn.getLastSignedInAccount(this);
                     if (mGoogleSignInAccount == null) {
                         Log.e(TAG, "Google Drive API: GoogleSignInAccount is null");
                         return;
@@ -204,16 +218,23 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
                                 }
                             });
                 }
+                else{
+                    Log.e(TAG, "Google Drive API: Sign in failed. Result code: " + resultCode);
+                }
                 break;
         }
     }
 
     // Get task data from Google Drive account
     private void getLatestTasksDataFromDrive() {
+
+        showActivityProgressBar();
+
         final Task<DriveFolder> appFolderTask = mDriveResourceClient.getAppFolder();
         appFolderTask.addOnSuccessListener(new OnSuccessListener<DriveFolder>() {
             @Override
             public void onSuccess(DriveFolder driveFolder) {
+
                 Query query = new Query.Builder()
                         .addFilter(Filters.eq(SearchableField.TITLE, TASKS_DATA_FILE_NAME))
                         .build();
@@ -275,13 +296,6 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
                                 metadata.release();
                             }
                         })
-
-                        /*.addOnSuccessListener(new OnSuccessListener<MetadataBuffer>() {
-                            @Override
-                            public void onSuccess(MetadataBuffer metadata) {
-                                metaDataDialog(metadata);
-                            }
-                        })*/
 
 
                         .addOnFailureListener(new OnFailureListener() {
@@ -378,6 +392,11 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
     }
 
 
+    @Override
+    public void popBackStackFromFragment() {
+        onBackPressed();
+    }
+
     // Fragment listing all the tasks
     // Each task has buttons to add and subtract completions
     // Clicking on a task item will open a EditTaskFragment with the task as an argument
@@ -413,7 +432,7 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
     // Fragment to change app settings (not developed yet)
     @Override
     public void loadSettingsFragment() {
-        SettingsFragment settingsFragment = new SettingsFragment();
+        settingsFragment = SettingsFragment.newInstance(mGoogleSignInAccount,mGoogleAccountPhoto);
         getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.enter_from_bottom, R.anim.exit_to_top, R.anim.enter_from_top, R.anim.exit_to_bottom).replace(R.id.main_frame_layout, settingsFragment).addToBackStack(SETTINGS_FRAGMENT_NAME).commit();
     }
 
@@ -476,6 +495,8 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
 
         String tasks_data = new Gson().toJson(tasks);
         outState.putString("tasks_data", tasks_data);
+        outState.putParcelable("googleSignInAccount",mGoogleSignInAccount);
+        outState.putParcelable("googleAccountPhoto",mGoogleAccountPhoto);
 
         if (tasksFragment != null && tasksFragment.isAdded()) {
             getSupportFragmentManager().putFragment(outState, TASKS_FRAGMENT_NAME, tasksFragment);
@@ -485,24 +506,42 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
             getSupportFragmentManager().putFragment(outState, EDITTASK_FRAGMENT_NAME, editTaskFragment);
         } else if (newTaskFragment != null && newTaskFragment.isAdded()) {
             getSupportFragmentManager().putFragment(outState, NEWTASK_FRAGMENT_NAME, newTaskFragment);
+        } else if(settingsFragment != null && settingsFragment.isAdded()){
+            getSupportFragmentManager().putFragment(outState, SETTINGS_FRAGMENT_NAME, settingsFragment);
         }
 
 
     }
 
-
-
     // Activity ProgressBar
     void showActivityProgressBar() {
+        Log.i(TAG,"Show progress");
         ConstraintLayout container = findViewById(R.id.main_activity_progress_bar_container);
-        ProgressBar progressBar = findViewById(R.id.main_activity_progress_bar);
-        Drawable progressDrawable = progressBar.getIndeterminateDrawable().mutate();
-        progressDrawable.setColorFilter(getResources().getColor(R.color.colorAccent), android.graphics.PorterDuff.Mode.SRC_IN);
-        progressBar.setProgressDrawable(progressDrawable);
         container.setVisibility(View.VISIBLE);
+
+        final CircleImageView photo = findViewById(R.id.loading_google_account_photo);
+
+        if(mGoogleAccountPhoto == null){
+
+            // Get account photo URL
+            String photoUrl = mGoogleSignInAccount.getPhotoUrl().toString();
+
+            // Get photo bitmap from URL and add it to ImageView;
+            new AsyncImageFromURL(new AsyncImageFromURL.AsyncImageFromURLListener() {
+                @Override
+                public void onTaskFinished(Bitmap bitmap) {
+                    mGoogleAccountPhoto = bitmap;
+                    photo.setImageBitmap(mGoogleAccountPhoto);
+                }
+            }).execute(photoUrl);
+        }else{
+            photo.setImageBitmap(mGoogleAccountPhoto);
+        }
+
     }
 
     void hideActivityProgressBar() {
+        Log.i(TAG,"Hide progress");
         ConstraintLayout container = findViewById(R.id.main_activity_progress_bar_container);
         container.setVisibility(View.GONE);
     }
@@ -530,6 +569,4 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
 
         return (r * 0.299 + g * 0.587 + b * 0.114) > 186;
     }
-
-
 }

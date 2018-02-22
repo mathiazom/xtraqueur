@@ -66,4 +66,5 @@
     <string name="menu_item_title_new_task">Create new task</string>
     <string name="newtask_fee_placeholder" translatable="false">10</string>
     <string name="you_have_earned">You have earned</string>
+    <string name="settings_section_google_account">Google Account</string>
 </resources>
