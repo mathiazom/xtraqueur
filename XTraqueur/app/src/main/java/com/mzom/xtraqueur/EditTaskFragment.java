@@ -459,11 +459,11 @@ public class EditTaskFragment extends Fragment {
     // Permanently delete the task that is being edited
     private void deleteTask() {
         AlertDialog alertDialog = new AlertDialog.Builder(getContext())
-                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                .setPositiveButton(R.string.delete_button, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
 
-                        // DELETE TASK FROM ARRAYLIST
+                        // Delete task from ArrayList
                         for (XTask t : tasks) {
                             if (t.getName().equals(task.getName())) {
                                 tasks.remove(t);
@@ -471,21 +471,16 @@ public class EditTaskFragment extends Fragment {
                             }
                         }
 
-                        // GOOGLE DRIVE
+                        // Google Drive
                         editTaskFragmentListener.updateTasksDataOnDrive(tasks);
 
-                        // RETURN TO TASKSFRAGMENT
+                        // Return to TasksFragment
                         editTaskFragmentListener.loadTasksFragment();
-
-                        // NOTIFY WITH SNACKBAR
-                        /*if (getActivity() != null) {
-                            Snackbar.make(getActivity().findViewById(R.id.main_frame_layout), "\"" + task.getName() + "\" has been deleted successfully", Snackbar.LENGTH_LONG).show();
-                        }*/
 
 
                     }
                 })
-                .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
 
@@ -493,8 +488,8 @@ public class EditTaskFragment extends Fragment {
                 })
                 .create();
 
-        alertDialog.setTitle("Are you sure?");
-        alertDialog.setMessage("This action can not be undone. Do you really want to delete this task?");
+        alertDialog.setTitle(getString(R.string.delete_task_confirmation));
+        alertDialog.setMessage(getString(R.string.delete_task_message));
         alertDialog.show();
     }
 

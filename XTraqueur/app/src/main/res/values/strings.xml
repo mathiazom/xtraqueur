@@ -4,7 +4,7 @@
     <string name="placeholder_xtask_name" translatable="false">XTEMPLATE</string>
     <string name="placeholder_xtask_completions" translatable="false">0</string>
 
-    <string name="EDIT_TASK">EDIT TASK</string>
+    <string name="EDIT_TASK">Edit task</string>
     <string name="SUMMARY">Overview</string>
 
     <string name="pre_new_task_hint">Add a new task</string>
@@ -18,7 +18,6 @@
     <string name="new_task_fee_placeholder" translatable="false">10</string>
 
     <string name="total_sum">Total</string>
-    <string name="download_summary">Download spreadsheet</string>
     <string name="delete_completions">Delete all completions</string>
 
     <string name="statistics_title">Statistics</string>
@@ -44,8 +43,6 @@
     <string name="all_completions">All completions</string>
     <string name="delete">Delete</string>
     <string name="cancel">Cancel</string>
-    <string name="delete_all_completions_title">Delete all completions?</string>
-    <string name="delete_all_completions_message">This action can not be undone. Do you really want to delete all your completions?</string>
     <string name="go_back_to_all_tasks">Go back to all tasks</string>
     <string name="save_changes_to_task">Save changes to task</string>
     <string name="create_new_task">Create new task</string>
@@ -67,4 +64,18 @@
     <string name="newtask_fee_placeholder" translatable="false">10</string>
     <string name="you_have_earned">You have earned</string>
     <string name="settings_section_google_account">Google Account</string>
+    <string name="sign_out">Sign out</string>
+    <string name="sign_in">Sign in</string>
+    <string name="delete_button">Delete</string>
+    <string name="delete_task_confirmation">Delete this task?</string>
+    <string name="delete_task_message">This action can not be undone. Do you really want to delete this task?</string>
+    <string name="no_tasks_message">You don\'t have any tasks.\nClick below to create one!</string>
+    <string name="menu_icon_title_timeline">Timeline</string>
+    <string name="settings_section_danger_zone">Danger Zone</string>
+    <string name="delete_all_completions">Delete all completions</string>
+    <string name="delete_all_tasks">Delete all tasks</string>
+    <string name="delete_all_tasks_title">Delete all tasks?</string>
+    <string name="delete_all_tasks_message">This action can not be undone. Do you really want to delete all your tasks?</string>
+    <string name="delete_all_completions_title">Delete all completions?</string>
+    <string name="delete_all_completions_message">This action can not be undone. Do you really want to delete all your completions?</string>
 </resources>

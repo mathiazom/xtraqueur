@@ -6,7 +6,17 @@
     android:layout_height="match_parent"
     android:background="@color/colorPrimaryDark">
 
-    <include android:id="@+id/toolbar" layout="@layout/toolbar_back_and_check"/>
+    <android.support.v7.widget.Toolbar
+        app:title="@string/new_task"
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/colorPrimary"
+        android:elevation="4dp"
+        app:navigationContentDescription="@string/go_back_to_all_tasks"
+        app:navigationIcon="@drawable/ic_back">
+
+    </android.support.v7.widget.Toolbar>
 
     <ScrollView
         android:id="@+id/newtask_main_scroll"

@@ -1,7 +1,6 @@
 package com.mzom.xtraqueur;
 
 import android.content.Context;
-import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.ColorDrawable;
@@ -10,8 +9,6 @@ import android.os.Bundle;
 import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.constraint.ConstraintLayout;
-import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputEditText;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
@@ -32,26 +29,37 @@ import java.util.ArrayList;
 
 public class NewTaskFragment extends Fragment {
 
-    private ArrayList<XTask> tasks;
-    private int temp_color;
-
+    // Fragment root view
     private View view;
 
+    // Fragment toolbar
     private Toolbar mToolbar;
 
+    // Fragment launch triggered by TasksFragment EditText focus change
+    private boolean fromPreEdit;
+
+    // Tasks data set
+    private ArrayList<XTask> tasks;
+
+    // Task name input field
     private TextInputEditText mNameEditText;
     private TextInputLayout mNameLayout;
 
+    // Task fee input field
     private TextInputEditText mFeeEditText;
     private TextInputLayout mFeeLayout;
 
+    // Task color input field
     private LinearLayout mColorField;
 
-    private NewTaskFragmentListener newTaskFragmentListener;
+    // Current unsaved task color value
+    private int temp_color;
 
-    private boolean fromPreEdit;
-
+    // Log tag for debugging
     private final static String TAG = "Xtraqueur-NewTask";
+
+    // Listener to communicate with MainActivity
+    private NewTaskFragmentListener newTaskFragmentListener;
 
     interface NewTaskFragmentListener {
         void loadTasksFragment();
@@ -59,6 +67,7 @@ public class NewTaskFragment extends Fragment {
         void updateTasksDataOnDrive(ArrayList<XTask> tasks);
     }
 
+    // Init listener when activity is available
     @Override
     public void onAttach(Context activity) {
         super.onAttach(activity);
@@ -71,6 +80,7 @@ public class NewTaskFragment extends Fragment {
         }
     }
 
+    // Custom constructor
     public static NewTaskFragment newInstance(ArrayList<XTask> tasks, int temp_color, boolean fromPreEdit) {
         NewTaskFragment fragment = new NewTaskFragment();
         fragment.tasks = tasks;
@@ -96,14 +106,16 @@ public class NewTaskFragment extends Fragment {
         initToolbar();
 
         initListeners();
+
         initColorFilters();
 
-        // OPEN KEYBOARD IF FROM EDITTEXT
+        // Open keyboard if from edittext
         if (fromPreEdit) preEdit();
 
         return view;
     }
 
+    // Initialize toolbar field variable and add action buttons with listeners
     void initToolbar(){
 
         // Initialize toolbar field variable
@@ -137,7 +149,10 @@ public class NewTaskFragment extends Fragment {
         });
     }
 
+    // Show keyboard if fromPreEdit
     private void preEdit() {
+        if(getContext() == null) return;
+
         view.findViewById(R.id.newtask_edit_name).requestFocus();
         TextInputEditText editText = view.findViewById(R.id.newtask_edit_name);
         editText.requestFocus();
@@ -148,7 +163,7 @@ public class NewTaskFragment extends Fragment {
         }
     }
 
-    // INIT METHODS
+    // Init fragment listeners
     private void initListeners() {
 
         // COLOR PICKER
@@ -160,9 +175,10 @@ public class NewTaskFragment extends Fragment {
         });
     }
 
+    // Apply task color filters
     private void initColorFilters() {
 
-        //TOP TOOLBAR
+        //Top toolbar
         mToolbar.setBackground(new ColorDrawable(temp_color));
 
         // ScrollView background
@@ -170,7 +186,7 @@ public class NewTaskFragment extends Fragment {
         Drawable scrollDrawable = new ColorDrawable(darkenColor(temp_color));
         scrollView.setBackground(scrollDrawable);
 
-        // COLOR FIELD
+        // Color field
         Drawable colorFieldBackground = mColorField.getBackground();
         colorFieldBackground.setColorFilter(temp_color, PorterDuff.Mode.SRC_ATOP);
         mColorField.setBackground(colorFieldBackground);
@@ -182,6 +198,7 @@ public class NewTaskFragment extends Fragment {
         });
     }
 
+    // Chcek if name is in use by another task
     boolean nameInUse(String name){
         for (XTask t : tasks) {
             if (t.getName().equals(name)) {
@@ -191,6 +208,7 @@ public class NewTaskFragment extends Fragment {
         return false;
     }
 
+    // Check if name is a valid task name
     boolean validName(String name){
         return !String.valueOf(name).trim().isEmpty();
     }

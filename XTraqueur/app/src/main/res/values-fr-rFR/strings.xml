@@ -51,4 +51,18 @@
     <string name="menu_item_title_save_changes">Enregistrer les modifications</string>
     <string name="menu_item_title_new_task">Créer la tâche</string>
     <string name="you_have_earned">Tu as gagné</string>
+    <string name="sign_out">Déconnecter</string>
+    <string name="sign_in">Connecter</string>
+    <string name="delete_button">Supprimer</string>
+    <string name="delete_task_confirmation">Supprimer cette tâche?</string>
+    <string name="delete_task_message">Cette action ne peut pas être annulée. Voulez-vous vraiment supprimer cette tâche?</string>
+    <string name="settings_section_google_account">Compte Google</string>
+    <string name="EDIT_TASK">Modifier la tâche</string>
+    <string name="no_tasks_message">Vous n\'avez aucune tâche.\nCliquez ci-dessous pour en créer un!</string>
+    <string name="menu_icon_title_timeline">Chronologie</string>
+    <string name="settings_section_danger_zone">Zone dangereuse</string>
+    <string name="delete_all_completions">Supprimer toutes les complètements</string>
+    <string name="delete_all_tasks">Supprimer toutes les tâches</string>
+    <string name="delete_all_tasks_title">Supprimer toutes les tâches?</string>
+    <string name="delete_all_tasks_message">Cette action ne peut pas être annulée. Voulez-vous vraiment supprimer tous vos tâches?</string>
 </resources>

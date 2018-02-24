@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="EDIT_TASK">REDIGER OPPGAVE</string>
+    <string name="EDIT_TASK">Rediger oppgave</string>
     <string name="SUMMARY">Oversikt</string>
     <string name="pre_new_task_hint">Legg til en ny oppgave</string>
     <string name="new_task_name">Navn</string>
@@ -10,7 +10,6 @@
     <string name="new_task_color">Farge</string>
     <string name="new_task_name_placeholder">Oppgave</string>
     <string name="total_sum">Total</string>
-    <string name="download_summary">Last ned regneark</string>
     <string name="statistics_title">Statistikk</string>
     <string name="statistics_latest_occurrence_title">Seneste utførelse</string>
     <string name="statistics_value_rank_title">Verdirang</string>
@@ -31,7 +30,7 @@
     <string name="all_completions">Alle utførelser</string>
     <string name="delete">Slett</string>
     <string name="cancel">Avbryt</string>
-    <string name="delete_all_completions_title">Slett alle utførelser?</string>
+    <string name="delete_all_completions_title">Slette alle utførelser?</string>
     <string name="delete_all_completions_message">Denne handlingen kan ikke angres. Vil du virkelig slette alle utførelsene dine?</string>
     <string name="delete_completions">Slett alle utførelser</string>
     <string name="go_back_to_all_tasks">Gå tilbake til alle oppgaver</string>
@@ -53,4 +52,17 @@
     <string name="menu_item_title_save_changes">Lagre endringer</string>
     <string name="menu_item_title_new_task">Lag ny oppgave</string>
     <string name="you_have_earned">"Du har tjent "</string>
+    <string name="sign_out">Logg ut</string>
+    <string name="sign_in">Logg inn</string>
+    <string name="delete_button">Slett</string>
+    <string name="delete_task_confirmation">Slette denne oppgaven?</string>
+    <string name="delete_task_message">Denne handlingen kan ikke angres. Er du sikker på at du vil slette denne oppgaven?</string>
+    <string name="settings_section_google_account">Google-bruker</string>
+    <string name="no_tasks_message">Du har ingen oppgaver.\nKlikk under for å lage en!</string>
+    <string name="menu_icon_title_timeline">Tidslinje</string>
+    <string name="settings_section_danger_zone">Farlig sone</string>
+    <string name="delete_all_completions">Slett alle utførelser</string>
+    <string name="delete_all_tasks">Slett alle oppgaver</string>
+    <string name="delete_all_tasks_title">Slette alle oppgaver?</string>
+    <string name="delete_all_tasks_message">Denne handlingen kan ikke angres. Er du sikker på at du vil slette alle oppgavene dine?</string>
 </resources>

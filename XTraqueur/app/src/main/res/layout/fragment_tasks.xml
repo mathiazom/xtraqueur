@@ -4,7 +4,7 @@
     android:id="@+id/main_tasks_fragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/colorPrimary"
+    android:background="@color/colorPrimaryDark"
     android:orientation="vertical">
 
     <android.support.v7.widget.Toolbar
@@ -12,24 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="@color/colorPrimary"
-        app:title="@string/app_name">
-
-        <!--<TextView
-            android:background="@drawable/white_rounded"
-            android:id="@+id/tasks_total_value"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="end"
-            android:paddingBottom="5dp"
-            android:paddingEnd="10dp"
-            android:paddingStart="10dp"
-            android:paddingTop="5dp"
-            android:layout_marginStart="24dp"
-            android:textAlignment="center"
-            android:textColor="@color/colorPrimary"
-            android:textSize="17sp" />-->
-
-    </android.support.v7.widget.Toolbar>
+        app:title="@string/app_name"/>
 
     <LinearLayout
         android:id="@+id/tasks_total_value_container"
@@ -56,11 +39,43 @@
 
     </LinearLayout>
 
+    <LinearLayout
+        android:id="@+id/no_tasks_container"
+        android:visibility="gone"
+        android:orientation="vertical"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tasks_total_value_container"
+        app:layout_constraintBottom_toTopOf="@id/bottom_toolbar">
+
+        <ImageView
+            android:layout_gravity="center"
+            android:layout_width="75dp"
+            android:layout_height="75dp"
+            android:src="@drawable/ic_none"/>
+
+        <TextView
+            android:layout_marginTop="20dp"
+            android:textAlignment="center"
+            android:textColor="#eee"
+            android:layout_gravity="center"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/no_tasks_message"
+            android:textSize="13sp"/>
+
+    </LinearLayout>
+
     <com.mobeta.android.dslv.DragSortListView
         android:id="@+id/xtask_container"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:background="@color/colorPrimary"
         android:orientation="vertical"
         app:drag_start_mode="onLongPress"
         app:remove_mode="flingRemove"
@@ -75,16 +90,15 @@
         android:id="@+id/bottom_toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="10dp"
-        android:layout_marginEnd="20dp"
-        android:layout_marginStart="20dp"
-        android:layout_marginTop="10dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
         android:background="@color/colorPrimary"
         android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/xtask_container">
+        app:layout_constraintStart_toStartOf="parent">
 
         <EditText
             android:id="@+id/pre_new_task_name_edit"

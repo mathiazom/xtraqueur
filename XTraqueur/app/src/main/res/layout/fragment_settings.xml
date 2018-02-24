@@ -28,9 +28,9 @@
         <android.support.constraint.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingEnd="20dp"
+            android:paddingTop="20dp"
             android:paddingStart="20dp"
-            android:paddingTop="20dp">
+            android:paddingEnd="20dp">
 
             <TextView
                 app:layout_constraintTop_toTopOf="parent"
@@ -42,9 +42,9 @@
 
             <android.support.constraint.ConstraintLayout
                 android:paddingStart="20dp"
-                android:paddingEnd="20dp"
-                android:paddingTop="10dp"
-                android:paddingBottom="10dp"
+                android:paddingEnd="16dp"
+                android:paddingTop="18dp"
+                android:paddingBottom="12dp"
                 android:background="@drawable/white_rounded"
                 android:id="@+id/settings_section_google_account"
                 android:layout_marginTop="20dp"
@@ -54,41 +54,112 @@
                 android:layout_height="wrap_content">
 
                 <de.hdodenhof.circleimageview.CircleImageView
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent"
+                    android:id="@+id/settings_google_account_photo"
                     android:layout_width="40dp"
                     android:layout_height="40dp"
                     android:src="@drawable/ic_account_dark"
-                    android:id="@+id/settings_google_account_photo"/>
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
 
                 <LinearLayout
-                    android:orientation="vertical"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toEndOf="@id/settings_google_account_photo">
+                    android:orientation="vertical"
+                    app:layout_constraintStart_toEndOf="@id/settings_google_account_photo"
+                    app:layout_constraintTop_toTopOf="parent">
 
                     <TextView
+                        android:id="@+id/settings_google_account_name"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/colorPrimary"
                         android:textStyle="bold"
-                        android:textColor="@color/colorPrimary"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:id="@+id/settings_google_account_name"/>
+                        android:textSize="17sp"/>
 
                     <TextView
-                        android:textColor="@color/colorPrimary"
+                        android:id="@+id/settings_google_account_email"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="12sp"
-                        android:id="@+id/settings_google_account_email"/>
+                        android:textColor="@color/colorPrimary"
+                        android:textSize="13sp" />
 
                 </LinearLayout>
 
+                <Button
+                    android:layout_marginTop="15dp"
+                    android:id="@+id/button_account_sign_out"
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:text="@string/sign_out"
+                    android:textColor="@color/colorAccent"
+                    android:background="@android:color/transparent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/settings_google_account_photo" />
+
+                <Button
+                    android:visibility="gone"
+                    android:layout_marginTop="15dp"
+                    android:id="@+id/button_account_sign_in"
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:text="@string/sign_in"
+                    android:textColor="@color/colorAccent"
+                    android:background="@android:color/transparent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/settings_google_account_photo" />
+
             </android.support.constraint.ConstraintLayout>
 
+            <TextView
+                app:layout_constraintTop_toBottomOf="@id/settings_section_google_account"
+                app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginTop="40dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/settings_section_title_danger_zone"
+                android:text="@string/settings_section_danger_zone" />
+
+            <android.support.constraint.ConstraintLayout
+                android:id="@+id/settings_section_danger_zone"
+                android:layout_marginTop="20dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/settings_section_title_danger_zone"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <Button
+                    android:layout_marginTop="6dp"
+                    android:layout_marginBottom="6dp"
+                    android:textSize="14sp"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:id="@+id/button_delete_all_completions"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:text="@string/delete_all_completions"
+                    android:background="#c62828"/>
+
+
+                <Button
+                    android:layout_marginBottom="6dp"
+                    android:textSize="14sp"
+                    android:layout_marginTop="11dp"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    app:layout_constraintTop_toBottomOf="@id/button_delete_all_completions"
+                    app:layout_constraintStart_toStartOf="parent"
+                    android:id="@+id/button_delete_all_tasks"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:text="@string/delete_all_tasks"
+                    android:background="#c62828"/>
+
+            </android.support.constraint.ConstraintLayout>
         </android.support.constraint.ConstraintLayout>
 
     </ScrollView>

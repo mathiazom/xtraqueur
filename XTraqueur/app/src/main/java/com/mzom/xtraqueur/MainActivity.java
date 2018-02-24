@@ -33,12 +33,14 @@ import com.google.android.gms.drive.query.Filters;
 import com.google.android.gms.drive.query.Query;
 import com.google.android.gms.drive.query.SearchableField;
 import com.google.android.gms.tasks.Continuation;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.mikhaellopez.circularfillableloaders.CircularFillableLoaders;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -47,9 +49,7 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 
-import de.hdodenhof.circleimageview.CircleImageView;
-
-public class MainActivity extends AppCompatActivity implements TasksFragment.TasksFragmentListener, SummaryFragment.SummaryFragmentListener, NewTaskFragment.NewTaskFragmentListener, EditTaskFragment.EditTaskFragmentListener, SettingsFragment.SettingsFragmentListener {
+public class MainActivity extends AppCompatActivity implements TasksFragment.TasksFragmentListener, SummaryFragment.SummaryFragmentListener, NewTaskFragment.NewTaskFragmentListener, EditTaskFragment.EditTaskFragmentListener, SettingsFragment.SettingsFragmentListener, TimelineFragment.TimelineFragmentListener, WelcomeFragment.WelcomeFragmentListener {
 
     // Data set storing all the tasks
     private ArrayList<XTask> tasks;
@@ -60,6 +60,8 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
     private EditTaskFragment editTaskFragment;
     private NewTaskFragment newTaskFragment;
     private SettingsFragment settingsFragment;
+    private TimelineFragment timelineFragment;
+    private WelcomeFragment welcomeFragment;
 
     // Fragment identifiers used by the BackStack and instance saving
     private static final String TASKS_FRAGMENT_NAME = "TasksFragment";
@@ -67,6 +69,8 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
     private static final String NEWTASK_FRAGMENT_NAME = "NewTaskFragment";
     private static final String EDITTASK_FRAGMENT_NAME = "EditTaskFragment";
     private static final String SETTINGS_FRAGMENT_NAME = "SettingsFragment";
+    private static final String TIMELINE_FRAGMENT_NAME = "TimelineFragment";
+    private static final String WELCOME_FRAGMENT_NAME = "WelcomeFragment";
 
     // Google Drive tasks data file name
     private static final String TASKS_DATA_FILE_NAME = "tasks_data.txt";
@@ -79,6 +83,7 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
     private static final int REQUEST_CODE_SIGN_IN = 1337;
 
     // Google sign in account
+    private GoogleSignInClient mGoogleSignInClient;
     private GoogleSignInAccount mGoogleSignInAccount;
     private Bitmap mGoogleAccountPhoto;
 
@@ -97,14 +102,26 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
         // Set listener for changes to the backStack
         onBackStackChangedListener();
 
-        // Google Drive API client sign in
-        if (cont) signIn();
+        // Check if any Google accounts are signed in to the app
+        boolean signedIn = GoogleSignIn.getLastSignedInAccount(this) != null;
+
+        if (!signedIn) {
+            // No Google accounts signed in, load WelcomeFragment to let the user sign in
+            Log.i(TAG, "No signed in account, loading welcome-page");
+            loadWelcomeFragment();
+        }else if(cont){
+            // Google Drive API client sign in
+            signIn();
+        }
     }
 
     // Restore tasks data and fragments that were saved before activity destruction
     private boolean handleSavedInstanceState(Bundle savedInstanceState) {
 
-        if (savedInstanceState == null) return true;
+        if (savedInstanceState == null) {
+            Log.i(TAG, "No saved instance states");
+            return true;
+        }
 
         boolean cont = false;
 
@@ -115,40 +132,40 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
             }.getType());
         }
 
-        if(savedInstanceState.getParcelable("googleSignInAccount") != null){
+        if (savedInstanceState.getParcelable("googleSignInAccount") != null) {
             mGoogleSignInAccount = savedInstanceState.getParcelable("googleSignInAccount");
+            mGoogleSignInClient = buildGoogleSignInClient();
         }
 
         if (getSupportFragmentManager().getFragment(savedInstanceState, TASKS_FRAGMENT_NAME) != null) {
             Log.i(TAG, "SavedInstanceState: " + TASKS_FRAGMENT_NAME);
             tasksFragment = (TasksFragment) getSupportFragmentManager().getFragment(savedInstanceState, TASKS_FRAGMENT_NAME);
             getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, tasksFragment).commit();
-        }
-
-        else if (getSupportFragmentManager().getFragment(savedInstanceState, SUMMARY_FRAGMENT_NAME) != null) {
+        } else if (getSupportFragmentManager().getFragment(savedInstanceState, SUMMARY_FRAGMENT_NAME) != null) {
             Log.i(TAG, "SavedInstanceState: " + SUMMARY_FRAGMENT_NAME);
             summaryFragment = (SummaryFragment) getSupportFragmentManager().getFragment(savedInstanceState, SUMMARY_FRAGMENT_NAME);
             getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, summaryFragment).commit();
-        }
-
-        else if (getSupportFragmentManager().getFragment(savedInstanceState, EDITTASK_FRAGMENT_NAME) != null) {
+        } else if (getSupportFragmentManager().getFragment(savedInstanceState, EDITTASK_FRAGMENT_NAME) != null) {
             Log.i(TAG, "SavedInstanceState: " + EDITTASK_FRAGMENT_NAME);
             editTaskFragment = (EditTaskFragment) getSupportFragmentManager().getFragment(savedInstanceState, EDITTASK_FRAGMENT_NAME);
             getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, editTaskFragment).commit();
-        }
-
-        else if (getSupportFragmentManager().getFragment(savedInstanceState, NEWTASK_FRAGMENT_NAME) != null) {
+        } else if (getSupportFragmentManager().getFragment(savedInstanceState, NEWTASK_FRAGMENT_NAME) != null) {
             Log.i(TAG, "SavedInstanceState: " + NEWTASK_FRAGMENT_NAME);
             newTaskFragment = (NewTaskFragment) getSupportFragmentManager().getFragment(savedInstanceState, NEWTASK_FRAGMENT_NAME);
             getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, newTaskFragment).commit();
-        }
-
-        else if (getSupportFragmentManager().getFragment(savedInstanceState, SETTINGS_FRAGMENT_NAME) != null) {
+        } else if (getSupportFragmentManager().getFragment(savedInstanceState, SETTINGS_FRAGMENT_NAME) != null) {
             Log.i(TAG, "SavedInstanceState: " + SETTINGS_FRAGMENT_NAME);
             settingsFragment = (SettingsFragment) getSupportFragmentManager().getFragment(savedInstanceState, SETTINGS_FRAGMENT_NAME);
             getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, settingsFragment).commit();
-        }
-        else{
+        } else if (getSupportFragmentManager().getFragment(savedInstanceState, TIMELINE_FRAGMENT_NAME) != null) {
+            Log.i(TAG, "SavedInstanceState: " + TIMELINE_FRAGMENT_NAME);
+            timelineFragment = (TimelineFragment) getSupportFragmentManager().getFragment(savedInstanceState, TIMELINE_FRAGMENT_NAME);
+            getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, timelineFragment).commit();
+        } else if (getSupportFragmentManager().getFragment(savedInstanceState, WELCOME_FRAGMENT_NAME) != null) {
+            Log.i(TAG, "SavedInstanceState: " + WELCOME_FRAGMENT_NAME);
+            welcomeFragment = (WelcomeFragment) getSupportFragmentManager().getFragment(savedInstanceState, WELCOME_FRAGMENT_NAME);
+            getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, welcomeFragment).commit();
+        } else {
             cont = true;
         }
 
@@ -158,9 +175,10 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
 
 
     // Start Google Drive sign in
+    @Override
     public void signIn() {
         Log.i(TAG, "Google Drive API: Start sign in");
-        GoogleSignInClient mGoogleSignInClient = buildGoogleSignInClient();
+        mGoogleSignInClient = buildGoogleSignInClient();
         startActivityForResult(mGoogleSignInClient.getSignInIntent(), REQUEST_CODE_SIGN_IN);
     }
 
@@ -169,6 +187,7 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
         GoogleSignInOptions signInOptions =
                 new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                         .requestScopes(Drive.SCOPE_APPFOLDER)
+                        .requestId()
                         .requestEmail()
                         .build();
         return GoogleSignIn.getClient(this, signInOptions);
@@ -180,6 +199,7 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
         super.onActivityResult(requestCode, resultCode, data);
         switch (requestCode) {
             case REQUEST_CODE_SIGN_IN:
+
                 Log.i(TAG, "Google Drive API: Sign in request code");
 
                 // Called after user is signed in.
@@ -205,6 +225,11 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
                                 @Override
                                 public void onSuccess(Void aVoid) {
                                     Log.i(TAG, "Google Drive API: Sync successful");
+
+                                    if(welcomeFragment != null && welcomeFragment.isAdded()){
+                                        getSupportFragmentManager().beginTransaction().remove(welcomeFragment).commit();
+                                    }
+
                                     getLatestTasksDataFromDrive();
                                 }
                             })
@@ -217,8 +242,7 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
                                     getLatestTasksDataFromDevice();
                                 }
                             });
-                }
-                else{
+                } else {
                     Log.e(TAG, "Google Drive API: Sign in failed. Result code: " + resultCode);
                 }
                 break;
@@ -311,8 +335,17 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
     // Update tasks data on Google Drive account
     @Override
     public void updateTasksDataOnDrive(ArrayList<XTask> tasks) {
+        updateTasksDataOnDrive(tasks, new OnSuccessListener<DriveFile>() {
+            @Override
+            public void onSuccess(DriveFile driveFile) {
 
-        if(mDriveResourceClient == null || mDriveClient == null) return;
+            }
+        });
+    }
+
+    public void updateTasksDataOnDrive(ArrayList<XTask> tasks, OnSuccessListener<DriveFile> onSuccessListener) {
+
+        if (mDriveResourceClient == null || mDriveClient == null) return;
 
         Log.i(TAG, "Google Drive API: Tasks data update started");
 
@@ -320,6 +353,9 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
             Log.e(TAG, "Google Drive API: Tasks data was null, update terminated");
             return;
         }
+
+        // Update data locally
+        updateTasksDataOnDevice(tasks);
 
         this.tasks = tasks;
 
@@ -356,15 +392,67 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
                                 Log.i(TAG, "Google Drive API: Tasks data on drive updated successfully");
                             }
                         })
+                .addOnSuccessListener(onSuccessListener)
                 .addOnFailureListener(this, new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
                         Log.e(TAG, "Google Drive API: Unable to update task data on drive", e);
                     }
                 });
+    }
 
-        // Update data locally
-        updateTasksDataOnDevice(tasks);
+    // Danger zone: Delete all completions
+    @Override
+    public void deleteAllCompletions() {
+        for (XTask t : tasks) {
+            t.setCompletionsList(new ArrayList<Long>());
+        }
+
+        updateTasksDataOnDrive(tasks, new OnSuccessListener<DriveFile>() {
+            @Override
+            public void onSuccess(DriveFile driveFile) {
+                settingsFragment = SettingsFragment.newInstance(tasks, mGoogleSignInAccount, mGoogleAccountPhoto);
+                getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, settingsFragment).commit();
+            }
+        });
+    }
+
+    // Danger zone: Delete all tasks
+    @Override
+    public void deleteAllTasks() {
+        tasks = new ArrayList<>();
+
+        updateTasksDataOnDrive(tasks, new OnSuccessListener<DriveFile>() {
+            @Override
+            public void onSuccess(DriveFile driveFile) {
+                settingsFragment = SettingsFragment.newInstance(tasks, mGoogleSignInAccount, mGoogleAccountPhoto);
+                getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, settingsFragment).commit();
+            }
+        });
+
+
+    }
+
+    @Override
+    public void signOut() {
+        if (mGoogleSignInClient == null) {
+            Log.e(TAG, "Sign in client is null");
+            return;
+        }
+
+        mGoogleSignInClient.signOut()
+                .addOnCompleteListener(this, new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        restartActivity();
+                    }
+                });
+    }
+
+    public void restartActivity() {
+        Intent mIntent = getIntent();
+        finish();
+        startActivity(mIntent);
     }
 
 
@@ -372,15 +460,16 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
     private void updateTasksDataOnDevice(ArrayList<XTask> tasks) {
         SharedPreferences sharedPreferences = this.getSharedPreferences("TASKS_DATA_ON_DEVICE", 0);
         String json = new Gson().toJson(tasks);
-        sharedPreferences.edit().putString("TASKS_DATA", json).apply();
-        Log.i(TAG, "SharedPreferences: Local tasks data updated");
+        String id = mGoogleSignInAccount.getId();
+        sharedPreferences.edit().putString("TASKS_DATA_" + id, json).apply();
+        Log.i(TAG, "SharedPreferences: Local tasks data updated for id " + id);
     }
 
     // Get task data from SharedPreferences (stored locally on the device)
     private void getLatestTasksDataFromDevice() {
         Log.i(TAG, "SharedPreferences: Getting tasks data from device");
         SharedPreferences sharedPreferences = this.getSharedPreferences("TASKS_DATA_ON_DEVICE", 0);
-        String json = sharedPreferences.getString("TASKS_DATA", null);
+        String json = sharedPreferences.getString("TASKS_DATA_" + mGoogleSignInAccount.getId(), null);
 
         if (json != null) {
             tasks = new Gson().fromJson(json, new TypeToken<ArrayList<XTask>>() {
@@ -391,6 +480,11 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
         }
     }
 
+    // Update Google sign in account photo
+    @Override
+    public void setAccountPhoto(Bitmap bitmap) {
+        this.mGoogleAccountPhoto = bitmap;
+    }
 
     @Override
     public void popBackStackFromFragment() {
@@ -432,8 +526,19 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
     // Fragment to change app settings (not developed yet)
     @Override
     public void loadSettingsFragment() {
-        settingsFragment = SettingsFragment.newInstance(mGoogleSignInAccount,mGoogleAccountPhoto);
+        settingsFragment = SettingsFragment.newInstance(tasks, mGoogleSignInAccount, mGoogleAccountPhoto);
         getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.enter_from_bottom, R.anim.exit_to_top, R.anim.enter_from_top, R.anim.exit_to_bottom).replace(R.id.main_frame_layout, settingsFragment).addToBackStack(SETTINGS_FRAGMENT_NAME).commit();
+    }
+
+    @Override
+    public void loadTimelineFragment() {
+        timelineFragment = TimelineFragment.newInstance(tasks);
+        getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.enter_from_bottom, R.anim.exit_to_top, R.anim.enter_from_top, R.anim.exit_to_bottom).replace(R.id.main_frame_layout, timelineFragment).addToBackStack(TIMELINE_FRAGMENT_NAME).commit();
+    }
+
+    public void loadWelcomeFragment() {
+        welcomeFragment = new WelcomeFragment();
+        getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, welcomeFragment).commit();
     }
 
 
@@ -441,9 +546,9 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
     @Override
     public void onBackPressed() {
 
-        if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
+        if (getSupportFragmentManager().getBackStackEntryCount() > 2) {
 
-            if(editTaskFragment != null && editTaskFragment.isAdded() && editTaskFragment.hasUnsavedChanges()){
+            if (editTaskFragment != null && editTaskFragment.isAdded() && editTaskFragment.hasUnsavedChanges()) {
                 new AlertDialog.Builder(this)
                         .setTitle(R.string.discard_changes_dialog_title)
                         .setMessage(R.string.discard_changes_dialog_message)
@@ -466,7 +571,9 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
 
             getSupportFragmentManager().popBackStack();
 
-        } else {
+        } else if(getSupportFragmentManager().getBackStackEntryCount() == 1){
+            finish();
+        } else{
             super.onBackPressed();
         }
     }
@@ -482,7 +589,7 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
                 }
                 String fragName = getSupportFragmentManager().getBackStackEntryAt(index).getName();
                 if (fragName.equals(TASKS_FRAGMENT_NAME) && tasksFragment != null && tasksFragment.isAdded()) {
-                    tasksFragment.loadTasks();
+                    tasksFragment.loadTasks(tasks);
                 }
             }
         });
@@ -495,8 +602,7 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
 
         String tasks_data = new Gson().toJson(tasks);
         outState.putString("tasks_data", tasks_data);
-        outState.putParcelable("googleSignInAccount",mGoogleSignInAccount);
-        outState.putParcelable("googleAccountPhoto",mGoogleAccountPhoto);
+        outState.putParcelable("googleSignInAccount", mGoogleSignInAccount);
 
         if (tasksFragment != null && tasksFragment.isAdded()) {
             getSupportFragmentManager().putFragment(outState, TASKS_FRAGMENT_NAME, tasksFragment);
@@ -506,8 +612,12 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
             getSupportFragmentManager().putFragment(outState, EDITTASK_FRAGMENT_NAME, editTaskFragment);
         } else if (newTaskFragment != null && newTaskFragment.isAdded()) {
             getSupportFragmentManager().putFragment(outState, NEWTASK_FRAGMENT_NAME, newTaskFragment);
-        } else if(settingsFragment != null && settingsFragment.isAdded()){
+        } else if (settingsFragment != null && settingsFragment.isAdded()) {
             getSupportFragmentManager().putFragment(outState, SETTINGS_FRAGMENT_NAME, settingsFragment);
+        } else if (timelineFragment != null && timelineFragment.isAdded()) {
+            getSupportFragmentManager().putFragment(outState, TIMELINE_FRAGMENT_NAME, timelineFragment);
+        } else if (welcomeFragment != null && welcomeFragment.isAdded()) {
+            getSupportFragmentManager().putFragment(outState, WELCOME_FRAGMENT_NAME, welcomeFragment);
         }
 
 
@@ -515,13 +625,13 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
 
     // Activity ProgressBar
     void showActivityProgressBar() {
-        Log.i(TAG,"Show progress");
+        Log.i(TAG, "Show progress");
         ConstraintLayout container = findViewById(R.id.main_activity_progress_bar_container);
         container.setVisibility(View.VISIBLE);
 
-        final CircleImageView photo = findViewById(R.id.loading_google_account_photo);
+        final CircularFillableLoaders photo = findViewById(R.id.loading_google_account_photo);
 
-        if(mGoogleAccountPhoto == null){
+        if (mGoogleAccountPhoto == null) {
 
             // Get account photo URL
             String photoUrl = mGoogleSignInAccount.getPhotoUrl().toString();
@@ -534,14 +644,14 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
                     photo.setImageBitmap(mGoogleAccountPhoto);
                 }
             }).execute(photoUrl);
-        }else{
+        } else {
             photo.setImageBitmap(mGoogleAccountPhoto);
         }
 
     }
 
     void hideActivityProgressBar() {
-        Log.i(TAG,"Hide progress");
+        Log.i(TAG, "Hide progress");
         ConstraintLayout container = findViewById(R.id.main_activity_progress_bar_container);
         container.setVisibility(View.GONE);
     }

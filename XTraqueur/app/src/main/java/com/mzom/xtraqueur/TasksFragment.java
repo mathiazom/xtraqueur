@@ -13,6 +13,7 @@ import android.support.constraint.ConstraintLayout;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.Toolbar;
 import android.text.Html;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -38,6 +39,8 @@ public class TasksFragment extends Fragment {
 
     private TasksFragmentListener tasksFragmentListener;
 
+    private final static String TAG = "Xtraqueur-TasksFrag";
+
     interface TasksFragmentListener {
         void loadSummaryFragment();
 
@@ -46,6 +49,8 @@ public class TasksFragment extends Fragment {
         void loadEditTaskFragment(XTask task, int index);
 
         void loadSettingsFragment();
+
+        void loadTimelineFragment();
 
         void updateTasksDataOnDrive(ArrayList<XTask> tasks);
 
@@ -114,6 +119,9 @@ public class TasksFragment extends Fragment {
                 switch (item.getItemId()) {
                     case R.id.tasks_settings_icon:
                         tasksFragmentListener.loadSettingsFragment();
+                        break;
+                    case R.id.tasks_timeline_icon:
+                        tasksFragmentListener.loadTimelineFragment();
                 }
                 return false;
             }
@@ -122,7 +130,7 @@ public class TasksFragment extends Fragment {
 
     private void initListeners() {
         // Summary button
-        final TextView total_value = view.findViewById(R.id.tasks_total_value);
+        /*final TextView total_value = view.findViewById(R.id.tasks_total_value);
         total_value.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -168,50 +176,8 @@ public class TasksFragment extends Fragment {
                     }
                 });
                 scaleView.startAnimation(expand_animation);
-
-                /*// Circular reveal
-                View scaleView = new View(getContext());
-                scaleView.setBackground(new ColorDrawable(Color.parseColor("#eeeeee")));
-                ((ConstraintLayout) view).addView(scaleView);
-
-                int x = (total_value.getLeft() + total_value.getRight()) / 2;
-                int y = (total_value.getTop() + total_value.getBottom()) / 2;
-
-                int startRadius = 0;
-                int endRadius = Math.max(view.getWidth(), view.getHeight());
-
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-                    Animator anim = ViewAnimationUtils.createCircularReveal(scaleView, x, y, startRadius, endRadius);
-                    anim.setDuration(getContext().getResources().getInteger(android.R.integer.config_mediumAnimTime));
-                    anim.addListener(new Animator.AnimatorListener() {
-                        @Override
-                        public void onAnimationStart(Animator animator) {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                                tasks_total_value_container.setElevation(0);
-                            }
-                        }
-
-                        @Override
-                        public void onAnimationEnd(Animator animator) {
-                            tasksFragmentListener.loadSummaryFragment();
-                        }
-
-                        @Override
-                        public void onAnimationCancel(Animator animator) {
-
-                        }
-
-                        @Override
-                        public void onAnimationRepeat(Animator animator) {
-
-                        }
-                    });
-                    anim.start();
-                }*/
-
-
             }
-        });
+        });*/
 
         view.findViewById(R.id.new_task_button).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -230,13 +196,30 @@ public class TasksFragment extends Fragment {
 
     }
 
+    void loadTasks(ArrayList<XTask> tasks){
+        this.tasks = tasks;
+        loadTasks();
+    }
+
     // Fill ListView with items representing the tasks
     @SuppressLint("ClickableViewAccessibility")
     void loadTasks() {
 
+        Log.i(TAG,"Loading tasks: " + tasks.toString());
+
         // Create empty ArrayList if data set is null
         if (tasks == null) {
             tasks = new ArrayList<>();
+        }
+
+        if(tasks.size() == 0){
+            view.findViewById(R.id.xtask_container).setVisibility(View.GONE);
+            view.findViewById(R.id.no_tasks_container).setVisibility(View.VISIBLE);
+            view.findViewById(R.id.tasks_total_value_container).setVisibility(View.GONE);
+        }else{
+            view.findViewById(R.id.xtask_container).setVisibility(View.VISIBLE);
+            view.findViewById(R.id.no_tasks_container).setVisibility(View.GONE);
+            view.findViewById(R.id.tasks_total_value_container).setVisibility(View.VISIBLE);
         }
 
         // DragSortListView to host the task items
