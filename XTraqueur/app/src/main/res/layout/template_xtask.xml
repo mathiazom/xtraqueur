@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<android.support.constraint.ConstraintLayout
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/long_press_handle"
-    android:focusable="false"
-    android:focusableInTouchMode="false"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    android:focusable="false"
+    android:focusableInTouchMode="false">
 
     <android.support.constraint.ConstraintLayout
         android:id="@+id/xtask"
@@ -22,12 +21,12 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="20dp"
             android:background="@drawable/white_rounded"
+            android:contentDescription="@string/remove_completion_from_task"
             android:padding="2dp"
             android:src="@drawable/ic_subtract"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            android:contentDescription="@string/remove_completion_from_task"/>
+            app:layout_constraintTop_toTopOf="parent" />
 
         <android.support.constraint.ConstraintLayout
             android:id="@+id/xtask_name_and_completions"
@@ -78,12 +77,12 @@
             android:layout_height="wrap_content"
             android:layout_marginEnd="20dp"
             android:background="@drawable/white_rounded"
+            android:contentDescription="@string/add_completion_to_task"
             android:padding="2dp"
             android:src="@drawable/ic_add"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            android:contentDescription="@string/add_completion_to_task"/>
+            app:layout_constraintTop_toTopOf="parent" />
 
         <!-- <LinearLayout
             android:id="@+id/xtask_label"

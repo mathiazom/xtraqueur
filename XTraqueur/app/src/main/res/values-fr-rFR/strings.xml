@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="SUMMARY">Résumé</string>
-    <string name="pre_new_task_hint">Ajouter une nouvelle tâche</string>
+    <string name="pre_new_task_hint">Ajouter une nouvelle tâche&#8230;</string>
     <string name="new_task_name">Nom</string>
     <string name="new_task_fee">Taxe</string>
     <string name="new_task_completions">Complètements</string>

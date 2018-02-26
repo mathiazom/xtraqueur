@@ -7,7 +7,7 @@
     <string name="EDIT_TASK">Edit task</string>
     <string name="SUMMARY">Overview</string>
 
-    <string name="pre_new_task_hint">Add a new task</string>
+    <string name="pre_new_task_hint">Add a new task&#8230;</string>
     <string name="new_task_name">Name</string>
     <string name="new_task_fee">Fee</string>
     <string name="new_task_completions">Completions</string>

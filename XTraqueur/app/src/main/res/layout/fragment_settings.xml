@@ -71,6 +71,7 @@
 
                     <TextView
                         android:id="@+id/settings_google_account_name"
+                        android:fontFamily="sans-serif-light"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textColor="@color/colorPrimary"
@@ -78,6 +79,7 @@
                         android:textSize="17sp"/>
 
                     <TextView
+                        android:fontFamily="sans-serif-light"
                         android:id="@+id/settings_google_account_email"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <item android:title="@string/menu_icon_title_timeline" android:id="@+id/tasks_timeline_icon" android:icon="@drawable/ic_timeline" app:showAsAction="always"/>
-    <item android:title="@string/menu_icon_title_settings" android:id="@+id/tasks_settings_icon" android:icon="@drawable/ic_settings" app:showAsAction="always"/>
+    <item android:title="@string/menu_icon_title_timeline" android:id="@+id/tasks_timeline_icon" android:icon="@drawable/ic_timeline" app:showAsAction="ifRoom"/>
+    <item android:title="@string/menu_icon_title_settings" android:id="@+id/tasks_settings_icon" android:icon="@drawable/ic_settings" app:showAsAction="ifRoom"/>
 </menu>

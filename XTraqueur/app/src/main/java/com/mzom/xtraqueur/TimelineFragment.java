@@ -103,6 +103,7 @@ public class TimelineFragment extends Fragment {
         ArrayList<XTaskCompletion> completions = new ArrayList<>();
 
         for(XTask t : tasks){
+            if(t.getCompletionsList() != null)
             for(Long l : t.getCompletionsList()){
                 completions.add(new XTaskCompletion(l,t.getName(),t.getColor()));
             }

@@ -49,10 +49,11 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity implements TasksFragment.TasksFragmentListener, NewTaskFragment.NewTaskFragmentListener, EditTaskFragment.EditTaskFragmentListener, SettingsFragment.SettingsFragmentListener, TimelineFragment.TimelineFragmentListener, WelcomeFragment.WelcomeFragmentListener {
+public class MainActivity extends AppCompatActivity implements TasksFragment.TasksFragmentListener, NewTaskFragment.NewTaskFragmentListener, TaskDetailsFragment.TaskDetailsFragmentListener, EditTaskFragment.EditTaskFragmentListener, SettingsFragment.SettingsFragmentListener, TimelineFragment.TimelineFragmentListener, WelcomeFragment.WelcomeFragmentListener {
 
     // Fragment fields
     private TasksFragment mTasksFragment;
+    private TaskDetailsFragment mTaskDetailsFragment;
     private EditTaskFragment mEditTaskFragment;
     private NewTaskFragment mNewTaskFragment;
     private SettingsFragment mSettingsFragment;
@@ -62,6 +63,7 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
     // Fragment identifiers used by the BackStack and instance saving
     private static final String TASKS_FRAGMENT_NAME = "TasksFragment";
     private static final String NEWTASK_FRAGMENT_NAME = "NewTaskFragment";
+    private static final String TASK_DETAILS_FRAGMENT_NAME = "TaskDetailsFragment";
     private static final String EDITTASK_FRAGMENT_NAME = "EditTaskFragment";
     private static final String SETTINGS_FRAGMENT_NAME = "SettingsFragment";
     private static final String TIMELINE_FRAGMENT_NAME = "TimelineFragment";
@@ -116,15 +118,29 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
 
         if (mTasksFragment != null && mTasksFragment.isAdded()) {
             getSupportFragmentManager().putFragment(outState, TASKS_FRAGMENT_NAME, mTasksFragment);
-        } else if (mEditTaskFragment != null && mEditTaskFragment.isAdded()) {
+        }
+
+        else if (mTaskDetailsFragment != null && mTaskDetailsFragment.isAdded()) {
+            getSupportFragmentManager().putFragment(outState, TASK_DETAILS_FRAGMENT_NAME, mTaskDetailsFragment);
+        }
+
+        else if (mEditTaskFragment != null && mEditTaskFragment.isAdded()) {
             getSupportFragmentManager().putFragment(outState, EDITTASK_FRAGMENT_NAME, mEditTaskFragment);
-        } else if (mNewTaskFragment != null && mNewTaskFragment.isAdded()) {
+        }
+
+        else if (mNewTaskFragment != null && mNewTaskFragment.isAdded()) {
             getSupportFragmentManager().putFragment(outState, NEWTASK_FRAGMENT_NAME, mNewTaskFragment);
-        } else if (mSettingsFragment != null && mSettingsFragment.isAdded()) {
+        }
+
+        else if (mSettingsFragment != null && mSettingsFragment.isAdded()) {
             getSupportFragmentManager().putFragment(outState, SETTINGS_FRAGMENT_NAME, mSettingsFragment);
-        } else if (mTimelineFragment != null && mTimelineFragment.isAdded()) {
+        }
+
+        else if (mTimelineFragment != null && mTimelineFragment.isAdded()) {
             getSupportFragmentManager().putFragment(outState, TIMELINE_FRAGMENT_NAME, mTimelineFragment);
-        } else if (mWelcomeFragment != null && mWelcomeFragment.isAdded()) {
+        }
+
+        else if (mWelcomeFragment != null && mWelcomeFragment.isAdded()) {
             getSupportFragmentManager().putFragment(outState, WELCOME_FRAGMENT_NAME, mWelcomeFragment);
         }
 
@@ -156,27 +172,45 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
             Log.i(TAG, "SavedInstanceState: " + TASKS_FRAGMENT_NAME);
             mTasksFragment = (TasksFragment) getSupportFragmentManager().getFragment(savedInstanceState, TASKS_FRAGMENT_NAME);
             getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, mTasksFragment).commit();
-        } else if (getSupportFragmentManager().getFragment(savedInstanceState, EDITTASK_FRAGMENT_NAME) != null) {
+        }
+
+        else if (getSupportFragmentManager().getFragment(savedInstanceState, TASK_DETAILS_FRAGMENT_NAME) != null) {
+            Log.i(TAG, "SavedInstanceState: " + TASK_DETAILS_FRAGMENT_NAME);
+            mTaskDetailsFragment = (TaskDetailsFragment) getSupportFragmentManager().getFragment(savedInstanceState, TASK_DETAILS_FRAGMENT_NAME);
+            getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, mTaskDetailsFragment).commit();
+        }
+
+        else if (getSupportFragmentManager().getFragment(savedInstanceState, EDITTASK_FRAGMENT_NAME) != null) {
             Log.i(TAG, "SavedInstanceState: " + EDITTASK_FRAGMENT_NAME);
             mEditTaskFragment = (EditTaskFragment) getSupportFragmentManager().getFragment(savedInstanceState, EDITTASK_FRAGMENT_NAME);
             getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, mEditTaskFragment).commit();
-        } else if (getSupportFragmentManager().getFragment(savedInstanceState, NEWTASK_FRAGMENT_NAME) != null) {
+        }
+
+        else if (getSupportFragmentManager().getFragment(savedInstanceState, NEWTASK_FRAGMENT_NAME) != null) {
             Log.i(TAG, "SavedInstanceState: " + NEWTASK_FRAGMENT_NAME);
             mNewTaskFragment = (NewTaskFragment) getSupportFragmentManager().getFragment(savedInstanceState, NEWTASK_FRAGMENT_NAME);
             getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, mNewTaskFragment).commit();
-        } else if (getSupportFragmentManager().getFragment(savedInstanceState, SETTINGS_FRAGMENT_NAME) != null) {
+        }
+
+        else if (getSupportFragmentManager().getFragment(savedInstanceState, SETTINGS_FRAGMENT_NAME) != null) {
             Log.i(TAG, "SavedInstanceState: " + SETTINGS_FRAGMENT_NAME);
             mSettingsFragment = (SettingsFragment) getSupportFragmentManager().getFragment(savedInstanceState, SETTINGS_FRAGMENT_NAME);
             getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, mSettingsFragment).commit();
-        } else if (getSupportFragmentManager().getFragment(savedInstanceState, TIMELINE_FRAGMENT_NAME) != null) {
+        }
+
+        else if (getSupportFragmentManager().getFragment(savedInstanceState, TIMELINE_FRAGMENT_NAME) != null) {
             Log.i(TAG, "SavedInstanceState: " + TIMELINE_FRAGMENT_NAME);
             mTimelineFragment = (TimelineFragment) getSupportFragmentManager().getFragment(savedInstanceState, TIMELINE_FRAGMENT_NAME);
             getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, mTimelineFragment).commit();
-        } else if (getSupportFragmentManager().getFragment(savedInstanceState, WELCOME_FRAGMENT_NAME) != null) {
+        }
+
+        else if (getSupportFragmentManager().getFragment(savedInstanceState, WELCOME_FRAGMENT_NAME) != null) {
             Log.i(TAG, "SavedInstanceState: " + WELCOME_FRAGMENT_NAME);
             mWelcomeFragment = (WelcomeFragment) getSupportFragmentManager().getFragment(savedInstanceState, WELCOME_FRAGMENT_NAME);
             getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, mWelcomeFragment).commit();
-        } else {
+        }
+
+        else {
             return true;
         }
 
@@ -538,6 +572,13 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
         getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.enter_from_top, R.anim.exit_to_bottom, R.anim.enter_from_bottom, R.anim.exit_to_top).replace(R.id.main_frame_layout, mNewTaskFragment).addToBackStack(NEWTASK_FRAGMENT_NAME).commit();
     }
 
+    // Fragment showing task details
+    @Override
+    public void loadTaskDetailsFragment(XTask task, int index) {
+        mTaskDetailsFragment = TaskDetailsFragment.newInstance(task);
+        getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout,mTaskDetailsFragment).addToBackStack(TASK_DETAILS_FRAGMENT_NAME).commit();
+    }
+
     // Fragment to edit the task passed in as an argument
     @Override
     public void loadEditTaskFragment(XTask task, int index) {
@@ -600,12 +641,7 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
                                 getSupportFragmentManager().popBackStack();
                             }
                         })
-                        .setNegativeButton(R.string.cancel_option, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-
-                            }
-                        })
+                        .setNegativeButton(R.string.cancel_option, null)
                         .create()
                         .show();
                 return;
@@ -635,7 +671,6 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
 
     // Activity ProgressBar
     void showActivityProgressBar() {
-        Log.i(TAG, "Show progress");
         ConstraintLayout container = findViewById(R.id.main_activity_progress_bar_container);
         container.setVisibility(View.VISIBLE);
 
@@ -661,7 +696,6 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
     }
 
     void hideActivityProgressBar() {
-        Log.i(TAG, "Hide progress");
         ConstraintLayout container = findViewById(R.id.main_activity_progress_bar_container);
         container.setVisibility(View.GONE);
     }
@@ -678,6 +712,7 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
             returnColor = colors.getColor(index, Color.BLACK);
             colors.recycle();
         }
+
         return returnColor;
     }
 

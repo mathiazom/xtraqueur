@@ -2,7 +2,7 @@
 <resources>
     <string name="EDIT_TASK">Rediger oppgave</string>
     <string name="SUMMARY">Oversikt</string>
-    <string name="pre_new_task_hint">Legg til en ny oppgave</string>
+    <string name="pre_new_task_hint">Legg til en ny oppgave&#8230;</string>
     <string name="new_task_name">Navn</string>
     <string name="new_task_fee">Avgift</string>
     <string name="new_task_completions">Utførelser</string>

@@ -25,7 +25,9 @@ import android.widget.ScrollView;
 import com.jaredrummler.android.colorpicker.ColorPickerDialog;
 import com.jaredrummler.android.colorpicker.ColorPickerDialogListener;
 
+import java.text.Collator;
 import java.util.ArrayList;
+import java.util.Locale;
 
 public class NewTaskFragment extends Fragment {
 

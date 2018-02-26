@@ -24,7 +24,7 @@
         android:paddingTop="10dp"
         android:paddingBottom="10dp"
         android:id="@+id/completion"
-        android:background="@drawable/white_rounded"
+        android:background="@drawable/white_rounded_2dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintStart_toStartOf="parent"
@@ -38,7 +38,7 @@
             android:id="@+id/timeline_completion_task"/>
 
         <TextView
-            android:textStyle="bold"
+            android:fontFamily="sans-serif-light"
             android:textColor="#eee"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

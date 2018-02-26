@@ -15,9 +15,6 @@ import android.support.design.widget.TextInputEditText;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.Toolbar;
-import android.text.Editable;
-import android.text.TextWatcher;
-import android.util.Log;
 import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -70,6 +67,31 @@ public class EditTaskFragment extends Fragment {
     // Listener to communicate with MainActivity
     private EditTaskFragmentListener editTaskFragmentListener;
 
+    // Interface to communicate with MainActivity
+    interface EditTaskFragmentListener {
+        // Tell MainActivity to display TasksFragment in the FrameLayout
+        void loadTasksFragment();
+
+        // Update tasks data on Google Drive
+        void updateTasksDataOnDrive(ArrayList<XTask> tasks);
+
+        // Access useDarkText method in MainActivity
+        boolean useDarkText(int color);
+    }
+
+    // Initialize listener field variable when fragment has been attached
+    @Override
+    public void onAttach(Context activity) {
+        super.onAttach(activity);
+
+        try {
+            editTaskFragmentListener = (EditTaskFragmentListener) activity;
+
+        } catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString() + " must implement EditTaskFragmentListener");
+        }
+    }
+
     // Constructor that enables MainActivity to pass arguments to the fragments field variables on creation
     public static EditTaskFragment newInstance(ArrayList<XTask> tasks, XTask task, int index) {
         EditTaskFragment fragment = new EditTaskFragment();
@@ -87,17 +109,8 @@ public class EditTaskFragment extends Fragment {
         // Retain fragment state to save its variables
         setRetainInstance(true);
 
-        LayoutInflater localInflater = inflater;
-
-        if(editTaskFragmentListener.useDarkText(task.getColor())){
-            final Context contextThemeWrapper = new ContextThemeWrapper(getActivity(),R.style.ThemeOverlay_AppCompat_Light);
-            localInflater = inflater.cloneInContext(contextThemeWrapper);
-        }
-
-
-
         // Root view for this fragment
-        this.view = localInflater.inflate(R.layout.fragment_edittask, container, false);
+        this.view = inflater.inflate(R.layout.fragment_edittask, container, false);
 
         // Init field variables for fragment views
         mNameLayout = view.findViewById(R.id.edittask_layout_name);
@@ -130,30 +143,6 @@ public class EditTaskFragment extends Fragment {
         loadTaskData();
     }
 
-    // Interface to communicate with MainActivity
-    interface EditTaskFragmentListener {
-        // Tell MainActivity to display TasksFragment in the FrameLayout
-        void loadTasksFragment();
-
-        // Update tasks data on Google Drive
-        void updateTasksDataOnDrive(ArrayList<XTask> tasks);
-
-        // Access useDarkText method in MainActivity
-        boolean useDarkText(int color);
-    }
-
-    // Initialize listener field variable when fragment has been attached
-    @Override
-    public void onAttach(Context activity) {
-        super.onAttach(activity);
-
-        try {
-            editTaskFragmentListener = (EditTaskFragmentListener) activity;
-
-        } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString() + " must implement EditTaskFragmentListener");
-        }
-    }
 
     // Initialize toolbar field variable and add action buttons with listeners
     void initToolbar() {
@@ -183,21 +172,6 @@ public class EditTaskFragment extends Fragment {
                 return false;
             }
         });
-
-        // Handle color contrast (dark text if needed)
-        // Navigation icon
-        Drawable toolbarNavIcon = mToolbar.getNavigationIcon();
-        if(toolbarNavIcon == null || getContext() == null){
-            return;
-        }
-
-        if(editTaskFragmentListener.useDarkText(task.getColor())){
-            toolbarNavIcon.setColorFilter(getContext().getResources().getColor(R.color.colorPrimary), PorterDuff.Mode.SRC_ATOP);
-        }else{
-            toolbarNavIcon.setColorFilter(Color.parseColor("#ffffff"), PorterDuff.Mode.SRC_ATOP);
-        }
-
-
     }
 
     void confirmDiscardChanges(){
@@ -246,6 +220,7 @@ public class EditTaskFragment extends Fragment {
             }
         });
 
+        /*// Register name EditText changes
         mNameEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -264,6 +239,7 @@ public class EditTaskFragment extends Fragment {
             }
         });
 
+        // Register name EditText changes
         mFeeEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -284,7 +260,7 @@ public class EditTaskFragment extends Fragment {
                     mFeeLayout.setError(getString(R.string.invalid_fee));
                 }
             }
-        });
+        });*/
     }
 
     // Display a ColorPickerDialog to change the tasks color

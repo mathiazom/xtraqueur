@@ -3,6 +3,7 @@ package com.mzom.xtraqueur;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
@@ -32,6 +33,7 @@ import java.util.Locale;
 public class TasksFragment extends Fragment {
 
     private View view;
+    private Toolbar mToolbar;
 
     private ArrayList<XTask> tasks;
 
@@ -44,6 +46,8 @@ public class TasksFragment extends Fragment {
     interface TasksFragmentListener {
 
         void loadNewTaskFragment(boolean fromPreEdit);
+
+        void loadTaskDetailsFragment(XTask task, int index);
 
         void loadEditTaskFragment(XTask task, int index);
 
@@ -108,11 +112,11 @@ public class TasksFragment extends Fragment {
     }
 
     void initToolbar() {
-        Toolbar toolbar = view.findViewById(R.id.toolbar);
+        mToolbar = view.findViewById(R.id.toolbar);
 
-        toolbar.inflateMenu(R.menu.menu_tasks_fragment);
+        mToolbar.inflateMenu(R.menu.menu_tasks_fragment);
 
-        toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
+        mToolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
                 switch (item.getItemId()) {
@@ -177,6 +181,22 @@ public class TasksFragment extends Fragment {
             view.findViewById(R.id.tasks_total_value_container).setVisibility(View.VISIBLE);
         }
 
+        // Timeline action button enable/disable
+        int total_completions = 0;
+        for(XTask t:tasks){
+            if(t.getCompletionsList() != null)
+                total_completions += t.getCompletionsList().size();
+        }
+
+        MenuItem timeline_icon = mToolbar.getMenu().findItem(R.id.tasks_timeline_icon);
+        timeline_icon.setEnabled(total_completions > 0);
+        if(total_completions > 0){
+            timeline_icon.getIcon().setAlpha(255);
+        }else{
+            timeline_icon.getIcon().setAlpha(30);
+        }
+
+
         // DragSortListView to host the task items
         // Enables drag and sort functionality to the list
         final DragSortListView xtask_list = view.findViewById(R.id.xtask_container);
@@ -229,13 +249,13 @@ public class TasksFragment extends Fragment {
         });
 
         // Controller used to handle touch events and calculate which ListView items to drag
+        // Uses custom class to handle both normal click and long click
         final DragSortController controller = new XTaskDragSortController(xtask_list, new XTaskDragSortController.XTaskDragSortControllerListener() {
             @Override
             public void onEditTask(int index, float y) {
                 editTask(index, y);
             }
         });
-
         controller.setDragHandleId(R.id.xtask);
         controller.setRemoveEnabled(false);
         controller.setSortEnabled(true);
@@ -282,6 +302,7 @@ public class TasksFragment extends Fragment {
             public void onAnimationEnd(Animation animation) {
                 // Once the expand animation has finished, tell MainActivity to switch to an EditTaskFragment in the FrameLayout
                 tasksFragmentListener.loadEditTaskFragment(tasks.get(index), index);
+                //tasksFragmentListener.loadTaskDetailsFragment(tasks.get(index),index);
             }
 
             @Override
@@ -299,9 +320,6 @@ public class TasksFragment extends Fragment {
 
         // Update tasks_data.txt stored with Google Drive
         tasksFragmentListener.updateTasksDataOnDrive(tasks);
-
-        // Update TextView displaying the tasks total value
-        updateTotalValue();
 
         // "Reload" ListView to make changes take effect
         loadTasks();
