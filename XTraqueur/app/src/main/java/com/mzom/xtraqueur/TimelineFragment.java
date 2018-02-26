@@ -36,7 +36,7 @@ public class TimelineFragment extends Fragment {
     TimelineFragmentListener mTimelineFragmentListener;
 
     interface TimelineFragmentListener{
-        void popBackStackFromFragment();
+        void onFragmentBackPressed();
     }
 
     public static TimelineFragment newInstance(ArrayList<XTask> tasks) {
@@ -85,7 +85,7 @@ public class TimelineFragment extends Fragment {
         mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mTimelineFragmentListener.popBackStackFromFragment();
+                mTimelineFragmentListener.onFragmentBackPressed();
             }
         });
     }

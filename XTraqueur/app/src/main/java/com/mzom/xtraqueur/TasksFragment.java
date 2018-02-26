@@ -42,7 +42,6 @@ public class TasksFragment extends Fragment {
     private final static String TAG = "Xtraqueur-TasksFrag";
 
     interface TasksFragmentListener {
-        void loadSummaryFragment();
 
         void loadNewTaskFragment(boolean fromPreEdit);
 
@@ -129,56 +128,7 @@ public class TasksFragment extends Fragment {
     }
 
     private void initListeners() {
-        // Summary button
-        /*final TextView total_value = view.findViewById(R.id.tasks_total_value);
-        total_value.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                // View that acts as a drawable expanding and covering the whole screen
-                final View scaleView = new View(getContext());
-
-                // Add elevation to make scaleView appear over all other views and cover the whole screen
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    scaleView.setElevation(maxElevation);
-                }
-
-                // Set drawable color to task color
-                scaleView.setBackground(new ColorDrawable(Color.parseColor("#eeeeee")));
-
-                // Add view to the fragment root view (get access to ViewGroup method addView() by casting to ConstraintLayout)
-                ((ConstraintLayout) view).addView(scaleView);
-
-                // Calculate center on y-axis
-                float y = (total_value.getTop() + total_value.getBottom())/2;
-
-                // Expand animation to fill the whole screen with task color
-                final ScaleAnimation expand_animation = new ScaleAnimation(1f, 1f, 0f, 1f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.ABSOLUTE, y);
-
-                expand_animation.setDuration(200);
-
-                // Keep the transformation after animation has finished
-                expand_animation.setFillAfter(true);
-
-                expand_animation.setAnimationListener(new Animation.AnimationListener() {
-                    @Override
-                    public void onAnimationStart(Animation animation) {
-                    }
-
-                    @Override
-                    public void onAnimationEnd(Animation animation) {
-                        // Once the expand animation has finished, tell MainActivity to switch to SummaryFragment
-                        tasksFragmentListener.loadSummaryFragment();
-                    }
-
-                    @Override
-                    public void onAnimationRepeat(Animation animation) {
-                    }
-                });
-                scaleView.startAnimation(expand_animation);
-            }
-        });*/
-
+        // ImageButton to load NewTaskFragment
         view.findViewById(R.id.new_task_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -187,6 +137,7 @@ public class TasksFragment extends Fragment {
             }
         });
 
+        // EditText to load NewTaskFragment
         view.findViewById(R.id.pre_new_task_name_edit).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -196,6 +147,7 @@ public class TasksFragment extends Fragment {
 
     }
 
+    // Update dataset before loading tasks
     void loadTasks(ArrayList<XTask> tasks){
         this.tasks = tasks;
         loadTasks();
@@ -212,31 +164,37 @@ public class TasksFragment extends Fragment {
             tasks = new ArrayList<>();
         }
 
+        // Display message to user if there are no tasks to load
         if(tasks.size() == 0){
+            // Display message
             view.findViewById(R.id.xtask_container).setVisibility(View.GONE);
             view.findViewById(R.id.no_tasks_container).setVisibility(View.VISIBLE);
             view.findViewById(R.id.tasks_total_value_container).setVisibility(View.GONE);
         }else{
+            // Hide message
             view.findViewById(R.id.xtask_container).setVisibility(View.VISIBLE);
             view.findViewById(R.id.no_tasks_container).setVisibility(View.GONE);
             view.findViewById(R.id.tasks_total_value_container).setVisibility(View.VISIBLE);
         }
 
         // DragSortListView to host the task items
+        // Enables drag and sort functionality to the list
         final DragSortListView xtask_list = view.findViewById(R.id.xtask_container);
 
         // ListView ArrayAdapter
         final XTaskListAdapter mListAdapter = new XTaskListAdapter(getContext(), tasks, new XTaskListAdapter.XTaskListAdapterListener() {
             @Override
             public void onUpdateTasks(ArrayList<XTask> tasks) {
-                // Save the scroll position
+
+                // Save the scroll position before refresh
                 int index = xtask_list.getFirstVisiblePosition();
                 View v = xtask_list.getChildAt(0);
                 int top = (v == null) ? 0 : (v.getTop() - xtask_list.getPaddingTop());
 
+                // Refresh ListView
                 updateTasks(tasks);
 
-                // Restore the scroll position
+                // Restore the scroll position after refresh
                 xtask_list.setSelectionFromTop(index, top);
             }
 

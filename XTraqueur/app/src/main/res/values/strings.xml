@@ -78,4 +78,5 @@
     <string name="delete_all_tasks_message">This action can not be undone. Do you really want to delete all your tasks?</string>
     <string name="delete_all_completions_title">Delete all completions?</string>
     <string name="delete_all_completions_message">This action can not be undone. Do you really want to delete all your completions?</string>
+    <string name="save">Save</string>
 </resources>

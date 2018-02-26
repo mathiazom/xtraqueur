@@ -65,4 +65,5 @@
     <string name="delete_all_tasks">Supprimer toutes les tâches</string>
     <string name="delete_all_tasks_title">Supprimer toutes les tâches?</string>
     <string name="delete_all_tasks_message">Cette action ne peut pas être annulée. Voulez-vous vraiment supprimer tous vos tâches?</string>
+    <string name="save">Enregistrer</string>
 </resources>

@@ -65,4 +65,5 @@
     <string name="delete_all_tasks">Slett alle oppgaver</string>
     <string name="delete_all_tasks_title">Slette alle oppgaver?</string>
     <string name="delete_all_tasks_message">Denne handlingen kan ikke angres. Er du sikker på at du vil slette alle oppgavene dine?</string>
+    <string name="save">Lagre</string>
 </resources>

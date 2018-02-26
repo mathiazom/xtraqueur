@@ -73,7 +73,7 @@ public class SummaryFragment extends Fragment {
         view.findViewById(R.id.summary_back_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                summaryFragmentListener.popBackStackFromFragment();
+                summaryFragmentListener.onFragmentBackPressed();
             }
         });
 
@@ -169,7 +169,7 @@ public class SummaryFragment extends Fragment {
 
     interface SummaryFragmentListener {
 
-        void popBackStackFromFragment();
+        void onFragmentBackPressed();
 
         void loadEditTaskFragment(XTask task, int index);
 

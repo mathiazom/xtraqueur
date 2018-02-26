@@ -49,35 +49,23 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity implements TasksFragment.TasksFragmentListener, SummaryFragment.SummaryFragmentListener, NewTaskFragment.NewTaskFragmentListener, EditTaskFragment.EditTaskFragmentListener, SettingsFragment.SettingsFragmentListener, TimelineFragment.TimelineFragmentListener, WelcomeFragment.WelcomeFragmentListener {
-
-    // Data set storing all the tasks
-    private ArrayList<XTask> tasks;
+public class MainActivity extends AppCompatActivity implements TasksFragment.TasksFragmentListener, NewTaskFragment.NewTaskFragmentListener, EditTaskFragment.EditTaskFragmentListener, SettingsFragment.SettingsFragmentListener, TimelineFragment.TimelineFragmentListener, WelcomeFragment.WelcomeFragmentListener {
 
     // Fragment fields
-    private TasksFragment tasksFragment;
-    private SummaryFragment summaryFragment;
-    private EditTaskFragment editTaskFragment;
-    private NewTaskFragment newTaskFragment;
-    private SettingsFragment settingsFragment;
-    private TimelineFragment timelineFragment;
-    private WelcomeFragment welcomeFragment;
+    private TasksFragment mTasksFragment;
+    private EditTaskFragment mEditTaskFragment;
+    private NewTaskFragment mNewTaskFragment;
+    private SettingsFragment mSettingsFragment;
+    private TimelineFragment mTimelineFragment;
+    private WelcomeFragment mWelcomeFragment;
 
     // Fragment identifiers used by the BackStack and instance saving
     private static final String TASKS_FRAGMENT_NAME = "TasksFragment";
-    private static final String SUMMARY_FRAGMENT_NAME = "SummaryFragment";
     private static final String NEWTASK_FRAGMENT_NAME = "NewTaskFragment";
     private static final String EDITTASK_FRAGMENT_NAME = "EditTaskFragment";
     private static final String SETTINGS_FRAGMENT_NAME = "SettingsFragment";
     private static final String TIMELINE_FRAGMENT_NAME = "TimelineFragment";
     private static final String WELCOME_FRAGMENT_NAME = "WelcomeFragment";
-
-    // Google Drive tasks data file name
-    private static final String TASKS_DATA_FILE_NAME = "tasks_data.txt";
-
-    // Tag used for debugging
-    private static final String TAG = "Xtraqueur-MainActivity";
-
 
     // Google Drive SignIn request code
     private static final int REQUEST_CODE_SIGN_IN = 1337;
@@ -91,29 +79,58 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
     private DriveResourceClient mDriveResourceClient;
     private DriveClient mDriveClient;
 
+    // Google Drive tasks data file name
+    private static final String TASKS_DATA_FILE_NAME = "tasks_data.txt";
+
+    // Data set storing all user tasks
+    private ArrayList<XTask> tasks;
+
+
+    // Tag used for debugging
+    private static final String TAG = "Xtraqueur-MainActivity";
+
+    // Activity creation
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         // Retrieve all data saved before configuration changes (onSaveInstanceState)
-        boolean cont = handleSavedInstanceState(savedInstanceState);
+        boolean hasRetainedStates = handleSavedInstanceState(savedInstanceState);
 
-        // Set listener for changes to the backStack
+        // Set listener for changes to the BackStack
         onBackStackChangedListener();
 
-        // Check if any Google accounts are signed in to the app
-        boolean signedIn = GoogleSignIn.getLastSignedInAccount(this) != null;
-
-        if (!signedIn) {
-            // No Google accounts signed in, load WelcomeFragment to let the user sign in
-            Log.i(TAG, "No signed in account, loading welcome-page");
-            loadWelcomeFragment();
-        }else if(cont){
-            // Google Drive API client sign in
-            signIn();
-        }
+        // Handle Google account sign in
+        handleSignIn(hasRetainedStates);
     }
+
+    // Save visible fragment and tasks data to restore after activity destruction
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        String tasks_data = new Gson().toJson(tasks);
+        outState.putString("tasks_data", tasks_data);
+        outState.putParcelable("googleSignInAccount", mGoogleSignInAccount);
+
+        if (mTasksFragment != null && mTasksFragment.isAdded()) {
+            getSupportFragmentManager().putFragment(outState, TASKS_FRAGMENT_NAME, mTasksFragment);
+        } else if (mEditTaskFragment != null && mEditTaskFragment.isAdded()) {
+            getSupportFragmentManager().putFragment(outState, EDITTASK_FRAGMENT_NAME, mEditTaskFragment);
+        } else if (mNewTaskFragment != null && mNewTaskFragment.isAdded()) {
+            getSupportFragmentManager().putFragment(outState, NEWTASK_FRAGMENT_NAME, mNewTaskFragment);
+        } else if (mSettingsFragment != null && mSettingsFragment.isAdded()) {
+            getSupportFragmentManager().putFragment(outState, SETTINGS_FRAGMENT_NAME, mSettingsFragment);
+        } else if (mTimelineFragment != null && mTimelineFragment.isAdded()) {
+            getSupportFragmentManager().putFragment(outState, TIMELINE_FRAGMENT_NAME, mTimelineFragment);
+        } else if (mWelcomeFragment != null && mWelcomeFragment.isAdded()) {
+            getSupportFragmentManager().putFragment(outState, WELCOME_FRAGMENT_NAME, mWelcomeFragment);
+        }
+
+
+    }
+
 
     // Restore tasks data and fragments that were saved before activity destruction
     private boolean handleSavedInstanceState(Bundle savedInstanceState) {
@@ -122,8 +139,6 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
             Log.i(TAG, "No saved instance states");
             return true;
         }
-
-        boolean cont = false;
 
         // Get tasks Arraylist from savedInstanceState
         String temp_tasks_data = savedInstanceState.getString("tasks_data", null);
@@ -139,40 +154,50 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
 
         if (getSupportFragmentManager().getFragment(savedInstanceState, TASKS_FRAGMENT_NAME) != null) {
             Log.i(TAG, "SavedInstanceState: " + TASKS_FRAGMENT_NAME);
-            tasksFragment = (TasksFragment) getSupportFragmentManager().getFragment(savedInstanceState, TASKS_FRAGMENT_NAME);
-            getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, tasksFragment).commit();
-        } else if (getSupportFragmentManager().getFragment(savedInstanceState, SUMMARY_FRAGMENT_NAME) != null) {
-            Log.i(TAG, "SavedInstanceState: " + SUMMARY_FRAGMENT_NAME);
-            summaryFragment = (SummaryFragment) getSupportFragmentManager().getFragment(savedInstanceState, SUMMARY_FRAGMENT_NAME);
-            getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, summaryFragment).commit();
+            mTasksFragment = (TasksFragment) getSupportFragmentManager().getFragment(savedInstanceState, TASKS_FRAGMENT_NAME);
+            getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, mTasksFragment).commit();
         } else if (getSupportFragmentManager().getFragment(savedInstanceState, EDITTASK_FRAGMENT_NAME) != null) {
             Log.i(TAG, "SavedInstanceState: " + EDITTASK_FRAGMENT_NAME);
-            editTaskFragment = (EditTaskFragment) getSupportFragmentManager().getFragment(savedInstanceState, EDITTASK_FRAGMENT_NAME);
-            getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, editTaskFragment).commit();
+            mEditTaskFragment = (EditTaskFragment) getSupportFragmentManager().getFragment(savedInstanceState, EDITTASK_FRAGMENT_NAME);
+            getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, mEditTaskFragment).commit();
         } else if (getSupportFragmentManager().getFragment(savedInstanceState, NEWTASK_FRAGMENT_NAME) != null) {
             Log.i(TAG, "SavedInstanceState: " + NEWTASK_FRAGMENT_NAME);
-            newTaskFragment = (NewTaskFragment) getSupportFragmentManager().getFragment(savedInstanceState, NEWTASK_FRAGMENT_NAME);
-            getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, newTaskFragment).commit();
+            mNewTaskFragment = (NewTaskFragment) getSupportFragmentManager().getFragment(savedInstanceState, NEWTASK_FRAGMENT_NAME);
+            getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, mNewTaskFragment).commit();
         } else if (getSupportFragmentManager().getFragment(savedInstanceState, SETTINGS_FRAGMENT_NAME) != null) {
             Log.i(TAG, "SavedInstanceState: " + SETTINGS_FRAGMENT_NAME);
-            settingsFragment = (SettingsFragment) getSupportFragmentManager().getFragment(savedInstanceState, SETTINGS_FRAGMENT_NAME);
-            getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, settingsFragment).commit();
+            mSettingsFragment = (SettingsFragment) getSupportFragmentManager().getFragment(savedInstanceState, SETTINGS_FRAGMENT_NAME);
+            getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, mSettingsFragment).commit();
         } else if (getSupportFragmentManager().getFragment(savedInstanceState, TIMELINE_FRAGMENT_NAME) != null) {
             Log.i(TAG, "SavedInstanceState: " + TIMELINE_FRAGMENT_NAME);
-            timelineFragment = (TimelineFragment) getSupportFragmentManager().getFragment(savedInstanceState, TIMELINE_FRAGMENT_NAME);
-            getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, timelineFragment).commit();
+            mTimelineFragment = (TimelineFragment) getSupportFragmentManager().getFragment(savedInstanceState, TIMELINE_FRAGMENT_NAME);
+            getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, mTimelineFragment).commit();
         } else if (getSupportFragmentManager().getFragment(savedInstanceState, WELCOME_FRAGMENT_NAME) != null) {
             Log.i(TAG, "SavedInstanceState: " + WELCOME_FRAGMENT_NAME);
-            welcomeFragment = (WelcomeFragment) getSupportFragmentManager().getFragment(savedInstanceState, WELCOME_FRAGMENT_NAME);
-            getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, welcomeFragment).commit();
+            mWelcomeFragment = (WelcomeFragment) getSupportFragmentManager().getFragment(savedInstanceState, WELCOME_FRAGMENT_NAME);
+            getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, mWelcomeFragment).commit();
         } else {
-            cont = true;
+            return true;
         }
 
-        return cont;
+        return false;
 
     }
 
+    // Handle Google account sign in on activity creation
+    private void handleSignIn(boolean cont) {
+        // Check if any Google accounts are signed in to the app
+        boolean signedIn = GoogleSignIn.getLastSignedInAccount(this) != null;
+
+        if (!signedIn) {
+            // No Google accounts signed in, load WelcomeFragment to let the user sign in
+            Log.i(TAG, "No signed in account, loading welcome-page");
+            loadWelcomeFragment();
+        } else if (cont) {
+            // Google Drive API client sign in
+            signIn();
+        }
+    }
 
     // Start Google Drive sign in
     @Override
@@ -226,8 +251,8 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
                                 public void onSuccess(Void aVoid) {
                                     Log.i(TAG, "Google Drive API: Sync successful");
 
-                                    if(welcomeFragment != null && welcomeFragment.isAdded()){
-                                        getSupportFragmentManager().beginTransaction().remove(welcomeFragment).commit();
+                                    if (mWelcomeFragment != null && mWelcomeFragment.isAdded()) {
+                                        getSupportFragmentManager().beginTransaction().remove(mWelcomeFragment).commit();
                                     }
 
                                     getLatestTasksDataFromDrive();
@@ -248,6 +273,7 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
                 break;
         }
     }
+
 
     // Get task data from Google Drive account
     private void getLatestTasksDataFromDrive() {
@@ -401,38 +427,7 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
                 });
     }
 
-    // Danger zone: Delete all completions
-    @Override
-    public void deleteAllCompletions() {
-        for (XTask t : tasks) {
-            t.setCompletionsList(new ArrayList<Long>());
-        }
-
-        updateTasksDataOnDrive(tasks, new OnSuccessListener<DriveFile>() {
-            @Override
-            public void onSuccess(DriveFile driveFile) {
-                settingsFragment = SettingsFragment.newInstance(tasks, mGoogleSignInAccount, mGoogleAccountPhoto);
-                getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, settingsFragment).commit();
-            }
-        });
-    }
-
-    // Danger zone: Delete all tasks
-    @Override
-    public void deleteAllTasks() {
-        tasks = new ArrayList<>();
-
-        updateTasksDataOnDrive(tasks, new OnSuccessListener<DriveFile>() {
-            @Override
-            public void onSuccess(DriveFile driveFile) {
-                settingsFragment = SettingsFragment.newInstance(tasks, mGoogleSignInAccount, mGoogleAccountPhoto);
-                getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, settingsFragment).commit();
-            }
-        });
-
-
-    }
-
+    // Sign user out of Google account
     @Override
     public void signOut() {
         if (mGoogleSignInClient == null) {
@@ -449,6 +444,7 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
                 });
     }
 
+    // Restart activity to complete Google account sign out
     public void restartActivity() {
         Intent mIntent = getIntent();
         finish();
@@ -480,15 +476,50 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
         }
     }
 
+    // Danger zone: Delete all completions
+    @Override
+    public void deleteAllCompletions() {
+        for (XTask t : tasks) {
+            t.setCompletionsList(new ArrayList<Long>());
+        }
+
+        updateTasksDataOnDrive(tasks, new OnSuccessListener<DriveFile>() {
+            @Override
+            public void onSuccess(DriveFile driveFile) {
+                mSettingsFragment = SettingsFragment.newInstance(tasks, mGoogleSignInAccount, mGoogleAccountPhoto);
+                getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, mSettingsFragment).commit();
+            }
+        });
+    }
+
+    // Danger zone: Delete all tasks
+    @Override
+    public void deleteAllTasks() {
+        tasks = new ArrayList<>();
+
+        updateTasksDataOnDrive(tasks, new OnSuccessListener<DriveFile>() {
+            @Override
+            public void onSuccess(DriveFile driveFile) {
+                mSettingsFragment = SettingsFragment.newInstance(tasks, mGoogleSignInAccount, mGoogleAccountPhoto);
+                getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, mSettingsFragment).commit();
+            }
+        });
+
+
+    }
+
+
     // Update Google sign in account photo
     @Override
     public void setAccountPhoto(Bitmap bitmap) {
         this.mGoogleAccountPhoto = bitmap;
     }
 
-    @Override
-    public void popBackStackFromFragment() {
-        onBackPressed();
+
+    // Fragment that lets the user sign in to a Google account to use with the app
+    public void loadWelcomeFragment() {
+        mWelcomeFragment = new WelcomeFragment();
+        getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, mWelcomeFragment).commit();
     }
 
     // Fragment listing all the tasks
@@ -496,59 +527,70 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
     // Clicking on a task item will open a EditTaskFragment with the task as an argument
     @Override
     public void loadTasksFragment() {
-        tasksFragment = TasksFragment.newInstance(tasks);
-        getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, tasksFragment).addToBackStack(TASKS_FRAGMENT_NAME).commit();
-    }
-
-    // Fragment giving an overview of the tasks values and the total value
-    @Override
-    public void loadSummaryFragment() {
-        summaryFragment = SummaryFragment.newInstance(tasks);
-        getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, summaryFragment).addToBackStack(SUMMARY_FRAGMENT_NAME).commit();
+        mTasksFragment = TasksFragment.newInstance(tasks);
+        getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, mTasksFragment).addToBackStack(TASKS_FRAGMENT_NAME).commit();
     }
 
     // Fragment to create new tasks
     @Override
     public void loadNewTaskFragment(boolean fromPreEdit) {
-        newTaskFragment = NewTaskFragment.newInstance(tasks, getRandomMatColor("700"), fromPreEdit);
-        getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.enter_from_top, R.anim.exit_to_bottom, R.anim.enter_from_bottom, R.anim.exit_to_top).replace(R.id.main_frame_layout, newTaskFragment).addToBackStack(NEWTASK_FRAGMENT_NAME).commit();
+        mNewTaskFragment = NewTaskFragment.newInstance(tasks, getRandomMatColor("700"), fromPreEdit);
+        getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.enter_from_top, R.anim.exit_to_bottom, R.anim.enter_from_bottom, R.anim.exit_to_top).replace(R.id.main_frame_layout, mNewTaskFragment).addToBackStack(NEWTASK_FRAGMENT_NAME).commit();
     }
 
     // Fragment to edit the task passed in as an argument
     @Override
     public void loadEditTaskFragment(XTask task, int index) {
-        editTaskFragment = EditTaskFragment.newInstance(tasks, task, index);
+        mEditTaskFragment = EditTaskFragment.newInstance(tasks, task, index);
 
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-        fragmentTransaction.replace(R.id.main_frame_layout, editTaskFragment).addToBackStack(EDITTASK_FRAGMENT_NAME).commit();
+        fragmentTransaction.replace(R.id.main_frame_layout, mEditTaskFragment).addToBackStack(EDITTASK_FRAGMENT_NAME).commit();
     }
 
-    // Fragment to change app settings (not developed yet)
-    @Override
-    public void loadSettingsFragment() {
-        settingsFragment = SettingsFragment.newInstance(tasks, mGoogleSignInAccount, mGoogleAccountPhoto);
-        getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.enter_from_bottom, R.anim.exit_to_top, R.anim.enter_from_top, R.anim.exit_to_bottom).replace(R.id.main_frame_layout, settingsFragment).addToBackStack(SETTINGS_FRAGMENT_NAME).commit();
-    }
-
+    // Fragment to show completions timeline
     @Override
     public void loadTimelineFragment() {
-        timelineFragment = TimelineFragment.newInstance(tasks);
-        getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.enter_from_bottom, R.anim.exit_to_top, R.anim.enter_from_top, R.anim.exit_to_bottom).replace(R.id.main_frame_layout, timelineFragment).addToBackStack(TIMELINE_FRAGMENT_NAME).commit();
+        mTimelineFragment = TimelineFragment.newInstance(tasks);
+        getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.enter_from_bottom, R.anim.exit_to_top, R.anim.enter_from_top, R.anim.exit_to_bottom).replace(R.id.main_frame_layout, mTimelineFragment).addToBackStack(TIMELINE_FRAGMENT_NAME).commit();
     }
 
-    public void loadWelcomeFragment() {
-        welcomeFragment = new WelcomeFragment();
-        getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, welcomeFragment).commit();
+    // Fragment to change app settings
+    @Override
+    public void loadSettingsFragment() {
+        mSettingsFragment = SettingsFragment.newInstance(tasks, mGoogleSignInAccount, mGoogleAccountPhoto);
+        getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.enter_from_bottom, R.anim.exit_to_top, R.anim.enter_from_top, R.anim.exit_to_bottom).replace(R.id.main_frame_layout, mSettingsFragment).addToBackStack(SETTINGS_FRAGMENT_NAME).commit();
     }
 
 
-    // Handle user back presses
+    // Listen to BackStack changes to update TaskFragment
+    private void onBackStackChangedListener() {
+        getSupportFragmentManager().addOnBackStackChangedListener(new FragmentManager.OnBackStackChangedListener() {
+            @Override
+            public void onBackStackChanged() {
+                // Index of last entry in backStack
+                int index = getSupportFragmentManager().getBackStackEntryCount() - 1;
+                // Do nothing if backStack is empty
+                if (index < 0) {
+                    return;
+                }
+                // Name of current fragment in use
+                String fragName = getSupportFragmentManager().getBackStackEntryAt(index).getName();
+                // Update TasksFragment when gone back to
+                if (fragName.equals(TASKS_FRAGMENT_NAME) && mTasksFragment != null && mTasksFragment.isAdded()) {
+                    mTasksFragment.loadTasks(tasks);
+                }
+            }
+        });
+    }
+
+    // Handle back presses
     @Override
     public void onBackPressed() {
 
         if (getSupportFragmentManager().getBackStackEntryCount() > 2) {
 
-            if (editTaskFragment != null && editTaskFragment.isAdded() && editTaskFragment.hasUnsavedChanges()) {
+            // Prompt user if EditTaskFragment has any unsaved changes
+            if (mEditTaskFragment != null && mEditTaskFragment.isAdded() && mEditTaskFragment.hasUnsavedChanges()) {
                 new AlertDialog.Builder(this)
                         .setTitle(R.string.discard_changes_dialog_title)
                         .setMessage(R.string.discard_changes_dialog_message)
@@ -571,57 +613,25 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
 
             getSupportFragmentManager().popBackStack();
 
-        } else if(getSupportFragmentManager().getBackStackEntryCount() == 1){
+        } else if (getSupportFragmentManager().getBackStackEntryCount() == 1) {
+
+            // Finish activity if backstack is empty of fragments on back button press
             finish();
-        } else{
+
+        } else {
+
+            // Otherwise let super handle the back press
             super.onBackPressed();
+
         }
     }
 
-    // Handle BackStack changes
-    private void onBackStackChangedListener() {
-        getSupportFragmentManager().addOnBackStackChangedListener(new FragmentManager.OnBackStackChangedListener() {
-            @Override
-            public void onBackStackChanged() {
-                int index = getSupportFragmentManager().getBackStackEntryCount() - 1;
-                if (index < 0) {
-                    return;
-                }
-                String fragName = getSupportFragmentManager().getBackStackEntryAt(index).getName();
-                if (fragName.equals(TASKS_FRAGMENT_NAME) && tasksFragment != null && tasksFragment.isAdded()) {
-                    tasksFragment.loadTasks(tasks);
-                }
-            }
-        });
-    }
-
-    // Save visible fragment and tasks data to restore after activity destruction
+    // Handle back press inside a fragment
     @Override
-    public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-
-        String tasks_data = new Gson().toJson(tasks);
-        outState.putString("tasks_data", tasks_data);
-        outState.putParcelable("googleSignInAccount", mGoogleSignInAccount);
-
-        if (tasksFragment != null && tasksFragment.isAdded()) {
-            getSupportFragmentManager().putFragment(outState, TASKS_FRAGMENT_NAME, tasksFragment);
-        } else if (summaryFragment != null && summaryFragment.isAdded()) {
-            getSupportFragmentManager().putFragment(outState, SUMMARY_FRAGMENT_NAME, summaryFragment);
-        } else if (editTaskFragment != null && editTaskFragment.isAdded()) {
-            getSupportFragmentManager().putFragment(outState, EDITTASK_FRAGMENT_NAME, editTaskFragment);
-        } else if (newTaskFragment != null && newTaskFragment.isAdded()) {
-            getSupportFragmentManager().putFragment(outState, NEWTASK_FRAGMENT_NAME, newTaskFragment);
-        } else if (settingsFragment != null && settingsFragment.isAdded()) {
-            getSupportFragmentManager().putFragment(outState, SETTINGS_FRAGMENT_NAME, settingsFragment);
-        } else if (timelineFragment != null && timelineFragment.isAdded()) {
-            getSupportFragmentManager().putFragment(outState, TIMELINE_FRAGMENT_NAME, timelineFragment);
-        } else if (welcomeFragment != null && welcomeFragment.isAdded()) {
-            getSupportFragmentManager().putFragment(outState, WELCOME_FRAGMENT_NAME, welcomeFragment);
-        }
-
-
+    public void onFragmentBackPressed() {
+        onBackPressed();
     }
+
 
     // Activity ProgressBar
     void showActivityProgressBar() {
@@ -631,7 +641,7 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
 
         final CircularFillableLoaders photo = findViewById(R.id.loading_google_account_photo);
 
-        if (mGoogleAccountPhoto == null) {
+        if (mGoogleAccountPhoto == null && mGoogleSignInAccount.getPhotoUrl() != null) {
 
             // Get account photo URL
             String photoUrl = mGoogleSignInAccount.getPhotoUrl().toString();
@@ -655,6 +665,7 @@ public class MainActivity extends AppCompatActivity implements TasksFragment.Tas
         ConstraintLayout container = findViewById(R.id.main_activity_progress_bar_container);
         container.setVisibility(View.GONE);
     }
+
 
     // Get random Google Material color, parameter "typeColor" is color shade
     private int getRandomMatColor(String typeColor) {

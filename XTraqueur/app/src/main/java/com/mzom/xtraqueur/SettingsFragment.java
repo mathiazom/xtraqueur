@@ -55,7 +55,7 @@ public class SettingsFragment extends android.support.v4.app.Fragment {
 
         void deleteAllTasks();
 
-        void popBackStackFromFragment();
+        void onFragmentBackPressed();
 
         void loadTasksFragment();
     }
@@ -114,7 +114,7 @@ public class SettingsFragment extends android.support.v4.app.Fragment {
         mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                settingsFragmentListener.popBackStackFromFragment();
+                settingsFragmentListener.onFragmentBackPressed();
             }
         });
     }

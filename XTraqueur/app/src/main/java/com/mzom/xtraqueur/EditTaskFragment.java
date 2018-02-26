@@ -17,6 +17,8 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
+import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -85,8 +87,17 @@ public class EditTaskFragment extends Fragment {
         // Retain fragment state to save its variables
         setRetainInstance(true);
 
+        LayoutInflater localInflater = inflater;
+
+        if(editTaskFragmentListener.useDarkText(task.getColor())){
+            final Context contextThemeWrapper = new ContextThemeWrapper(getActivity(),R.style.ThemeOverlay_AppCompat_Light);
+            localInflater = inflater.cloneInContext(contextThemeWrapper);
+        }
+
+
+
         // Root view for this fragment
-        this.view = inflater.inflate(R.layout.fragment_edittask, container, false);
+        this.view = localInflater.inflate(R.layout.fragment_edittask, container, false);
 
         // Init field variables for fragment views
         mNameLayout = view.findViewById(R.id.edittask_layout_name);
@@ -166,12 +177,27 @@ public class EditTaskFragment extends Fragment {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
                 switch (item.getItemId()) {
-                    case R.id.edittask_save_changes_icon:
-                        commitChanges();
+                    case R.id.edittask_save_changes_text:
+                        saveChanges();
                 }
                 return false;
             }
         });
+
+        // Handle color contrast (dark text if needed)
+        // Navigation icon
+        Drawable toolbarNavIcon = mToolbar.getNavigationIcon();
+        if(toolbarNavIcon == null || getContext() == null){
+            return;
+        }
+
+        if(editTaskFragmentListener.useDarkText(task.getColor())){
+            toolbarNavIcon.setColorFilter(getContext().getResources().getColor(R.color.colorPrimary), PorterDuff.Mode.SRC_ATOP);
+        }else{
+            toolbarNavIcon.setColorFilter(Color.parseColor("#ffffff"), PorterDuff.Mode.SRC_ATOP);
+        }
+
+
     }
 
     void confirmDiscardChanges(){
@@ -404,7 +430,7 @@ public class EditTaskFragment extends Fragment {
     }
 
     // Change task values according to inputs and update to Google drive
-    private void commitChanges() {
+    private void saveChanges() {
 
         // Collect input
         String name = String.valueOf(mNameEditText.getEditableText());

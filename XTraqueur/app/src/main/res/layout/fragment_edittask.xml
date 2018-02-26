@@ -14,9 +14,7 @@
         android:background="@color/colorPrimary"
         android:elevation="4dp"
         app:navigationContentDescription="@string/go_back_to_all_tasks"
-        app:navigationIcon="@drawable/ic_back">
-
-    </android.support.v7.widget.Toolbar>
+        app:navigationIcon="@drawable/ic_back"/>
 
     <ScrollView
         android:id="@+id/edittask_main_scroll"
