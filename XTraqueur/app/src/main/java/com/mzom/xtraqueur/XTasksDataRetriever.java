@@ -1,7 +1,5 @@
 package com.mzom.xtraqueur;
 
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.util.Log;
@@ -26,11 +24,11 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 
 
-public class XTasksDataRetriever extends AsyncTask<DriveResourceClient, Void, XTasksDataPackage> {
+class XTasksDataRetriever extends AsyncTask<DriveResourceClient, Void, XTasksDataPackage> {
 
     private static final String TAG = "XTQ-XTasksDataRetriever";
 
-    private XTasksDataRetrieverListener mXTasksDataRetrieverListener;
+    private final XTasksDataRetrieverListener mXTasksDataRetrieverListener;
 
     private DriveResourceClient mDriveResourceClient;
 
@@ -43,8 +41,8 @@ public class XTasksDataRetriever extends AsyncTask<DriveResourceClient, Void, XT
     private XTasksDataPackage dataPackage;
 
     static final int RETRIEVE_ALL_DATA = 0;
-    static final int RETRIEVE_TASKS_ONLY = 1;
-    static final int RETRIEVE_PAYMENTS_ONLY = 2;
+    private static final int RETRIEVE_TASKS_ONLY = 1;
+    private static final int RETRIEVE_PAYMENTS_ONLY = 2;
 
     private final int dataToRetrieve;
 

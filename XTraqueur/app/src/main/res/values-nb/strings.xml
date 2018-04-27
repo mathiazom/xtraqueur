@@ -103,4 +103,6 @@
     <string name="delete_completion_confirmation_message">Denne handlingen kan ikke angres. Er du sikker på at du vil slette denne utførelsen?</string>
     <string name="delete_payment_confirmation_title">Slette betaling?</string>
     <string name="delete_payment_confirmation_message">Denne handlingen kan ikke angres. Er du sikker på at du vil slette denne betalingen?</string>
+    <string name="selected_color">Valgt farge</string>
+    <string name="selected_item">"Valgt "</string>
 </resources>

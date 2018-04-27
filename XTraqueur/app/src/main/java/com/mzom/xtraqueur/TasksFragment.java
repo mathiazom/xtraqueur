@@ -1,5 +1,6 @@
 package com.mzom.xtraqueur;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -37,6 +38,8 @@ public class TasksFragment extends Fragment {
 
     // Tasks dataset
     private ArrayList<XTask> tasks;
+
+    private XTaskListAdapter mListAdapter;
 
     // Log tag for debugging
     private final static String TAG = "Xtraqueur-TasksFrag";
@@ -165,6 +168,7 @@ public class TasksFragment extends Fragment {
     }
 
     // Fill ListView with items representing the tasks
+    @SuppressLint("ClickableViewAccessibility")
     private void loadTasks() {
 
         // Create empty ArrayList if data set is null
@@ -201,7 +205,7 @@ public class TasksFragment extends Fragment {
         final DragSortListView xtask_list = view.findViewById(R.id.xtask_container);
 
         // ListView ArrayAdapter
-        final XTaskListAdapter mListAdapter = new XTaskListAdapter(getContext(), tasks, new XTaskListAdapter.XTaskListAdapterListener() {
+        mListAdapter = new XTaskListAdapter(getContext(), tasks, new XTaskListAdapter.XTaskListAdapterListener() {
             @Override
             public void onUpdateTasks(ArrayList<XTask> tasks) {
 

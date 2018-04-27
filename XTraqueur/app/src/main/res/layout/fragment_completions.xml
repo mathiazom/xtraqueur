@@ -17,7 +17,7 @@
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="@color/colorPrimary"
-        android:elevation="4dp"
+        app:elevation="4dp"
         app:navigationContentDescription="@string/go_back_to_all_tasks"
         app:navigationIcon="@drawable/ic_back">
 
@@ -28,7 +28,7 @@
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="@color/colorAccentDark"
-        android:elevation="4dp"
+        app:elevation="4dp"
         android:visibility="gone"
         app:navigationContentDescription="@string/cancel_selection"
         app:navigationIcon="@drawable/ic_clear">

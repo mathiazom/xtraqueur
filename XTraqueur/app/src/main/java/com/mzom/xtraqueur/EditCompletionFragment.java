@@ -131,7 +131,7 @@ public class EditCompletionFragment extends BaseEditFragment {
         tempCompletionDate = newDate.getTime();
 
         // Completion date text
-        final SimpleDateFormat dateFormat = new SimpleDateFormat("EEEE d MMM yyyy", Locale.getDefault());;
+        final SimpleDateFormat dateFormat = new SimpleDateFormat("EEEE d MMM yyyy", Locale.getDefault());
         completionDateEdit.setText(dateFormat.format(newDate));
 
         // Completion time text

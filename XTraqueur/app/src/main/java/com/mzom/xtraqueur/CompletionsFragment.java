@@ -1,8 +1,6 @@
 package com.mzom.xtraqueur;
 
 import android.app.AlertDialog;
-import android.app.DatePickerDialog;
-import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.drawable.ColorDrawable;
@@ -16,26 +14,17 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.ScaleAnimation;
-import android.widget.Button;
-import android.widget.DatePicker;
-import android.widget.EditText;
-import android.widget.TimePicker;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
-import java.util.Locale;
 
 public class CompletionsFragment extends Fragment {
 
@@ -53,8 +42,6 @@ public class CompletionsFragment extends Fragment {
 
     private Toolbar mToolbar;
     private Toolbar mSelectionModeToolbar;
-
-    private RecyclerView mRecyclerView;
 
     private CompletionsFragmentListener mCompletionsFragmentListener;
 
@@ -112,9 +99,7 @@ public class CompletionsFragment extends Fragment {
     // Initialize toolbar field variable and add action buttons with listeners
     private void initToolbar() {
 
-        // Load both regular and selection mode toolbar (only regular toolbar visible at startup)
-
-        // Initialize toolbar field variable
+        // Initialize regular toolbar field variable
         mToolbar = view.findViewById(R.id.toolbar);
 
         // Add action buttons to toolbar from menu resource
@@ -124,35 +109,10 @@ public class CompletionsFragment extends Fragment {
         mToolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
-                switch (item.getItemId()){
+                switch (item.getItemId()) {
                     case R.id.timeline_icon_task_filter:
                         // Display dialog for filtering
-
-                        ArrayList<String> titles_temp = new ArrayList<>();
-                        final ArrayList<XTask> titles_task = new ArrayList<>();
-                        titles_temp.add(getString(R.string.timeline_filter_all_tasks));
-                        titles_task.add(null);
-
-                        for(XTask t : tasks){
-                            if(t.getCompletions() > 0){
-                                titles_temp.add(t.getName());
-                                titles_task.add(t);
-                            }
-                        }
-
-                        CharSequence[] titles = titles_temp.toArray(new CharSequence[titles_temp.size()]);
-
-                        new AlertDialog.Builder(getContext())
-                                .setTitle(R.string.timeline_filter_by_task)
-                                .setSingleChoiceItems(titles, filterTask != null ? titles_task.indexOf(filterTask) : 0,new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        loadCompletions(titles_task.get(which));
-                                        dialog.dismiss();
-                                    }
-                                })
-                                .create()
-                                .show();
+                        completionsFilterDialog();
                 }
                 return false;
             }
@@ -181,18 +141,16 @@ public class CompletionsFragment extends Fragment {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
 
-                ArrayList<Boolean> oldSelection = selectionArray;
-
-                disableSelectionMode();
-
-                switch (item.getItemId()){
+                switch (item.getItemId()) {
                     case R.id.timeline_selection_mode_icon_register_payment:
-                        mCompletionsFragmentListener.loadNewPaymentFragment(oldSelection);
+                        mCompletionsFragmentListener.loadNewPaymentFragment(selectionArray);
                         break;
                     case R.id.timeline_selection_mode_icon_delete:
-                        deleteSelectedCompletions(oldSelection);
+                        deleteSelectedCompletions();
                         break;
                 }
+
+                hideSelectionUI();
 
                 return false;
             }
@@ -202,34 +160,64 @@ public class CompletionsFragment extends Fragment {
         mSelectionModeToolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                disableSelectionMode();
+                mAdapter.setUniversalItemSelection(false);
             }
         });
     }
 
+    // Dialog used to filter completions used in timeline adapter
+    private void completionsFilterDialog(){
+
+        ArrayList<String> titles_temp = new ArrayList<>();
+        final ArrayList<XTask> titles_task = new ArrayList<>();
+        titles_temp.add(getString(R.string.timeline_filter_all_tasks));
+        titles_task.add(null);
+
+        for (XTask t : tasks) {
+            if (t.getCompletions() > 0) {
+                titles_temp.add(t.getName());
+                titles_task.add(t);
+            }
+        }
+
+        CharSequence[] titles = titles_temp.toArray(new CharSequence[titles_temp.size()]);
+
+        new AlertDialog.Builder(getContext())
+                .setTitle(R.string.timeline_filter_by_task)
+                .setSingleChoiceItems(titles, filterTask != null ? titles_task.indexOf(filterTask) : 0, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        loadCompletions(titles_task.get(which));
+                        dialog.dismiss();
+                    }
+                })
+                .create()
+                .show();
+    }
+
     // Use SparseBooleanArray to get RecyclerView's currently selected completions
-    private ArrayList<XTaskCompletion> getSelectedCompletions(){
+    private ArrayList<XTaskCompletion> getSelectedCompletions() {
 
         ArrayList<XTaskCompletion> selectedCompletions = new ArrayList<>();
 
-        for(int c = 0;c<completions.size();c++){
-            if(selectionArray.get(c)){
+        for (int c = 0; c < completions.size(); c++) {
+            if (selectionArray.get(c)) {
                 selectedCompletions.add(completions.get(c));
             }
         }
         return selectedCompletions;
     }
 
-    private void loadCompletions(XTask filterTask){
-        this.filterTask = filterTask;
-        loadCompletions();
+    // Display all completions without any filter
+    private void loadCompletions() {
+        loadCompletions(null);
     }
 
     // Display all completions sorted from newest to oldest
-    private void loadCompletions() {
+    private void loadCompletions(final XTask filterTask) {
 
         // Load recycler view
-        mRecyclerView = view.findViewById(R.id.completions_recycler);
+        RecyclerView mRecyclerView = view.findViewById(R.id.completions_recycler);
 
         mRecyclerView.setHasFixedSize(true);
 
@@ -239,8 +227,8 @@ public class CompletionsFragment extends Fragment {
         completions = new ArrayList<>();
 
         // Filtered for single task (from EditTaskFragment)
-        if(filterTask != null){
-            if(filterTask.getCompletionsList() != null){
+        if (filterTask != null) {
+            if (filterTask.getCompletionsList() != null) {
                 for (Long l : filterTask.getCompletionsList()) {
                     completions.add(new XTaskCompletion(l, filterTask));
                 }
@@ -248,7 +236,7 @@ public class CompletionsFragment extends Fragment {
         }
 
         // No filters, showing all task completions
-        else{
+        else {
             for (XTask t : tasks) {
                 if (t.getCompletionsList() != null)
                     for (Long l : t.getCompletionsList()) {
@@ -266,11 +254,11 @@ public class CompletionsFragment extends Fragment {
         });
 
         // Display completions in RecyclerView with Adapter
-        mAdapter = new TimelineAdapter(false,new TimelineAdapter.TimelineAdapterListener() {
+        mAdapter = new TimelineAdapter(false, new TimelineAdapter.TimelineAdapterListener() {
             @Override
-            public void onItemClick(int pos,float y) {
-                Log.i("Edit completion",String.valueOf(y));
-                editCompletion(pos,y);
+            public void onItemClick(int pos, float y) {
+                Log.i("Edit completion", String.valueOf(y));
+                editCompletion(pos, y);
             }
 
             @Override
@@ -283,16 +271,7 @@ public class CompletionsFragment extends Fragment {
                 // Update selection array
                 selectionArray = updatedSelectionArray;
 
-                updateSelectionToolbar();
-
-                // Enable/disable selection mode based on number of selections
-                if(totalSelected() > 0){
-                    enableSelectionMode();
-                    return true;
-                }else{
-                    disableSelectionMode();
-                    return false;
-                }
+                return updateSelectionBasedUI();
             }
 
             @Override
@@ -302,18 +281,11 @@ public class CompletionsFragment extends Fragment {
                 int color = completions.get(pos).getTask().getColor();
                 long date = completions.get(pos).getDate();
 
-                return new TimelineItem(title,color,date);
+                return new TimelineItem(title, color, date);
             }
         });
 
         mRecyclerView.setAdapter(mAdapter);
-
-    }
-
-    private void refreshTimeline(){
-
-        // Display completions in RecyclerView with Adapter
-        mRecyclerView.getAdapter().notifyDataSetChanged();
 
     }
 
@@ -361,25 +333,33 @@ public class CompletionsFragment extends Fragment {
     }
 
     // Calculate how many completions have been selected
-    private int totalSelected(){
+    private int totalSelected() {
         return mAdapter.getTotalSelected();
     }
 
-    private void updateSelectionToolbar(){
+    private boolean updateSelectionBasedUI() {
 
         // Update toolbar title based on number of selected
         int total_selected = totalSelected();
         String toolbar_title;
-        if(total_selected == 0){
+        if (total_selected == 0) {
             toolbar_title = getString(R.string.select_completions);
-        }else{
+        } else {
             toolbar_title = String.valueOf(total_selected) + " " + getString(R.string.selected);
         }
 
         mSelectionModeToolbar.setTitle(toolbar_title);
+
+        if (totalSelected() > 0) {
+            displaySelectionUI();
+            return true;
+        }
+
+        hideSelectionUI();
+        return false;
     }
 
-    private void enableSelectionMode(){
+    private void displaySelectionUI(){
 
         // Hide regular toolbar
         mToolbar = view.findViewById(R.id.toolbar);
@@ -388,11 +368,9 @@ public class CompletionsFragment extends Fragment {
         // Make selection mode toolbar visible
         mSelectionModeToolbar = view.findViewById(R.id.toolbar_selection_mode);
         mSelectionModeToolbar.setVisibility(View.VISIBLE);
-
-        updateSelectionToolbar();
     }
 
-    private void disableSelectionMode(){
+    private void hideSelectionUI(){
         // Selection array with none selected
         selectionArray = new ArrayList<>(Arrays.asList(new Boolean[completions.size()]));
         Collections.fill(selectionArray,false);
@@ -404,42 +382,21 @@ public class CompletionsFragment extends Fragment {
         // Make regular toolbar visible
         mToolbar = view.findViewById(R.id.toolbar);
         mToolbar.setVisibility(View.VISIBLE);
-
-        refreshTimeline();
-        Log.i("Timeline","Loaded timeline");
     }
 
-    private void deleteSelectedCompletions(ArrayList<Boolean> selection){
+    private void deleteSelectedCompletions() {
 
-        Log.i("Timeline","Starting deletion");
+        for (XTaskCompletion completion : getSelectedCompletions()) {
 
-        ArrayList<XTaskCompletion> toRemove = new ArrayList<>();
+            tasks.get(tasks.indexOf(completion.getTask())).removeCompletion(completion.getDate());
 
-        for(int c = completions.size()-1;c>=0;c--){
-            Log.i("Timeline","Selection for " + String.valueOf(c) + " - " + String.valueOf(selection.get(c)));
-            if(selection.get(c)){
-                XTaskCompletion completion = completions.get(c);
-                tasks.get(tasks.indexOf(completion.getTask())).removeCompletion(completion.getDate());
-                toRemove.add(completion);
-                mAdapter.deleteItem(c);
-                Log.i("Timeline",String.valueOf(c) + " will be removed");
-            }
-        }
-
-        Log.i("Timeline","To be removed " + toRemove.toString());
-
-        /*for(XTaskCompletion completion : toRemove){
-
-            Log.i("Timeline", "Removing");
-
-            mAdapter.deleteItem(completions.indexOf(completion));
-
-            Log.i("Timeline","II Removed " + String.valueOf(completions.indexOf(completion)));
+            int index = completions.indexOf(completion);
 
             completions.remove(completion);
-        }*/
 
-        completions.removeAll(toRemove);
+            mAdapter.deleteItem(index);
+
+        }
 
         mCompletionsFragmentListener.updateTasksDataOnDrive(tasks);
 

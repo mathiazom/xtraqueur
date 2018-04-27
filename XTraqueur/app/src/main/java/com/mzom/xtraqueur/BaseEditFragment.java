@@ -28,7 +28,6 @@ import android.widget.TimePicker;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.EventListener;
 
 public abstract class BaseEditFragment extends Fragment {
 
@@ -49,8 +48,6 @@ public abstract class BaseEditFragment extends Fragment {
         void updateTasksDataOnDrive(ArrayList<XTask> tasks);
 
         void updatePaymentsDataOnDrive(ArrayList<XTaskPayment> payments);
-
-        void loadCompletionsFragment();
 
         void loadCompletionsFragment(ArrayList<XTask> tasks,XTask task);
 
@@ -307,7 +304,7 @@ public abstract class BaseEditFragment extends Fragment {
 
     // Get a darker shade of the original task color
     @ColorInt
-    int darkenColor(@ColorInt int color) {
+    private int darkenColor(@ColorInt int color) {
         float[] hsv = new float[3];
         Color.colorToHSV(color, hsv);
         hsv[2] *= 0.8f;

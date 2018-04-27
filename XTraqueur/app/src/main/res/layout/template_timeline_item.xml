@@ -10,7 +10,7 @@
     android:layout_marginTop="0dp">
 
     <TextView
-        android:id="@+id/timeline_new_date_title"
+        android:id="@+id/timeline_item_date_header"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:paddingBottom="10dp"
@@ -24,7 +24,7 @@
         android:layout_height="wrap_content"
         android:background="@drawable/dark_rounded_2dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/timeline_new_date_title">
+        app:layout_constraintTop_toBottomOf="@id/timeline_item_date_header">
 
         <LinearLayout
             android:id="@+id/item_title_and_date"
@@ -64,7 +64,8 @@
             android:src="@drawable/ic_check"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            android:contentDescription="@string/selected_item" />
 
     </android.support.constraint.ConstraintLayout>
 

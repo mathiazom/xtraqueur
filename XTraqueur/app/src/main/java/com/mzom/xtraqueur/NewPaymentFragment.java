@@ -4,8 +4,6 @@ import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.graphics.PorterDuff;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -13,14 +11,11 @@ import android.support.design.widget.TextInputEditText;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
-import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.support.v7.widget.Toolbar;
-import android.widget.Button;
 import android.widget.DatePicker;
 
 import java.text.NumberFormat;
@@ -40,8 +35,6 @@ public class NewPaymentFragment extends Fragment {
     private Date paymentDate;
 
     private View view;
-
-    private Toolbar mToolbar;
 
     private Toolbar mSelectionModeToolbar;
 
@@ -96,9 +89,7 @@ public class NewPaymentFragment extends Fragment {
 
         initListeners();
 
-        initTimeline();
-
-        //initSelectionButton();
+        loadCompletions();
 
         setPaymentDate(Calendar.getInstance().getTime());
 
@@ -120,7 +111,7 @@ public class NewPaymentFragment extends Fragment {
 
         // Regular toolbar
 
-        mToolbar = view.findViewById(R.id.toolbar);
+        Toolbar mToolbar = view.findViewById(R.id.toolbar);
 
         mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
@@ -134,8 +125,6 @@ public class NewPaymentFragment extends Fragment {
         // Payment selection toolbar
 
         mSelectionModeToolbar = view.findViewById(R.id.toolbar_selection_mode);
-
-        //mSelectionModeToolbar.setVisibility(View.GONE);
 
         mSelectionModeToolbar.inflateMenu(R.menu.menu_new_payment_fragment_selection_mode);
 
@@ -151,10 +140,10 @@ public class NewPaymentFragment extends Fragment {
                 switch (item.getItemId()){
                     case R.id.payment_selection_mode_icon_select_all:
                         // Select all payments
-                        mAdapter.setAllItemsSelection(true);
+                        mAdapter.setUniversalItemSelection(true);
                         break;
                     case R.id.payment_selection_mode_icon_deselect_all:
-                        deselectAllCompletions();
+                        mAdapter.setUniversalItemSelection(false);
                         break;
                 }
 
@@ -275,7 +264,7 @@ public class NewPaymentFragment extends Fragment {
         return completions;
     }
 
-    private void initTimeline() {
+    private void loadCompletions() {
 
         RecyclerView mRecyclerView = view.findViewById(R.id.register_payment_completions);
 
@@ -333,7 +322,7 @@ public class NewPaymentFragment extends Fragment {
 
         });
 
-        mAdapter.selectItems(selectionArray);
+        mAdapter.setSelectionArray(selectionArray);
 
         mRecyclerView.setAdapter(mAdapter);
 
@@ -343,16 +332,6 @@ public class NewPaymentFragment extends Fragment {
     private void initSelectionArray(){
         selectionArray = new ArrayList<>(Arrays.asList(new Boolean[completions.size()]));
         Collections.fill(selectionArray,false);
-    }
-
-    // Payment registering
-
-    private void deselectAllCompletions(){
-        mAdapter.setAllItemsSelection(false);
-        MenuItem selectAll = mSelectionModeToolbar.getMenu().findItem(R.id.payment_selection_mode_icon_select_all);
-        selectAll.setVisible(true);
-        MenuItem deselectAll = mSelectionModeToolbar.getMenu().findItem(R.id.payment_selection_mode_icon_deselect_all);
-        deselectAll.setVisible(false);
     }
 
     // Calculate how many completions have been selected

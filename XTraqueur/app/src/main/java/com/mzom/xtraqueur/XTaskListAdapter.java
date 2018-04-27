@@ -5,7 +5,6 @@ import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
-import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
@@ -41,7 +40,6 @@ class XTaskListAdapter extends ArrayAdapter<XTask> {
         super(ctx, -1, tasks);
         this.mLayoutInflater = LayoutInflater.from(ctx);
         this.xTaskListAdapterListener = xTaskListAdapterListener;
-
         this.tasks = tasks;
 
     }
@@ -122,20 +120,10 @@ class XTaskListAdapter extends ArrayAdapter<XTask> {
                 if (task.getCompletionsList().size() == 0) return;
 
                 xTaskListAdapterListener.loadTimeline(tasks,task);
-
-                /*CompletionsDialog completionsDialog = new CompletionsDialog(getContext(), tasks, task, position,new CompletionsDialog.OnCompletionDeletedListener() {
-                    @Override
-                    public void onCompletionDeleted(ArrayList<XTask> updated_tasks) {
-                        xTaskListAdapterListener.onUpdateTasks(updated_tasks);
-                        holder.mTaskCompletions.setText(String.valueOf(updated_tasks.get(position).getCompletions()));
-                    }
-                });
-                completionsDialog.show();*/
             }
         });
 
         // Set task view background according to task color
-        //convertView.setBackground(new ColorDrawable(darkenColor(task.getColor())));
         convertView.setBackground(new ColorDrawable(task.getColor()));
 
         return convertView;

@@ -24,18 +24,18 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 
-public class XTasksDataUploader extends AsyncTask<XTasksDataPackage,Void,Void> {
+class XTasksDataUploader extends AsyncTask<XTasksDataPackage,Void,Void> {
 
     private static final String TAG = "XTQ-XTasksDataUploader";
 
-    private GoogleSignInAccount mGoogleSignInAccount;
+    private final GoogleSignInAccount mGoogleSignInAccount;
 
-    private DriveResourceClient mDriveResourceClient;
+    private final DriveResourceClient mDriveResourceClient;
 
-    private SharedPreferences sharedPreferencesTasks;
-    private SharedPreferences sharedPreferencesPayments;
+    private final SharedPreferences sharedPreferencesTasks;
+    private final SharedPreferences sharedPreferencesPayments;
 
-    private OnSuccessListener<DriveFile> onSuccessListener;
+    private final OnSuccessListener<DriveFile> onSuccessListener;
 
     // Google Drive tasks data file name
     private static final String TASKS_DATA_FILE_NAME = "tasks_data.txt";
@@ -142,6 +142,15 @@ public class XTasksDataUploader extends AsyncTask<XTasksDataPackage,Void,Void> {
 
 
     private void updatePaymentsDataOnDrive(ArrayList<XTaskPayment> payments){
+
+        if (payments == null) {
+            Log.e(TAG, "Google Drive API: Payments data was null, update terminated");
+            return;
+        }
+
+        // Update data locally
+        updatePaymentsDataOnDevice(payments);
+
         final Task<DriveFolder> appFolderTask = mDriveResourceClient.getAppFolder();
         final Task<DriveContents> createContentsTask = mDriveResourceClient.createContents();
 
@@ -182,5 +191,13 @@ public class XTasksDataUploader extends AsyncTask<XTasksDataPackage,Void,Void> {
                 });
     }
 
+    // Update payments data in SharedPreferences (stored locally on the device)
+    private void updatePaymentsDataOnDevice(ArrayList<XTaskPayment> payments) {
+        String json = new Gson().toJson(payments);
+        String id = mGoogleSignInAccount.getId();
+        sharedPreferencesPayments.edit().putString("PAYMENTS_DATA_" + id, json).apply();
+        Log.i(TAG, "SharedPreferences: Local payments data updated for id " + id);
+        Log.i(TAG, json);
+    }
 
 }

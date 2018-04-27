@@ -1,10 +1,6 @@
 package com.mzom.xtraqueur;
 
-/**
- * Created by Mathias on 20.04.2018.
- */
-
-public class TimelineItem {
+class TimelineItem {
 
     private String title;
     private int color;

@@ -266,6 +266,17 @@ public class NewTaskFragment extends Fragment {
 
         // Return to TasksFragment
         newTaskFragmentListener.loadTasksFragment();
+
+        hideKeyboard();
+    }
+
+    private void hideKeyboard(){
+        if(getContext() == null) return;
+
+        InputMethodManager imm = (InputMethodManager)getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+
+        if(imm == null) return;
+        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
 
     // Triggered when user picks a color in the color picker

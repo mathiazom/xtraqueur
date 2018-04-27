@@ -116,4 +116,6 @@
     <string name="delete_completion_confirmation_message">This action can not be undone. Do you really want to delete this task?</string>
     <string name="delete_payment_confirmation_title">Delete payment?</string>
     <string name="delete_payment_confirmation_message">This action can not be undone. Do you really want to delete this payment?</string>
+    <string name="selected_color">Selected color</string>
+    <string name="selected_item">Selected</string>
 </resources>
