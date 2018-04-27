@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    android:background="@color/colorPrimary">
 
     <android.support.v7.widget.Toolbar
-        app:title="@string/menu_icon_title_settings"
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="@color/colorPrimary"
-        android:elevation="4dp"
         app:navigationContentDescription="@string/go_back_to_all_tasks"
-        app:navigationIcon="@drawable/ic_back">
+        app:navigationIcon="@drawable/ic_back"
+        app:title="@string/menu_icon_title_settings">
 
     </android.support.v7.widget.Toolbar>
 
@@ -28,30 +28,30 @@
         <android.support.constraint.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingTop="20dp"
+            android:paddingEnd="20dp"
             android:paddingStart="20dp"
-            android:paddingEnd="20dp">
+            android:paddingTop="20dp">
 
             <TextView
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
+                android:id="@+id/settings_section_title_google_account"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/settings_section_title_google_account"
-                android:text="@string/settings_section_google_account" />
+                android:text="@string/settings_section_google_account"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
             <android.support.constraint.ConstraintLayout
-                android:paddingStart="20dp"
-                android:paddingEnd="16dp"
-                android:paddingTop="18dp"
-                android:paddingBottom="12dp"
-                android:background="@drawable/white_rounded"
                 android:id="@+id/settings_section_google_account"
-                android:layout_marginTop="20dp"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/settings_section_title_google_account"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:background="@drawable/white_rounded"
+                android:paddingBottom="12dp"
+                android:paddingEnd="16dp"
+                android:paddingStart="20dp"
+                android:paddingTop="18dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/settings_section_title_google_account">
 
                 <de.hdodenhof.circleimageview.CircleImageView
                     android:id="@+id/settings_google_account_photo"
@@ -71,44 +71,45 @@
 
                     <TextView
                         android:id="@+id/settings_google_account_name"
-                        android:fontFamily="sans-serif-light"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:fontFamily="sans-serif-light"
                         android:textColor="@color/colorPrimary"
-                        android:textStyle="bold"
-                        android:textSize="17sp"/>
+                        android:textSize="17sp"
+                        android:textStyle="bold" />
 
                     <TextView
-                        android:fontFamily="sans-serif-light"
                         android:id="@+id/settings_google_account_email"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:fontFamily="sans-serif-light"
                         android:textColor="@color/colorPrimary"
                         android:textSize="13sp" />
 
                 </LinearLayout>
 
                 <Button
-                    android:layout_marginTop="15dp"
                     android:id="@+id/button_account_sign_out"
                     android:layout_width="wrap_content"
                     android:layout_height="32dp"
-                    android:text="@string/sign_out"
-                    android:textColor="@color/colorAccent"
+                    android:layout_marginTop="15dp"
                     android:background="@android:color/transparent"
+                    android:text="@string/sign_out"
+                    android:textAlignment="viewStart"
+                    android:textColor="@color/colorAccent"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/settings_google_account_photo" />
 
                 <Button
-                    android:visibility="gone"
-                    android:layout_marginTop="15dp"
                     android:id="@+id/button_account_sign_in"
                     android:layout_width="wrap_content"
                     android:layout_height="32dp"
+                    android:layout_marginTop="15dp"
+                    android:background="@android:color/transparent"
                     android:text="@string/sign_in"
                     android:textColor="@color/colorAccent"
-                    android:background="@android:color/transparent"
+                    android:visibility="gone"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/settings_google_account_photo" />
@@ -116,50 +117,50 @@
             </android.support.constraint.ConstraintLayout>
 
             <TextView
-                app:layout_constraintTop_toBottomOf="@id/settings_section_google_account"
-                app:layout_constraintStart_toStartOf="parent"
-                android:layout_marginTop="40dp"
+                android:id="@+id/settings_section_title_danger_zone"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/settings_section_title_danger_zone"
-                android:text="@string/settings_section_danger_zone" />
+                android:layout_marginTop="40dp"
+                android:text="@string/settings_section_danger_zone"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/settings_section_google_account" />
 
             <android.support.constraint.ConstraintLayout
                 android:id="@+id/settings_section_danger_zone"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/settings_section_title_danger_zone"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                app:layout_constraintTop_toBottomOf="@id/settings_section_title_danger_zone">
 
                 <Button
-                    android:layout_marginTop="6dp"
-                    android:layout_marginBottom="6dp"
-                    android:textSize="14sp"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
                     android:id="@+id/button_delete_all_completions"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
                     android:layout_width="wrap_content"
                     android:layout_height="36dp"
+                    android:layout_marginBottom="6dp"
+                    android:layout_marginTop="6dp"
+                    android:background="@drawable/accent_rounded_2dp"
+                    android:paddingEnd="16dp"
+                    android:paddingStart="16dp"
                     android:text="@string/delete_all_completions"
-                    android:background="#c62828"/>
+                    android:textSize="14sp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
 
 
                 <Button
-                    android:layout_marginBottom="6dp"
-                    android:textSize="14sp"
-                    android:layout_marginTop="11dp"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
-                    app:layout_constraintTop_toBottomOf="@id/button_delete_all_completions"
-                    app:layout_constraintStart_toStartOf="parent"
                     android:id="@+id/button_delete_all_tasks"
                     android:layout_width="wrap_content"
                     android:layout_height="36dp"
+                    android:layout_marginBottom="6dp"
+                    android:layout_marginTop="11dp"
+                    android:background="@drawable/accent_rounded_2dp"
+                    android:paddingEnd="16dp"
+                    android:paddingStart="16dp"
                     android:text="@string/delete_all_tasks"
-                    android:background="#c62828"/>
+                    android:textSize="14sp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/button_delete_all_completions" />
 
             </android.support.constraint.ConstraintLayout>
         </android.support.constraint.ConstraintLayout>

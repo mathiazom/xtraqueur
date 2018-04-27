@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item android:title="@string/select_all" android:id="@+id/payment_selection_mode_icon_select_all" app:showAsAction="ifRoom"/>
+    <item android:title="@string/deselect_all" android:id="@+id/payment_selection_mode_icon_deselect_all" app:showAsAction="ifRoom"/>
+    <!-- <item android:title="@string/register_payment" android:icon="@drawable/ic_payment_icon" android:id="@+id/payment_selection_mode_icon_register_payment" app:showAsAction="ifRoom"/> -->
+</menu>

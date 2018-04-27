@@ -7,14 +7,13 @@
     android:background="@color/colorPrimaryDark">
 
     <android.support.v7.widget.Toolbar
-        app:title="@string/new_task"
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="@color/colorPrimary"
         android:elevation="4dp"
         app:navigationContentDescription="@string/go_back_to_all_tasks"
-        app:navigationIcon="@drawable/ic_back">
+        app:navigationIcon="@drawable/ic_clear">
 
     </android.support.v7.widget.Toolbar>
 
@@ -33,10 +32,11 @@
             android:layout_height="wrap_content"
             android:paddingEnd="50dp"
             android:paddingStart="50dp"
-            android:paddingTop="50dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="50dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/top_toolbar">
+            app:layout_constraintTop_toTopOf="parent">
 
             <android.support.design.widget.TextInputLayout
                 android:id="@+id/newtask_layout_name"
@@ -51,6 +51,7 @@
                     android:id="@+id/newtask_edit_name"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:textStyle="bold"
                     android:hint="@string/new_task_name"
                     android:textSize="30sp" />
 
@@ -76,49 +77,6 @@
 
             </android.support.design.widget.TextInputLayout>
 
-            <!--<TextView
-                android:id="@+id/newtask_title_name"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:labelFor="@id/newtask_edit_name"
-                android:text="@string/new_task_name"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <EditText
-                android:id="@+id/newtask_edit_name"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:hint="@string/new_task_name_placeholder"
-                android:maxLines="1"
-                android:textSize="30sp"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/newtask_title_name" />
-
-            <TextView
-                android:id="@+id/newtask_title_fee"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:labelFor="@id/newtask_edit_fee"
-                android:text="@string/new_task_fee"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/newtask_edit_name" />
-
-            <EditText
-                android:id="@+id/newtask_edit_fee"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_alignParentStart="true"
-                android:layout_marginEnd="8dp"
-                android:hint="@string/new_task_fee_placeholder"
-                android:inputType="numberSigned"
-                android:maxLines="1"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/newtask_title_fee" />-->
-
             <TextView
                 android:id="@+id/newtask_title_color"
                 android:layout_width="match_parent"
@@ -128,15 +86,39 @@
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/newtask_layout_fee" />
 
-            <LinearLayout
-                android:id="@+id/newtask_field_color"
+            <android.support.constraint.ConstraintLayout
+                android:id="@+id/newtask_color_button"
                 android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:layout_marginTop="15dp"
-                android:background="@drawable/dark_rounded"
-                android:orientation="horizontal"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:padding="10dp"
+                android:background="@drawable/white_rounded"
                 app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/newtask_title_color" />
+                app:layout_constraintTop_toBottomOf="@+id/newtask_title_color">
+
+                <LinearLayout
+                    android:id="@+id/newtask_color_button_marker"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_marginStart="5dp"
+                    android:orientation="horizontal"
+                    android:background="@drawable/circle"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"/>
+
+                <TextView
+                    android:layout_marginStart="15dp"
+                    android:id="@+id/newtask_color_button_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="17sp"
+                    android:textColor="@color/colorPrimary"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toEndOf="@id/newtask_color_button_marker"/>
+
+            </android.support.constraint.ConstraintLayout>
 
         </android.support.constraint.ConstraintLayout>
 

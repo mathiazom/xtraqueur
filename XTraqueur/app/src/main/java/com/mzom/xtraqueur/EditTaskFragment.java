@@ -1,56 +1,32 @@
 package com.mzom.xtraqueur;
 
-import android.app.AlertDialog;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
-import android.os.Bundle;
-import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.TextInputEditText;
 import android.support.design.widget.TextInputLayout;
-import android.support.v4.app.Fragment;
-import android.support.v7.widget.Toolbar;
-import android.view.ContextThemeWrapper;
-import android.view.LayoutInflater;
-import android.view.MenuItem;
+import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
-import android.widget.ScrollView;
-
-import com.jaredrummler.android.colorpicker.ColorPickerDialog;
-import com.jaredrummler.android.colorpicker.ColorPickerDialogListener;
+import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Date;
 
-public class EditTaskFragment extends Fragment {
+public class EditTaskFragment extends BaseEditFragment {
 
-    // Fragment main views
-    private View view;
-
-    private Toolbar mToolbar;
+    private ConstraintLayout fragmentView;
 
     private TextInputEditText mNameEditText;
-    private TextInputLayout mNameLayout;
-
     private TextInputEditText mFeeEditText;
+
+    private TextInputLayout mNameLayout;
     private TextInputLayout mFeeLayout;
 
     private Button mManageButton;
-    private Button mDeleteButton;
-
-    private LinearLayout mColorField;
-
-    private boolean isTaskNameChanged;
-    private boolean isTaskFeeChanged;
-    private boolean isTaskColorChanged;
-
 
     // Tasks data set
     private ArrayList<XTask> tasks;
@@ -64,33 +40,7 @@ public class EditTaskFragment extends Fragment {
     // Color selected in color picker, but not yet saved to task
     private int temp_color;
 
-    // Listener to communicate with MainActivity
-    private EditTaskFragmentListener editTaskFragmentListener;
-
-    // Interface to communicate with MainActivity
-    interface EditTaskFragmentListener {
-        // Tell MainActivity to display TasksFragment in the FrameLayout
-        void loadTasksFragment();
-
-        // Update tasks data on Google Drive
-        void updateTasksDataOnDrive(ArrayList<XTask> tasks);
-
-        // Access useDarkText method in MainActivity
-        boolean useDarkText(int color);
-    }
-
-    // Initialize listener field variable when fragment has been attached
-    @Override
-    public void onAttach(Context activity) {
-        super.onAttach(activity);
-
-        try {
-            editTaskFragmentListener = (EditTaskFragmentListener) activity;
-
-        } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString() + " must implement EditTaskFragmentListener");
-        }
-    }
+    final static String TAG = "Xtraqueur-EditFrag";
 
     // Constructor that enables MainActivity to pass arguments to the fragments field variables on creation
     public static EditTaskFragment newInstance(ArrayList<XTask> tasks, XTask task, int index) {
@@ -102,316 +52,144 @@ public class EditTaskFragment extends Fragment {
         return fragment;
     }
 
-    @Nullable
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    private void initMaterialColorList(){
 
-        // Retain fragment state to save its variables
-        setRetainInstance(true);
-
-        // Root view for this fragment
-        this.view = inflater.inflate(R.layout.fragment_edittask, container, false);
-
-        // Init field variables for fragment views
-        mNameLayout = view.findViewById(R.id.edittask_layout_name);
-        mFeeLayout = view.findViewById(R.id.edittask_layout_fee);
-
-        mNameEditText = view.findViewById(R.id.edittask_edit_name);
-        mFeeEditText = view.findViewById(R.id.edittask_edit_fee);
-
-        mManageButton = view.findViewById(R.id.button_manage_completions);
-        mDeleteButton = view.findViewById(R.id.delete_task);
-
-        mColorField = view.findViewById(R.id.edittask_field_color);
-
-        // Init fragment toolbar
-        initToolbar();
-
-        // Setup the listeners for the views in this fragment
-        initListeners();
-
-        return view;
-    }
-
-    // Execute methods that depend on an activity being created
-    @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-
-        // Fill UI with original task data
-        // This is done in onActivityCreated to avoid getActivity() returning null
-        loadTaskData();
-    }
-
-
-    // Initialize toolbar field variable and add action buttons with listeners
-    void initToolbar() {
-
-        // Initialize toolbar field variable
-        mToolbar = view.findViewById(R.id.toolbar);
-
-        // Add action buttons to toolbar from menu resource
-        mToolbar.inflateMenu(R.menu.menu_edit_task_fragment);
-
-        // Set back button as toolbar navigation icon
-        mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
+        ConstraintLayout colorButton = fragmentView.findViewById(R.id.edittask_color_button);
+        colorButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                confirmDiscardChanges();
+                final MaterialColorDialog materialColorDialog = new MaterialColorDialog(getContext(), temp_color,new MaterialColorDialog.MaterialColorDialogListener() {
+                    @Override
+                    public void onColorPicked(int color) {
+                        onColorChanged(color);
+                    }
+                });
+                materialColorDialog.show();
             }
         });
 
-        // Add listeners to the other toolbar action buttons
-        mToolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                switch (item.getItemId()) {
-                    case R.id.edittask_save_changes_text:
-                        saveChanges();
-                }
-                return false;
-            }
-        });
-    }
+        LinearLayout marker = fragmentView.findViewById(R.id.edittask_color_button_marker);
+        Drawable background = marker.getBackground();
+        background.setColorFilter(temp_color, PorterDuff.Mode.SRC_ATOP);
+        marker.setBackground(background);
 
-    void confirmDiscardChanges(){
-        // Check if changes have been made and ask user to stay in fragment or discard changes
-        if (taskDataIsChanged()) {
-            new AlertDialog.Builder(getContext())
-                    .setTitle(R.string.discard_changes_dialog_title)
-                    .setMessage(R.string.discard_changes_dialog_message)
-                    .setPositiveButton(R.string.discard_option, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            editTaskFragmentListener.loadTasksFragment();
-                        }
-                    })
-                    .setNegativeButton(R.string.cancel_option, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
+        TextView colorTitle = fragmentView.findViewById(R.id.edittask_color_button_title);
+        String sColor = String.format("#%06X", (0xFFFFFF & temp_color));
+        colorTitle.setText(sColor);
 
-                        }
-                    })
-                    .create()
-                    .show();
-
-        }
-        // Go back to tasks list if no changes have been made
-        else {
-            editTaskFragmentListener.loadTasksFragment();
-        }
-    }
-
-    // Setup the listeners for the views in this fragment
-    private void initListeners() {
-        // Color picker from color field
-        mColorField.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                colorPicker();
-            }
-        });
-
-        // Delete task button
-        mDeleteButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                deleteTask();
-            }
-        });
-
-        /*// Register name EditText changes
-        mNameEditText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                isTaskNameChanged = !mNameEditText.getEditableText().toString().equals(task.getName());
-                updateNavigationIcon();
-            }
-        });
-
-        // Register name EditText changes
-        mFeeEditText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                try{
-                    isTaskFeeChanged = Integer.parseInt(mFeeEditText.getEditableText().toString()) != task.getFee();
-                    updateNavigationIcon();
-                }catch (NumberFormatException e){
-                    mFeeLayout.setError(getString(R.string.invalid_fee));
-                }
-            }
-        });*/
-    }
-
-    // Display a ColorPickerDialog to change the tasks color
-    private void colorPicker() {
-
-        // Declare new ColorPickerDialog with temp_color
-        ColorPickerDialog colorPickerDialog = ColorPickerDialog.newBuilder().setColor(temp_color).setShowAlphaSlider(true).create();
-
-        // Add listener to the dialog
-        colorPickerDialog.setColorPickerDialogListener(new ColorPickerDialogListener() {
-            @Override
-            public void onColorSelected(int dialogId, int color) {
-                // Change fragment UI to use the selected color
-                onColorChanged(color);
-            }
-
-            @Override
-            public void onDialogDismissed(int dialogId) {
-
-            }
-        });
-
-        // Display color picker (as long as getActivity() doesn't return null)
-        if(getActivity() != null) colorPickerDialog.show(getActivity().getFragmentManager(), "ColorPicker");
     }
 
     // Triggered when user picks a color in the color picker
     private void onColorChanged(final int color) {
 
+        notifyItemColorChange(color);
+
         temp_color = color;
 
-        isTaskColorChanged = temp_color != task.getColor();
-
-        updateNavigationIcon();
-
-        // COLOR FIELD
-        Drawable colorFieldBackground = mColorField.getBackground();
-        colorFieldBackground.setColorFilter(temp_color, PorterDuff.Mode.SRC_ATOP);
-        mColorField.setBackground(colorFieldBackground);
-        mColorField.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                colorPicker();
-            }
-        });
-
-        // TOOLBAR COLOR
-        mToolbar.setBackground(new ColorDrawable(color));
-
-        //MANAGE BUTTON
+        // Manage button
         Drawable manage_drawable = mManageButton.getBackground();
-        manage_drawable.setColorFilter(color, PorterDuff.Mode.SRC_ATOP);
+        manage_drawable.setColorFilter(temp_color, PorterDuff.Mode.SRC_ATOP);
         mManageButton.setBackground(manage_drawable);
 
-        // SCROLL CONTAINER BACKGROUND
-        ScrollView scrollView = view.findViewById(R.id.edittask_main_scroll);
-        Drawable scrollDrawable = new ColorDrawable(darkenColor(color));
-        scrollView.setBackground(scrollDrawable);
+        // Color marker
+        LinearLayout marker = fragmentView.findViewById(R.id.edittask_color_button_marker);
+        Drawable background = marker.getBackground();
+        background.setColorFilter(temp_color, PorterDuff.Mode.SRC_ATOP);
+        marker.setBackground(background);
+
+        // Color title
+        TextView colorTitle = fragmentView.findViewById(R.id.edittask_color_button_title);
+        String sColor = String.format("#%06X", (0xFFFFFF & temp_color));
+        colorTitle.setText(sColor);
     }
 
-    // Indicate to the user that there are unsaved changes made to the task
-    private void updateNavigationIcon(){
-        if(isTaskNameChanged || isTaskFeeChanged || isTaskColorChanged){
-            mToolbar.setNavigationIcon(R.drawable.ic_clear);
-        }
-        else {
-            mToolbar.setNavigationIcon(R.drawable.ic_back);
-        }
-    }
+    @NonNull
+    @Override
+    ConstraintLayout getEditLayout(ConstraintLayout baseEditContainer) {
 
-    boolean hasUnsavedChanges(){
-        return isTaskNameChanged || isTaskFeeChanged || isTaskColorChanged;
-    }
+        // Root view for this fragment
+        fragmentView = (ConstraintLayout) getLayoutInflater().inflate(R.layout.fragment_edit_task, baseEditContainer, false);
 
-    // Fill input and color field with current task values
-    private void loadTaskData() {
+        // Init field variables for fragment views
+
+        mNameLayout = fragmentView.findViewById(R.id.edittask_layout_name);
+        mFeeLayout = fragmentView.findViewById(R.id.edittask_layout_fee);
+
+        mNameEditText = fragmentView.findViewById(R.id.edittask_edit_name);
+        mFeeEditText = fragmentView.findViewById(R.id.edittask_edit_fee);
+
+        mManageButton = fragmentView.findViewById(R.id.button_manage_completions);
 
         // Load task values to EditTexts
         mNameEditText.setText(task.getName());
         mFeeEditText.setText(String.valueOf(task.getFee()));
 
-        // Color field background
-        Drawable colorFieldBackground = mColorField.getBackground();
-        colorFieldBackground.setColorFilter(task.getColor(), PorterDuff.Mode.SRC_ATOP);
-        mColorField.setBackground(colorFieldBackground);
-
-        // Toolbar background
-        mToolbar.setBackground(new ColorDrawable(task.getColor()));
-
         // Manage button background
         Drawable manage_drawable = mManageButton.getBackground();
-        manage_drawable.setColorFilter(task.getColor(), PorterDuff.Mode.SRC_ATOP);
+        manage_drawable.setColorFilter(temp_color, PorterDuff.Mode.SRC_ATOP);
         mManageButton.setBackground(manage_drawable);
 
-        // Manage button listener
+        // Visually disable completion manage button if there are no task completions
+        if(task.getCompletionsList().size() == 0) mManageButton.setAlpha(0.30f);
+
+        Button deleteButton = fragmentView.findViewById(R.id.delete_task);
+
+        // Delete button background
+        if (getContext() != null) {
+            deleteButton.setTextColor(getContext().getResources().getColor(R.color.colorPrimary));
+            Drawable delete_drawable = deleteButton.getBackground();
+            delete_drawable.setColorFilter(getResources().getColor(R.color.colorWhite), PorterDuff.Mode.SRC_ATOP);
+            deleteButton.setBackground(delete_drawable);
+        }
+        setItemDeleteButton(deleteButton,getString(R.string.delete_task_confirmation),getString(R.string.delete_task_message));
+
+        // Completions Manage button
         mManageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (task.getCompletionsList() == null || task.getCompletionsList().size() == 0) {
                     return;
                 }
-                CompletionsDialog completionsDialog = new CompletionsDialog(getContext(), tasks, task, index);
-                completionsDialog.setOnCompletionDeletedListener(new CompletionsDialog.OnCompletionDeletedListener() {
-                    @Override
-                    public void onCompletionDeleted(ArrayList<XTask> updated_tasks) {
-                        editTaskFragmentListener.updateTasksDataOnDrive(updated_tasks);
-                    }
-                });
-                completionsDialog.show();
+
+                getBaseEditListener().loadCompletionsFragment(tasks,task);
             }
         });
 
-        // Delete button background
-        if (getContext() != null) {
-            mDeleteButton.setTextColor(getContext().getResources().getColor(R.color.colorPrimary));
-            Drawable delete_drawable = mDeleteButton.getBackground();
-            delete_drawable.setColorFilter(Color.parseColor("#eeeeee"), PorterDuff.Mode.SRC_ATOP);
-            mDeleteButton.setBackground(delete_drawable);
-        }
 
-        // ScrollView background
-        ScrollView scrollView = view.findViewById(R.id.edittask_main_scroll);
-        Drawable scrollDrawable = new ColorDrawable(darkenColor(task.getColor()));
-        scrollView.setBackground(scrollDrawable);
+        initMaterialColorList();
+
+        return fragmentView;
     }
 
-    // Check if any properties of the task has been changed
-    private boolean taskDataIsChanged() {
+    @Override
+    int getItemColor() {
+        return temp_color;
+    }
 
-        // COLLECT INPUT
-        String name = String.valueOf(mNameEditText.getEditableText());
-
-        int fee;
+    @Override
+    boolean itemDataIsChanged() {
+        // Get edited task fee
+        double fee;
         try {
             // CHECK FOR NUMBERS THAT ARE TOO LARGE (> 2^31-1)
-            fee = Integer.parseInt(String.valueOf(mFeeEditText.getEditableText()));
+            fee = Double.parseDouble(String.valueOf(mFeeEditText.getEditableText()));
         } catch (NumberFormatException e) {
             return true;
         }
 
-
-        return !(task.getName().equals(name) && task.getFee() == fee && task.getColor() == temp_color);
-    }
-
-    // Change task values according to inputs and update to Google drive
-    private void saveChanges() {
-
-        // Collect input
+        // Get edited task name
         String name = String.valueOf(mNameEditText.getEditableText());
 
-        if (name.trim().isEmpty()) {
+        return !(task.getName().equals(name) && task.getFee() == fee && temp_color == task.getColor());
+    }
+
+    @Override
+    void saveChanges() {
+
+        // Collect input
+        String name = (String.valueOf(mNameEditText.getEditableText())).trim();
+
+        if (name.isEmpty()) {
             mNameLayout.setError(getString(R.string.invalid_name));
             return;
         }
@@ -426,17 +204,19 @@ public class EditTaskFragment extends Fragment {
         }
 
         // Check if number format is invalid
-        int fee;
+        double fee;
         try {
-            fee = Integer.parseInt(String.valueOf(mFeeEditText.getEditableText()));
+            fee = Double.parseDouble(String.valueOf(mFeeEditText.getEditableText()));
         } catch (NumberFormatException e) {
             // Notify user that the inputted fee is invalid
             mFeeLayout.setError(getString(R.string.invalid_fee));
             return;
         }
 
+        Log.i("Colortesting",String.valueOf(task.getColor()) + " vs " + String.valueOf(temp_color));
+
         // Check if any changes have been made
-        if (taskDataIsChanged()) {
+        if (itemDataIsChanged()) {
 
             // Create duplicate of task and set properties according to input
             XTask edit = task;
@@ -444,63 +224,30 @@ public class EditTaskFragment extends Fragment {
             edit.setFee(fee);
             edit.setColor(temp_color);
 
+
+            Log.i("Colortesting", "setColor: " + String.valueOf(temp_color));
+
             // Commit changes
             tasks.set(index, edit);
 
             // Update tasks_data.txt on Google Drive
-            editTaskFragmentListener.updateTasksDataOnDrive(tasks);
+            getBaseEditListener().updateTasksDataOnDrive(tasks);
 
 
         }
-
-        // Return to TasksFragments
-        editTaskFragmentListener.loadTasksFragment();
-
     }
 
-    // Permanently delete the task that is being edited
-    private void deleteTask() {
-        AlertDialog alertDialog = new AlertDialog.Builder(getContext())
-                .setPositiveButton(R.string.delete_button, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
+    @Override
+    void deleteItem() {
+        // Delete task from ArrayList
+        tasks.remove(task);
 
-                        // Delete task from ArrayList
-                        for (XTask t : tasks) {
-                            if (t.getName().equals(task.getName())) {
-                                tasks.remove(t);
-                                break;
-                            }
-                        }
-
-                        // Google Drive
-                        editTaskFragmentListener.updateTasksDataOnDrive(tasks);
-
-                        // Return to TasksFragment
-                        editTaskFragmentListener.loadTasksFragment();
-
-
-                    }
-                })
-                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-
-                    }
-                })
-                .create();
-
-        alertDialog.setTitle(getString(R.string.delete_task_confirmation));
-        alertDialog.setMessage(getString(R.string.delete_task_message));
-        alertDialog.show();
+        // Update tasks data on drive
+        getBaseEditListener().updateTasksDataOnDrive(tasks);
     }
 
-    // Get a darker shade of the original task color
-    @ColorInt
-    private int darkenColor(@ColorInt int color) {
-        float[] hsv = new float[3];
-        Color.colorToHSV(color, hsv);
-        hsv[2] *= 0.8f;
-        return Color.HSVToColor(hsv);
+    @Override
+    void onDatePicked(Date newDate) {
+
     }
 }

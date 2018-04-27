@@ -1,18 +1,16 @@
 package com.mzom.xtraqueur;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 
-class XTask {
+class XTask implements Serializable {
 
     // Task display name
     private String name;
 
-    // Task completions count
-    private int completions;
-
     // Task fee for every completion
-    private int fee;
+    private double fee;
 
     // Task color used in the app UI
     private int color;
@@ -21,11 +19,11 @@ class XTask {
     private ArrayList<Long> completionsList;
 
 
-    XTask(String name, int completions, int fee, int color) {
+    XTask(String name, double fee, int color) {
         this.name = name;
-        this.completions = completions;
         this.fee = fee;
         this.color = color;
+        this.completionsList = new ArrayList<>();
     }
 
 
@@ -33,7 +31,7 @@ class XTask {
         return this.name;
     }
 
-    int getFee() {
+    double getFee() {
         return this.fee;
     }
 
@@ -46,19 +44,18 @@ class XTask {
     }
 
     int getCompletions() {
-        return this.completions;
+        return this.completionsList.size();
     }
 
-    int getValue() {
-        return this.fee * this.completions;
+    double getValue() {
+        return this.fee * this.getCompletions();
     }
-
 
     void setName(String name) {
         this.name = name;
     }
 
-    void setFee(int fee) {
+    void setFee(double fee) {
         this.fee = fee;
     }
 
@@ -68,9 +65,7 @@ class XTask {
 
     void setCompletionsList(ArrayList<Long> completionsList) {
         this.completionsList = completionsList;
-        this.completions = completionsList.size();
     }
-
 
     void addToCompletions() {
 
@@ -82,12 +77,13 @@ class XTask {
         // Add new completion to list
         Long date = new Date().getTime();
         this.completionsList.add(date);
-
-        // Update completions count
-        this.completions = completionsList.size();
     }
 
-    void removeCompletions() {
-        this.completions = 0;
+    void removeCompletion(Long completion){
+        this.completionsList.remove(completion);
+    }
+
+    void applyCompletionChange(XTaskCompletion completion){
+        getCompletionsList().set(completion.getIndex(),completion.getDate());
     }
 }

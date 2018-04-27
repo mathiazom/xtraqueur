@@ -1,31 +1,31 @@
 package com.mzom.xtraqueur;
 
-/**
- * Created by elev on 23.02.2018.
- */
-
-public class XTaskCompletion {
+class XTaskCompletion {
 
     private long date;
-    private String taskName;
-    private int taskColor;
+    private final XTask task;
+    private final int index;
 
-    public XTaskCompletion(long date,String taskName,int taskColor){
+    XTaskCompletion(long date, XTask task) {
         this.date = date;
-        this.taskName = taskName;
-        this.taskColor = taskColor;
+        this.task = task;
+        this.index = task.getCompletionsList().indexOf(date);
     }
 
-    long getDate(){
+    long getDate() {
         return this.date;
     }
 
-    String getTaskName(){
-        return this.taskName;
+    XTask getTask(){
+        return this.task;
     }
 
-    int getTaskColor(){
-        return this.taskColor;
+    int getIndex() {
+        return this.index;
+    }
+
+    void setDate(Long date){
+        this.date = date;
     }
 
 }

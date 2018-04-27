@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item android:title="@string/register_payment" android:icon="@drawable/ic_payment_icon" android:id="@+id/timeline_selection_mode_icon_register_payment" app:showAsAction="ifRoom"/>
+    <item android:title="@string/delete" android:icon="@drawable/ic_delete" android:id="@+id/timeline_selection_mode_icon_delete" app:showAsAction="ifRoom"/>
+</menu>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="SUMMARY">Résumé</string>
+    <!--<string name="SUMMARY">Résumé</string>
     <string name="pre_new_task_hint">Ajouter une nouvelle tâche&#8230;</string>
     <string name="new_task_name">Nom</string>
     <string name="new_task_fee">Taxe</string>
@@ -66,4 +66,6 @@
     <string name="delete_all_tasks_title">Supprimer toutes les tâches?</string>
     <string name="delete_all_tasks_message">Cette action ne peut pas être annulée. Voulez-vous vraiment supprimer tous vos tâches?</string>
     <string name="save">Enregistrer</string>
+    <string name="could_not_sign_in">N\'a pas pu se connecter</string>
+    <string name="offline_mode">Mode hors-ligne</string> -->
 </resources>

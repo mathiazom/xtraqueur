@@ -5,10 +5,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.graphics.PorterDuff;
 import android.graphics.drawable.ColorDrawable;
-import android.graphics.drawable.Drawable;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -38,26 +35,20 @@ public class SettingsFragment extends android.support.v4.app.Fragment {
     private Bitmap mAccountPhoto;
 
     // Listener to communicate with MainActivity
-    SettingsFragmentListener settingsFragmentListener;
+    private SettingsFragmentListener settingsFragmentListener;
 
     // Log tag for debugging
     private static final String TAG = "Xtraqueur-Settings";
 
     interface SettingsFragmentListener {
 
-        void setAccountPhoto(Bitmap bitmap);
-
         void signOut();
-
-        void signIn();
 
         void deleteAllCompletions();
 
         void deleteAllTasks();
 
         void onFragmentBackPressed();
-
-        void loadTasksFragment();
     }
 
     // Custom constructor to pass Google sign in account arguments
@@ -105,7 +96,7 @@ public class SettingsFragment extends android.support.v4.app.Fragment {
     }
 
     // Initialize toolbar field variable and add action buttons with listeners
-    void initToolbar() {
+    private void initToolbar() {
 
         // Initialize toolbar field variable
         Toolbar mToolbar = view.findViewById(R.id.toolbar);
@@ -120,7 +111,7 @@ public class SettingsFragment extends android.support.v4.app.Fragment {
     }
 
     // Button listeners
-    void initListeners(){
+    private void initListeners(){
 
         // Google account sign out button
         Button sign_out_button = view.findViewById(R.id.button_account_sign_out);
@@ -148,7 +139,7 @@ public class SettingsFragment extends android.support.v4.app.Fragment {
             delete_completions_button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    AlertDialog alertDialog = new AlertDialog.Builder(getContext())
+                    AlertDialog alertDialog = new AlertDialog.Builder(getContext(),R.style.AlertDialogTheme)
                             .setPositiveButton(R.string.delete_button, new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialogInterface, int i) {
@@ -162,9 +153,9 @@ public class SettingsFragment extends android.support.v4.app.Fragment {
                                 }
                             })
                             .create();
-
                     alertDialog.setTitle(getString(R.string.delete_all_completions_title));
                     alertDialog.setMessage(getString(R.string.delete_all_completions_message));
+
                     alertDialog.show();
                 }
             });
@@ -183,7 +174,7 @@ public class SettingsFragment extends android.support.v4.app.Fragment {
             delete_tasks_button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    AlertDialog alertDialog = new AlertDialog.Builder(getContext())
+                    AlertDialog alertDialog = new AlertDialog.Builder(getContext(),R.style.AlertDialogTheme)
                             .setPositiveButton(R.string.delete_button, new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialogInterface, int i) {
@@ -212,8 +203,6 @@ public class SettingsFragment extends android.support.v4.app.Fragment {
         btn.setEnabled(false);
 
         // Disabled button background
-        //Drawable delete_completions_button_drawable = delete_completions_button.getBackground();
-        //delete_completions_button_drawable.setColorFilter(Color.parseColor("#0CFFFFFF"), PorterDuff.Mode.SRC_ATOP);
         btn.setBackground(new ColorDrawable(Color.parseColor("#0CFFFFFF")));
 
         // Disabled button text
@@ -239,30 +228,13 @@ public class SettingsFragment extends android.support.v4.app.Fragment {
         String accountEmail = mGoogleSignInAccount.getEmail();
         accountEmailView.setText(accountEmail);
 
-        // Account photo
+        //Account photo
         final CircleImageView accountPhotoView = view.findViewById(R.id.settings_google_account_photo);
-
-        // Check account photo availability
-        if(mAccountPhoto != null){
-            // Use already downloaded account photo
-            accountPhotoView.setImageBitmap(mAccountPhoto);
-        }else{
-            // Get account photo from Url
-            //Log.i(TAG,"Account photo is null, downloading");
-            Uri photoUrl = mGoogleSignInAccount.getPhotoUrl();
-            if(photoUrl == null) return;
-            new AsyncImageFromURL(new AsyncImageFromURL.AsyncImageFromURLListener() {
-                @Override
-                public void onTaskFinished(Bitmap bitmap) {
-                    //Log.i(TAG,"Setting bitmap to ImageView");
-                    mAccountPhoto = bitmap;
-                    settingsFragmentListener.setAccountPhoto(mAccountPhoto);
-                    accountPhotoView.setImageBitmap(mAccountPhoto);
-                }
-            }).execute(photoUrl.toString());
-        }
+        if(mAccountPhoto != null) accountPhotoView.setImageBitmap(mAccountPhoto);
 
 
     }
+
+
 
 }

@@ -272,4 +272,66 @@
     <array name="extra">
         <item name="grey_1000b" type="color">#000000</item>
         <item name="grey_1000w" type="color">#ffffff</item>
-    </array></resources>
+    </array>
+    <array name="mdcolor_700_light_text">
+        <item name="red_700_light_text" type="color">#d01716</item>
+        <item name="pink_700_light_text" type="color">#c2185b</item>
+        <item name="purple_700_light_text" type="color">#7b1fa2</item>
+        <item name="deep_purple_700_light_text" type="color">#512da8</item>
+        <item name="indigo_700_light_text" type="color">#303f9f</item>
+        <item name="blue_700_light_text" type="color">#455ede</item>
+        <item name="light_blue_700_light_text" type="color">#005b9f</item>
+        <item name="cyan_700_light_text" type="color">#006978</item>
+        <item name="teal_700_light_text" type="color">#00796b</item>
+        <item name="green_700_light_text" type="color">#00600f</item>
+        <item name="light_green_700_light_text" type="color">#387002</item>
+        <item name="orange_700_light_text" type="color">#bb4d00</item>
+        <item name="deep_orange_700_light_text" type="color">#ac0800</item>
+        <item name="brown_700_light_text" type="color">#5d4037</item>
+        <item name="grey_700_light_text" type="color">#616161</item>
+        <item name="blue_grey_700_light_text" type="color">#455a64</item>
+    </array>
+    <array name="mdcolor_500_light_text">
+        <item name="red_500_light_text" type="color">#d32f2f</item>
+        <item name="pink_500_light_text" type="color">#c2185b</item>
+        <item name="purple_500_light_text" type="color">#9c27b0</item>
+        <item name="deep_purple_500_light_text" type="color">#673ab7</item>
+        <item name="indigo_500_light_text" type="color">#3f51b5</item>
+        <item name="blue_500_light_text" type="color">#1976d2</item>
+        <item name="light_blue_500_light_text" type="color">#0277bd</item>
+        <item name="cyan_500_light_text" type="color">#00838f</item>
+        <item name="teal_500_light_text" type="color">#00796b</item>
+        <item name="green_500_light_text" type="color">#2e7d32</item>
+        <item name="light_green_500_light_text" type="color">#33691e</item>
+        <item name="lime_500_light_text" type="color">#827717</item>
+        <item name="deep_orange_500_light_text" type="color">#bf360c</item>
+        <item name="brown_500_light_text" type="color">#795548</item>
+        <item name="grey_500_light_text" type="color">#757575</item>
+        <item name="blue_grey_500_light_text" type="color">#546e7a</item>
+    </array>
+
+    <array name="mdcolor_900_light_text">
+        <item name="red_900_light_text" type="color">#b71c1c</item>
+        <item name="pink_900_light_text" type="color">#880e4f</item>
+        <item name="purple_900_light_text" type="color">#4a148c</item>
+        <item name="deep_purple_900_light_text" type="color">#311b92</item>
+        <item name="indigo_900_light_text" type="color">#1a237e</item>
+        <item name="blue_900_light_text" type="color">#0d47a1</item>
+        <item name="light_blue_900_light_text" type="color">#01579b</item>
+        <item name="cyan_900_light_text" type="color">#006064</item>
+        <item name="teal_900_light_text" type="color">#004d40</item>
+        <item name="green_900_light_text" type="color">#1b5e20</item>
+        <item name="light_green_900_light_text" type="color">#33691e</item>
+        <item name="lime_900_light_text" type="color">#827717</item>
+        <item name="deep_orange_900_light_text" type="color">#bf360c</item>
+        <item name="brown_900_light_text" type="color">#3e2723</item>
+        <item name="grey_900_light_text" type="color">#212121</item>
+        <item name="blue_grey_900_light_text" type="color">#263238</item>
+    </array>
+
+    <array name="completion_click_dialog_options">
+        <item>Edit</item>
+        <item>Add to new payment</item>
+        <item>Delete</item>
+    </array>
+</resources>
