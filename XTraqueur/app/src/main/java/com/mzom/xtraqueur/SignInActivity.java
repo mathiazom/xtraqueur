@@ -163,10 +163,8 @@ public class SignInActivity extends AppCompatActivity implements WelcomeFragment
         Intent intent = new Intent(this, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         intent.putExtra("GOOGLE_SIGN_IN_ACCOUNT", mGoogleSignInAccount);
-        //intent.putExtra("GOOGLE_SIGN_IN_ACCOUNT_PHOTO",mGoogleAccountPhoto);
         startActivity(intent);
-
-        Log.i(TAG, "MainActivity launched");
         finish();
+        overridePendingTransition(R.anim.fade_in,R.anim.fade_out);
     }
 }

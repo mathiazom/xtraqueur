@@ -25,6 +25,8 @@ public class EarningsFragment extends Fragment {
 
     private ArrayList<XTask> tasks;
 
+    private ArrayList<XTaskPayment> payments;
+
     private EarningsFragmentListener mEarningsFragmentListener;
 
     interface EarningsFragmentListener {
@@ -57,6 +59,7 @@ public class EarningsFragment extends Fragment {
 
         EarningsFragment fragment = new EarningsFragment();
         fragment.tasks = tasks;
+        fragment.payments = payments;
         return fragment;
     }
 
@@ -141,7 +144,11 @@ public class EarningsFragment extends Fragment {
         TextView total_earning_text = view.findViewById(R.id.total_earnings_value);
         total_earning_text.setText(totalString);
 
-        view.findViewById(R.id.button_total_earnings_new_payment).setEnabled(total != 0);
+        Button button_new_payment = view.findViewById(R.id.button_total_earnings_new_payment);
+        button_new_payment.setEnabled(total != 0);
+
+        Button button_payments_timeline = view.findViewById(R.id.button_total_earnings_payments_timeline);
+        button_payments_timeline.setEnabled(payments.size() > 0);
 
     }
 }

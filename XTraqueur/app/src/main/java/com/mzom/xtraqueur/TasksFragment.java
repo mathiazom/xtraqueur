@@ -137,6 +137,7 @@ public class TasksFragment extends Fragment {
                         break;
                     case R.id.tasks_timeline_icon:
                         tasksFragmentListener.loadCompletionsFragment();
+                        break;
                 }
                 return false;
             }
@@ -271,6 +272,25 @@ public class TasksFragment extends Fragment {
     // Animate launch of EditTaskFragment with the selected task
     private void editTask(final int index, float y) {
 
+        startScaleAnimation(tasks.get(index).getColor(), y, new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                tasksFragmentListener.loadEditTaskFragment(tasks.get(index),index);
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
+    }
+
+    private void startScaleAnimation(int color, float y, final Animation.AnimationListener animationListener){
         // View that acts as a drawable with task color expanding and covering the whole screen
         final View scaleView = new View(getContext());
 
@@ -280,7 +300,7 @@ public class TasksFragment extends Fragment {
         }
 
         // Set drawable color to task color
-        scaleView.setBackground(new ColorDrawable(darkenColor(tasks.get(index).getColor())));
+        scaleView.setBackground(new ColorDrawable(color));
 
         // Add view to the fragment root view (get access to ViewGroup method addView() by casting to ConstraintLayout)
         ((ConstraintLayout) view).addView(scaleView);
@@ -293,21 +313,8 @@ public class TasksFragment extends Fragment {
         // Keep the transformation after animation has finished
         expand_animation.setFillAfter(true);
 
-        expand_animation.setAnimationListener(new Animation.AnimationListener() {
-            @Override
-            public void onAnimationStart(Animation animation) {
-            }
+        expand_animation.setAnimationListener(animationListener);
 
-            @Override
-            public void onAnimationEnd(Animation animation) {
-                // Once the expand animation has finished, tell MainActivity to switch to an EditTaskFragment in the FrameLayout
-                tasksFragmentListener.loadEditTaskFragment(tasks.get(index), index);
-            }
-
-            @Override
-            public void onAnimationRepeat(Animation animation) {
-            }
-        });
         scaleView.startAnimation(expand_animation);
     }
 

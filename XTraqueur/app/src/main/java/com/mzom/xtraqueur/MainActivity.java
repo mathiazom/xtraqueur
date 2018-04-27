@@ -390,13 +390,23 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void loadCompletionsFragment() {
         mCompletionsFragment = CompletionsFragment.newInstance(tasks);
-        getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.enter_from_bottom, R.anim.exit_to_top, R.anim.enter_from_top, R.anim.exit_to_bottom).replace(R.id.main_frame_layout, mCompletionsFragment).addToBackStack(CompletionsFragment.class.getSimpleName()).commit();
+        getSupportFragmentManager()
+                .beginTransaction()
+                .setCustomAnimations(R.anim.enter_from_bottom, R.anim.exit_to_top, R.anim.enter_from_top, R.anim.exit_to_bottom)
+                .replace(R.id.main_frame_layout, mCompletionsFragment)
+                .addToBackStack(CompletionsFragment.class.getSimpleName())
+                .commit();
     }
 
     @Override
     public void loadCompletionsFragment(ArrayList<XTask> tasks, XTask filterTask) {
         mCompletionsFragment = CompletionsFragment.newInstance(tasks, filterTask);
-        getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.enter_from_bottom, R.anim.exit_to_top, R.anim.enter_from_top, R.anim.exit_to_bottom).replace(R.id.main_frame_layout, mCompletionsFragment).addToBackStack(CompletionsFragment.class.getSimpleName()).commit();
+        getSupportFragmentManager()
+                .beginTransaction()
+                .setCustomAnimations(R.anim.enter_from_bottom, R.anim.exit_to_top, R.anim.enter_from_top, R.anim.exit_to_bottom)
+                .replace(R.id.main_frame_layout, mCompletionsFragment)
+                .addToBackStack(CompletionsFragment.class.getSimpleName())
+                .commit();
     }
 
     // Fragment to see unpaid earnings and to launch NewPaymentFragment

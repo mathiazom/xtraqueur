@@ -48,7 +48,7 @@ public class NewPaymentFragment extends Fragment {
 
     private NewPaymentFragmentListener mNewPaymentFragmentListener;
 
-    interface NewPaymentFragmentListener{
+    interface NewPaymentFragmentListener {
         void onBackPressed();
 
         void updatePaymentsDataOnDrive(XTaskPayment payment);
@@ -63,17 +63,16 @@ public class NewPaymentFragment extends Fragment {
         NewPaymentFragment fragment = new NewPaymentFragment();
         fragment.tasks = tasks;
         fragment.completions = fragment.getCompletionsFromTasks(tasks);
-        fragment.selectionArray = new ArrayList<>();
         fragment.initSelectionArray();
         return fragment;
     }
 
-    public static NewPaymentFragment newInstance(ArrayList<XTask> tasks,ArrayList<Boolean> selectionArray) {
+    public static NewPaymentFragment newInstance(ArrayList<XTask> tasks, ArrayList<Boolean> selectionArray) {
 
         NewPaymentFragment fragment = new NewPaymentFragment();
         fragment.tasks = tasks;
         fragment.completions = fragment.getCompletionsFromTasks(tasks);
-        fragment.initSelectionArray();
+        fragment.selectionArray = selectionArray;
         return fragment;
     }
 
@@ -83,7 +82,7 @@ public class NewPaymentFragment extends Fragment {
 
         setRetainInstance(true);
 
-        this.view = inflater.inflate(R.layout.fragment_newpayment,container,false);
+        this.view = inflater.inflate(R.layout.fragment_newpayment, container, false);
 
         initToolbar();
 
@@ -100,14 +99,14 @@ public class NewPaymentFragment extends Fragment {
     public void onAttach(Context context) {
         super.onAttach(context);
 
-        try{
+        try {
             mNewPaymentFragmentListener = (NewPaymentFragmentListener) context;
-        }catch (ClassCastException e){
+        } catch (ClassCastException e) {
             throw new ClassCastException(e.toString() + " must implement NewPaymentFragmentListener");
         }
     }
 
-    private void initToolbar(){
+    private void initToolbar() {
 
         // Regular toolbar
 
@@ -119,7 +118,6 @@ public class NewPaymentFragment extends Fragment {
                 mNewPaymentFragmentListener.onBackPressed();
             }
         });
-
 
 
         // Payment selection toolbar
@@ -137,7 +135,7 @@ public class NewPaymentFragment extends Fragment {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
 
-                switch (item.getItemId()){
+                switch (item.getItemId()) {
                     case R.id.payment_selection_mode_icon_select_all:
                         // Select all payments
                         mAdapter.setUniversalItemSelection(true);
@@ -160,13 +158,13 @@ public class NewPaymentFragment extends Fragment {
 
     }
 
-    private void initListeners(){
+    private void initListeners() {
 
         view.findViewById(R.id.newpayment_button_register).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-                AlertDialog alertDialog = new AlertDialog.Builder(getContext(),R.style.AlertDialogTheme)
+                AlertDialog alertDialog = new AlertDialog.Builder(getContext(), R.style.AlertDialogTheme)
                         .setPositiveButton(R.string.confirmation_dialog_register_payment_positive, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
@@ -207,7 +205,7 @@ public class NewPaymentFragment extends Fragment {
             public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
 
                 Calendar calendar = Calendar.getInstance();
-                calendar.set(year,month,dayOfMonth);
+                calendar.set(year, month, dayOfMonth);
                 final Date newDate = calendar.getTime();
 
                 setPaymentDate(newDate);
@@ -218,7 +216,7 @@ public class NewPaymentFragment extends Fragment {
         datePickerDialog.show();
     }
 
-    private void setPaymentDate(final Date newDate){
+    private void setPaymentDate(final Date newDate) {
 
         // Date string format
         final SimpleDateFormat dateFormat = new SimpleDateFormat("d MMM yyyy", Locale.getDefault());
@@ -243,7 +241,7 @@ public class NewPaymentFragment extends Fragment {
     }
 
 
-    private ArrayList<XTaskCompletion> getCompletionsFromTasks(ArrayList<XTask> tasks){
+    private ArrayList<XTaskCompletion> getCompletionsFromTasks(ArrayList<XTask> tasks) {
         ArrayList<XTaskCompletion> completions = new ArrayList<>();
 
         for (XTask t : tasks) {
@@ -277,7 +275,8 @@ public class NewPaymentFragment extends Fragment {
         mAdapter = new TimelineAdapter(true, new TimelineAdapter.TimelineAdapterListener() {
 
             @Override
-            public void onItemClick(int pos,float y) {}
+            public void onItemClick(int pos, float y) {
+            }
 
             @Override
             public int getItemCount() {
@@ -317,7 +316,7 @@ public class NewPaymentFragment extends Fragment {
                 int color = completions.get(pos).getTask().getColor();
                 long date = completions.get(pos).getDate();
 
-                return new TimelineItem(title,color,date);
+                return new TimelineItem(title, color, date);
             }
 
         });
@@ -329,17 +328,17 @@ public class NewPaymentFragment extends Fragment {
 
     }
 
-    private void initSelectionArray(){
+    private void initSelectionArray() {
         selectionArray = new ArrayList<>(Arrays.asList(new Boolean[completions.size()]));
-        Collections.fill(selectionArray,false);
+        Collections.fill(selectionArray, false);
     }
 
     // Calculate how many completions have been selected
-    private int totalSelected(){
+    private int totalSelected() {
         return mAdapter.getTotalSelected();
     }
 
-    private void setRegisterFieldEnabled(boolean enabled){
+    private void setRegisterFieldEnabled(boolean enabled) {
 
         // Register button
         view.findViewById(R.id.newpayment_button_register).setEnabled(enabled);
@@ -351,13 +350,13 @@ public class NewPaymentFragment extends Fragment {
     }
 
     // Update toolbar title based on number of selected
-    private void updateSelectionToolbar(){
+    private void updateSelectionToolbar() {
 
         int total_selected = totalSelected();
         String toolbar_title;
-        if(total_selected == 0){
+        if (total_selected == 0) {
             toolbar_title = getString(R.string.select_completions);
-        }else{
+        } else {
 
             // Total value of all tasks
             double total = 0;
@@ -379,10 +378,10 @@ public class NewPaymentFragment extends Fragment {
     }
 
     // Register new payment for selected completions
-    private void registerPayment(){
+    private void registerPayment() {
 
         // Completions will be archived, so remove them from regular completion list
-        for(XTaskCompletion completion : getSelectedCompletions()){
+        for (XTaskCompletion completion : getSelectedCompletions()) {
             tasks.get(tasks.indexOf(completion.getTask())).removeCompletion(completion.getDate());
         }
 
@@ -390,7 +389,7 @@ public class NewPaymentFragment extends Fragment {
         mNewPaymentFragmentListener.updateTasksDataOnDrive(tasks);
 
         // Add completions to payment object
-        XTaskPayment newPayment = new XTaskPayment(getSelectedCompletions(),paymentDate.getTime());
+        XTaskPayment newPayment = new XTaskPayment(getSelectedCompletions(), paymentDate.getTime());
 
         // Save new payment to drive
         mNewPaymentFragmentListener.updatePaymentsDataOnDrive(newPayment);
@@ -402,11 +401,11 @@ public class NewPaymentFragment extends Fragment {
     }
 
     // Use SparseBooleanArray to get RecyclerView's currently selected completions
-    private ArrayList<XTaskCompletion> getSelectedCompletions(){
+    private ArrayList<XTaskCompletion> getSelectedCompletions() {
         ArrayList<XTaskCompletion> selectedCompletions = new ArrayList<>();
 
-        for(int c = 0;c<completions.size();c++){
-            if(selectionArray.get(c)){
+        for (int c = 0; c < completions.size(); c++) {
+            if (selectionArray.get(c)) {
                 selectedCompletions.add(completions.get(c));
             }
         }

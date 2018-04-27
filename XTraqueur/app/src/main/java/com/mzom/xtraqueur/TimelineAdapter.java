@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Locale;
 
@@ -193,6 +194,11 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.ViewHo
     // Apply predefined selection
     void setSelectionArray(ArrayList<Boolean> newSelectionArray){
 
+        if(newSelectionArray.size() != getItemCount()){
+            initSelectionArray();
+            return;
+        }
+
         this.selectionArray = newSelectionArray;
 
         // Update items layout
@@ -213,6 +219,7 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.ViewHo
 
         int total_selected = 0;
         for(int b = 0; b < getItemCount();b++){
+            Log.i("Timeline","Item index: " + b);
             if(selectionArray.get(b)){
                 total_selected++;
             }
@@ -262,7 +269,7 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.ViewHo
         final TimelineItem timelineItem = timelineAdapterListener.getTimelineItem(position);
 
         // Selected
-        if (selectionArray.get(position)) {
+        if (selectionArray.size() != 0 && selectionArray.get(position)) {
             // Selected item background
             Drawable itemBackground = holder.mMainItemLayout.getBackground();
             itemBackground.setColorFilter(darkenColor(timelineItem.getColor()), PorterDuff.Mode.SRC_ATOP);
@@ -294,6 +301,14 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.ViewHo
 
         // Update item above to keep date header (use same index because of index shifting after item deletion)
         notifyItemChanged(index);
+    }
+
+    void deleteItemRange(int position, int itemCount){
+
+        initSelectionArray();
+
+        notifyItemRangeRemoved(position,itemCount);
+
     }
 
     // Get total number of adapter items

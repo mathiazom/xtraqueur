@@ -165,7 +165,9 @@ public class SettingsActivity extends AppCompatActivity implements SettingsFragm
                         // Restart activity to complete Google account sign out
 
                         Intent intent = new Intent(context,SignInActivity.class);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
                         startActivity(intent);
+                        finish();
                     }
                 });
     }

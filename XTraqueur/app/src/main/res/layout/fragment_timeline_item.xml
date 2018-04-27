@@ -17,7 +17,7 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="@color/colorPrimary"
-            app:elevation="4dp"
+            android:elevation="4dp"
             app:navigationContentDescription="@string/go_back_to_all_tasks"
             app:navigationIcon="@drawable/ic_clear"/>
 
