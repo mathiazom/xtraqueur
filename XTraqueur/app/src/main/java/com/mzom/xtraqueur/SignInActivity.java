@@ -46,7 +46,7 @@ public class SignInActivity extends AppCompatActivity implements WelcomeFragment
 
         if (!signedIn) {
             // No Google accounts signed in, load WelcomeFragment to let the user sign in
-            Log.i(TAG, "No signed in account, loading welcome-page");
+            Log.e(TAG, "No signed in account, loading welcome-page");
             loadWelcomeFragment();
         } else {
             // Google Drive API client sign in
@@ -56,7 +56,6 @@ public class SignInActivity extends AppCompatActivity implements WelcomeFragment
 
     // Start Google Drive sign in
     public void signIn() {
-        Log.i(TAG, "Google Drive API: Start sign in");
         GoogleSignInClient mGoogleSignInClient = buildGoogleSignInClient();
         startActivityForResult(mGoogleSignInClient.getSignInIntent(), REQUEST_CODE_SIGN_IN);
     }
@@ -79,19 +78,15 @@ public class SignInActivity extends AppCompatActivity implements WelcomeFragment
         switch (requestCode) {
             case REQUEST_CODE_SIGN_IN:
 
-                Log.i(TAG, "Google Drive API: Sign in request code");
-
                 // Start ProgressBar loading
                 showActivityProgressBar();
 
                 // Called after user is signed in
                 if (resultCode == RESULT_OK) {
-                    Log.i(TAG, "Google Drive API: Signed in successfully.");
 
                     // Use the last signed in account
                     mGoogleSignInAccount = GoogleSignIn.getLastSignedInAccount(this);
                     if (mGoogleSignInAccount == null) {
-                        Log.e(TAG, "Google Drive API: GoogleSignInAccount is null");
                         return;
                     }
 
@@ -105,8 +100,6 @@ public class SignInActivity extends AppCompatActivity implements WelcomeFragment
                                 @Override
                                 public void onSuccess(Void aVoid) {
 
-                                    Log.i(TAG, "Google Drive API: Sync successful");
-
                                     hideActivityProgressBar();
 
                                     launchMainActivity();
@@ -117,7 +110,7 @@ public class SignInActivity extends AppCompatActivity implements WelcomeFragment
                                 public void onFailure(@NonNull Exception e) {
 
                                     Log.e(TAG, "Google Drive API: Sync failed", e);
-                                    Toast.makeText(SignInActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
+                                    Toast.makeText(SignInActivity.this, "Sync quota reached", Toast.LENGTH_LONG).show();
 
                                     hideActivityProgressBar();
 
@@ -145,13 +138,11 @@ public class SignInActivity extends AppCompatActivity implements WelcomeFragment
 
     // Activity ProgressBar
     private void showActivityProgressBar() {
-        Log.i(TAG, "START LOADING");
         ConstraintLayout container = findViewById(R.id.sign_in_activity_progress_bar_container);
         container.setVisibility(View.VISIBLE);
     }
 
     private void hideActivityProgressBar() {
-        Log.i(TAG, "STOP LOADING");
         ConstraintLayout container = findViewById(R.id.sign_in_activity_progress_bar_container);
         container.setVisibility(View.GONE);
     }

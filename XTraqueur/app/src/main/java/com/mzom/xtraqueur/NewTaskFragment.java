@@ -12,7 +12,6 @@ import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.TextInputEditText;
 import android.support.design.widget.TextInputLayout;
-import android.support.v4.app.Fragment;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -25,7 +24,7 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
-public class NewTaskFragment extends Fragment {
+public class NewTaskFragment extends XFragment {
 
     // Fragment root view
     private View view;

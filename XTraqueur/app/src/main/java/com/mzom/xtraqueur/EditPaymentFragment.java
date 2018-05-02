@@ -3,7 +3,6 @@ package com.mzom.xtraqueur;
 import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.TextInputEditText;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
@@ -86,12 +85,8 @@ public class EditPaymentFragment extends BaseEditFragment {
     @Override
     void saveChanges() {
 
-        Log.i("Payment_edit",payment.toString());
-
         // Apply changes to payment
         payment.setPaymentDate(tempPaymentDate);
-
-        Log.i("Payment_edit",payment.toString());
 
         // Add to payments array
         payments.set(payments.indexOf(payment),payment);

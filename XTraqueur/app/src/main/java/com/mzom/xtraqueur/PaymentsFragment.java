@@ -2,27 +2,37 @@ package com.mzom.xtraqueur;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
-import android.support.v4.app.Fragment;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.util.SparseIntArray;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.ScaleAnimation;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 
-public class PaymentsFragment extends Fragment {
+public class PaymentsFragment extends XFragment {
 
     private static final String TAG = "XTQ-PaymentsFragment";
 
@@ -110,7 +120,7 @@ public class PaymentsFragment extends Fragment {
 
                 switch (item.getItemId()){
                     case R.id.payments_selection_mode_icon_delete:
-                        deleteSelectedPayments();
+                        mAdapter.deleteSelectedItems();
                         break;
                 }
                 return false;
@@ -121,7 +131,7 @@ public class PaymentsFragment extends Fragment {
         mSelectionModeToolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                disableSelectionMode();
+                mAdapter.setUniversalItemSelection(false);
             }
         });
 
@@ -129,21 +139,105 @@ public class PaymentsFragment extends Fragment {
 
     private void loadPayments(){
 
-        Log.i(TAG,payments.toString());
-
         // Load recycler view
-        RecyclerView mRecyclerView = view.findViewById(R.id.timeline_recycler);
+        TimelineRecycler mRecyclerView = view.findViewById(R.id.timeline_recycler);
 
-        mRecyclerView.setHasFixedSize(true);
+        // Sort completions based on recency
+        Collections.sort(payments, new Comparator<XTaskPayment>() {
+            @Override
+            public int compare(XTaskPayment p1, XTaskPayment p2) {
+                return Long.compare(p2.getPaymentDate(), p1.getPaymentDate());
+            }
+        });
 
-        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getContext());
-        mRecyclerView.setLayoutManager(mLayoutManager);
+        mAdapter = new TimelineAdapter(false, new TimelineAdapter.TimelineAdapterCustomViewListener() {
 
-        mAdapter = new TimelineAdapter(false, new TimelineAdapter.TimelineAdapterListener() {
+            @Override
+            public ConstraintLayout getCustomView(ViewGroup parent) {
+
+                ConstraintLayout v = (ConstraintLayout) LayoutInflater.from(getContext()).inflate(R.layout.template_timeline_payment_item, parent, false);
+
+                return v;
+            }
+
+            @Override
+            public void displayCustomItemData(@NonNull TimelineAdapter.ViewHolder holder, TimelineItem timelineItem) {
+
+                Log.i(TAG,"displayCustomItemData");
+
+                // Item title
+                final TextView itemTitleView = holder.mItemLayout.findViewById(R.id.timeline_item_title);
+                itemTitleView.setText(timelineItem.getTitle());
+
+                // Item date
+                final TextView itemDateView = holder.mItemLayout.findViewById(R.id.timeline_item_date);
+                final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("EEEE d MMM yyyy HH:mm", Locale.getDefault());
+                final Date itemDate = new Date(timelineItem.getDate());
+                itemDateView.setText(simpleDateFormat.format(itemDate));
+
+                // Item background
+                Drawable itemBackground = holder.mMainItemLayout.getBackground();
+                itemBackground.setColorFilter(timelineItem.getColor(), PorterDuff.Mode.SRC_ATOP);
+                holder.mMainItemLayout.setBackground(itemBackground);
+
+
+                ArrayList<XTaskCompletion> completions = payments.get(holder.getAdapterPosition()).getCompletions();
+
+                float paymentLayoutWidth = holder.mItemLayout.getWidth();
+
+                HashMap<XTask,Integer> hashMap = new HashMap<>();
+
+                for(int c = 0;c<completions.size();c++){
+
+                    XTask task = completions.get(c).getTask();
+
+                    if(hashMap.get(task) == null){
+                        hashMap.put(task,1);
+                    }else{
+                        hashMap.put(task,hashMap.get(task)+1);
+                    }
+
+
+
+                }
+
+                for(Map.Entry<XTask,Integer> entry : hashMap.entrySet()){
+
+                    LinearLayout taskBar = new LinearLayout(getContext());
+
+                    float percent = (float) entry.getValue() / hashMap.size();
+
+                    LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams((int)(paymentLayoutWidth*percent),
+                            100);
+
+                    taskBar.setLayoutParams(lp);
+
+                    taskBar.setBackground(new ColorDrawable(entry.getKey().getColor()));
+
+                    ((LinearLayout) holder.mMainItemLayout.findViewById(R.id.tasks_percents_container)).addView(taskBar);
+
+                }
+
+            }
 
             @Override
             public void onItemClick(int pos,float y) {
                 editPayment(pos,y);
+            }
+
+            @Override
+            public void deleteItemData(int index) {
+                payments.remove(index);
+            }
+
+            @Override
+            public void onDatasetChanged() {
+                mPaymentsFragmentListener.updatePaymentsDataOnDrive(payments);
+            }
+
+            @Override
+            public void onSelectionModeToggled(boolean isSelecting) {
+                updateSelectionUI(isSelecting);
             }
 
             @Override
@@ -152,21 +246,10 @@ public class PaymentsFragment extends Fragment {
             }
 
             @Override
-            public boolean onSelectionChanged(ArrayList<Boolean> updatedSelectionArray) {
+            public void onSelectionChanged(ArrayList<Boolean> updatedSelectionArray) {
 
                 // Update selection array
                 selectionArray = updatedSelectionArray;
-
-                updateSelectionToolbar();
-
-                // Enable/disable selection mode based on number of selections
-                if(mAdapter.getTotalSelected() > 0){
-                    enableSelectionMode();
-                    return true;
-                }else{
-                    disableSelectionMode();
-                    return false;
-                }
             }
 
             @Override
@@ -189,6 +272,8 @@ public class PaymentsFragment extends Fragment {
         });
 
         mRecyclerView.setAdapter(mAdapter);
+
+        mRecyclerView.startLayoutAnimation();
 
     }
 
@@ -235,40 +320,28 @@ public class PaymentsFragment extends Fragment {
         scaleView.startAnimation(expand_animation);
     }
 
-    private void deleteSelectedPayments(){
-
-        ArrayList<XTaskPayment> toRemove = new ArrayList<>();
-
-        for(int p = 0;p<payments.size();p++){
-            if(selectionArray.get(p)){
-                toRemove.add(payments.get(p));
-                mAdapter.notifyItemRemoved(p);
-            }
-        }
-
-        payments.removeAll(toRemove);
-
-        mPaymentsFragmentListener.updatePaymentsDataOnDrive(payments);
-
-        disableSelectionMode();
-
-    }
-
-    private void updateSelectionToolbar(){
+    private void updateSelectionUI(boolean isSelecting){
 
         // Update toolbar title based on number of selected
         int total_selected = mAdapter.getTotalSelected();
         String toolbar_title;
-        if(total_selected == 0){
+        if (!isSelecting) {
             toolbar_title = getString(R.string.select_completions);
-        }else{
+        } else {
             toolbar_title = String.valueOf(total_selected) + " " + getString(R.string.selected);
         }
 
         mSelectionModeToolbar.setTitle(toolbar_title);
+
+        if (isSelecting) {
+            displaySelectionUI();
+            return;
+        }
+
+        hideSelectionUI();
     }
 
-    private void enableSelectionMode(){
+    private void displaySelectionUI(){
 
         // Hide regular toolbar
         mToolbar = view.findViewById(R.id.toolbar);
@@ -277,12 +350,13 @@ public class PaymentsFragment extends Fragment {
         // Make selection mode toolbar visible
         mSelectionModeToolbar = view.findViewById(R.id.toolbar_selection_mode);
         mSelectionModeToolbar.setVisibility(View.VISIBLE);
-
-        updateSelectionToolbar();
     }
 
-    private void disableSelectionMode(){
-        selectionArray = new ArrayList<>(payments.size());
+    private void hideSelectionUI(){
+
+        // Selection array with none selected
+        selectionArray = new ArrayList<>(Arrays.asList(new Boolean[payments.size()]));
+        Collections.fill(selectionArray,false);
 
         // Hide selection mode toolbar
         mSelectionModeToolbar = view.findViewById(R.id.toolbar_selection_mode);
@@ -291,8 +365,6 @@ public class PaymentsFragment extends Fragment {
         // Make regular toolbar visible
         mToolbar = view.findViewById(R.id.toolbar);
         mToolbar.setVisibility(View.VISIBLE);
-
-        loadPayments();
     }
 
     private int getTotalPayments(){

@@ -24,28 +24,73 @@ import java.util.Locale;
 
 public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.ViewHolder> {
 
+    private int customViewResId;
+
     private ArrayList<Boolean> selectionArray;
 
     private boolean selectionMode;
 
+    private static final int NO_SELECTION_LOCK = 0;
+    static final int ALWAYS_SELECTING = 100;
+    private static final int NEVER_SELECTING = 200;
+
+    private final int selectionModeLock;
+
     private final TimelineAdapterListener timelineAdapterListener;
 
     interface TimelineAdapterListener {
+
+        TimelineItem getTimelineItem(int pos);
+
         void onItemClick(int pos,float y);
+
+        void onDatasetChanged();
+
+        void onSelectionModeToggled(boolean isSelecting);
+
+        void onSelectionChanged(ArrayList<Boolean> updatedSelectionArray);
+
+        void deleteItemData(int index);
 
         int getItemCount();
 
-        boolean onSelectionChanged(ArrayList<Boolean> updatedSelectionArray);
+    }
 
-        TimelineItem getTimelineItem(int pos);
+    interface TimelineAdapterCustomViewListener extends TimelineAdapterListener{
+
+        ConstraintLayout getCustomView(ViewGroup parent);
+
+        void displayCustomItemData(@NonNull final ViewHolder holder, final TimelineItem timelineItem);
+
+    }
+
+    private RecyclerView mRecyclerView;
+
+
+    @Override
+    public void onAttachedToRecyclerView(@NonNull RecyclerView recyclerView) {
+        super.onAttachedToRecyclerView(recyclerView);
+
+        mRecyclerView = recyclerView;
     }
 
 
     TimelineAdapter(boolean selectionMode, TimelineAdapterListener timelineAdapterListener) {
+        this(selectionMode,NO_SELECTION_LOCK,timelineAdapterListener);
+    }
+
+    TimelineAdapter(int selectionModeLock, TimelineAdapterListener timelineAdapterListener){
+        this(selectionModeLock == ALWAYS_SELECTING,selectionModeLock,timelineAdapterListener);
+    }
+
+    private TimelineAdapter(boolean selectionMode, int selectionModeLock, TimelineAdapterListener timelineAdapterListener){
         this.timelineAdapterListener = timelineAdapterListener;
         this.selectionMode = selectionMode;
+        this.selectionModeLock = selectionModeLock;
         initSelectionArray();
     }
+
+
 
 
     static class ViewHolder extends RecyclerView.ViewHolder {
@@ -63,7 +108,13 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.ViewHo
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
 
-        ConstraintLayout v = (ConstraintLayout) LayoutInflater.from(parent.getContext()).inflate(R.layout.template_timeline_item, parent, false);
+        ConstraintLayout v;
+
+        if(timelineAdapterListener instanceof TimelineAdapterCustomViewListener){
+            v = ((TimelineAdapterCustomViewListener) timelineAdapterListener).getCustomView(parent);
+        }else{
+            v = (ConstraintLayout) LayoutInflater.from(parent.getContext()).inflate(R.layout.template_timeline_item, parent, false);
+        }
 
         return new ViewHolder(v);
     }
@@ -71,7 +122,7 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.ViewHo
     @Override
     public void onBindViewHolder(@NonNull final ViewHolder holder, final int position) {
 
-        Log.i("Timeline","onBindViewHolder, pos: " + position);
+        Log.i("Timeline","OnBindViewHolder");
 
         // Current item
         final TimelineItem timelineItem = timelineAdapterListener.getTimelineItem(position);
@@ -80,7 +131,11 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.ViewHo
         final Date itemDate = new Date(timelineItem.getDate());
 
         // Display item title, date and color
-        displayItemData(holder,timelineItem);
+        if(timelineAdapterListener instanceof TimelineAdapterCustomViewListener){
+            ((TimelineAdapterCustomViewListener) timelineAdapterListener).displayCustomItemData(holder, timelineItem);
+        }else{
+            displayItemData(holder,timelineItem);
+        }
 
         // Additional date header if item starts new date
         setItemDateHeader(holder,itemDate);
@@ -167,7 +222,10 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.ViewHo
                     return;
                 }
 
-                timelineAdapterListener.onItemClick(holder.getAdapterPosition(),v.getY());
+                // Get view screen location for edit fragment animation
+                int[] location = new int[2];
+                v.getLocationOnScreen(location);
+                timelineAdapterListener.onItemClick(holder.getAdapterPosition(),location[1]);
             }
         });
 
@@ -183,6 +241,14 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.ViewHo
         });
     }
 
+    void timelineItemRangeInserted(int positionStart, int itemCount) {
+        notifyItemRangeInserted(positionStart,itemCount);
+        startLayoutAnimation();
+    }
+
+    private void startLayoutAnimation(){
+        mRecyclerView.scheduleLayoutAnimation();
+    }
 
 
     // Create new selection array with no items selected
@@ -208,6 +274,32 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.ViewHo
         timelineAdapterListener.onSelectionChanged(selectionArray);
     }
 
+    // Set selectionMode (controlled by selectionModeLock)
+    private void setSelecting(boolean selectionMode){
+
+        boolean oldSelecting = this.selectionMode;
+
+        switch (selectionModeLock){
+            case ALWAYS_SELECTING:
+                this.selectionMode = true;
+                break;
+            case NEVER_SELECTING:
+                this.selectionMode = false;
+                break;
+            case NO_SELECTION_LOCK:
+            default:
+                // Set given selection if no locks exist
+                this.selectionMode = selectionMode;
+                break;
+        }
+
+        // Check if selection state has changed
+        if(oldSelecting != selectionMode){
+            // If so, notify fragment to update selection based UI
+            timelineAdapterListener.onSelectionModeToggled(this.selectionMode);
+        }
+    }
+
     // Get total number of selected adapter items
     int getTotalSelected(){
 
@@ -219,7 +311,6 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.ViewHo
 
         int total_selected = 0;
         for(int b = 0; b < getItemCount();b++){
-            Log.i("Timeline","Item index: " + b);
             if(selectionArray.get(b)){
                 total_selected++;
             }
@@ -242,7 +333,11 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.ViewHo
         // Toggle selection array value for current position
         selectionArray.set(position, !selectionArray.get(position));
 
-        selectionMode = timelineAdapterListener.onSelectionChanged(selectionArray);
+        // Notify fragment that selection has changed (to update selection based UI)
+        timelineAdapterListener.onSelectionChanged(selectionArray);
+
+        // Stop selection if nothing is selected
+        setSelecting(getTotalSelected() > 0);
 
         // Change item layout based on selection
         markSelection(holder,position);
@@ -292,7 +387,7 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.ViewHo
 
 
     // Delete item from adapter with animation
-    void deleteItem(int index){
+    private void deleteItem(final int index){
 
         selectionArray.remove(index);
 
@@ -309,6 +404,49 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.ViewHo
 
         notifyItemRangeRemoved(position,itemCount);
 
+        startLayoutAnimation();
+
+    }
+
+    void deleteSelectedItems() {
+
+        ArrayList<Integer> selectedIndices = getSelectedIndices();
+
+        // Make sure that array is sorted from largest to smallest index
+        Collections.sort(selectedIndices,new Comparator<Integer>() {
+            @Override
+            public int compare(Integer o1, Integer o2) {
+                return Integer.compare(o1,o2);
+            }
+        });
+
+        for (int x = selectedIndices.size()-1;x >= 0;x--) {
+
+            int index = selectedIndices.get(x);
+
+            timelineAdapterListener.deleteItemData(index);
+
+            deleteItem(index);
+
+        }
+
+        timelineAdapterListener.onDatasetChanged();
+
+        setSelecting(false);
+
+    }
+
+    // Use SparseBooleanArray to get RecyclerView's currently selected completions
+    private ArrayList<Integer> getSelectedIndices() {
+
+        ArrayList<Integer> selectedIndices = new ArrayList<>();
+
+        for (int c = 0; c < getItemCount(); c++) {
+            if (selectionArray.get(c)) {
+                selectedIndices.add(c);
+            }
+        }
+        return selectedIndices;
     }
 
     // Get total number of adapter items

@@ -1,52 +1,20 @@
 <resources>
     <string name="app_name" translatable="false">XTraqueur</string>
 
-    <string name="placeholder_xtask_name" translatable="false">XTEMPLATE</string>
-    <string name="placeholder_xtask_completions" translatable="false">0</string>
-
-    <string name="EDIT_TASK">Edit task</string>
-    <string name="SUMMARY">Overview</string>
-
     <string name="pre_new_task_hint">Add a new task&#8230;</string>
     <string name="new_task_name">Name</string>
     <string name="new_task_fee">Fee</string>
     <string name="new_task_completions">Completions</string>
-    <string name="new_task_value">Value</string>
     <string name="new_task_color">Color</string>
 
-    <string name="new_task_name_placeholder">Task</string>
-    <string name="new_task_fee_placeholder" translatable="false">10</string>
-
-    <string name="total_sum">Total</string>
-    <string name="delete_completions">Delete all completions</string>
-
-    <string name="statistics_title">Statistics</string>
-
-    <string name="completions_title">Completions</string>
     <string name="manage_completions">Manage</string>
-    <string name="completions_message">List of a all completions of this task</string>
-    <string name="no_completions_msg">No completions for this task</string>
 
-    <string name="statistics_latest_occurrence_title">Latest completion</string>
-    <string name="no_completions">No completions</string>
-    <string name="today">Today</string>
-    <string name="days_ago">days ago</string>
-    <string name="hours_ago">hours ago</string>
-    <string name="minutes_ago">minutes ago</string>
-    <string name="just_now">Just now</string>
-    <string name="statistics_value_rank_title">Value rank</string>
-    <string name="statistics_tracking_rank_title">Completion rank</string>
     <string name="delete_task">Delete task</string>
-    <string name="task_details">Task Details</string>
 
-    <string name="new_task">New Task</string>
     <string name="all_completions">All completions</string>
     <string name="delete">Delete</string>
     <string name="cancel">Cancel</string>
     <string name="go_back_to_all_tasks">Go back to all tasks</string>
-    <string name="save_changes_to_task">Save changes to task</string>
-    <string name="create_new_task">Create new task</string>
-    <string name="delete_this_completion">Delete this completion</string>
     <string name="remove_completion_from_task">Remove completion from task</string>
     <string name="add_completion_to_task">Add completion to task</string>
     <string name="discard_changes_dialog_title">Discard changes?</string>
@@ -58,11 +26,7 @@
     <string name="invalid_name">That name is not valid!</string>
     <string name="invalid_fee">That fee is not valid!</string>
     <string name="menu_icon_title_settings">Settings</string>
-    <string name="menu_item_title_back">Back to tasks list</string>
-    <string name="menu_item_title_save_changes">Save changes</string>
-    <string name="menu_item_title_new_task">Create new task</string>
     <string name="newtask_fee_placeholder" translatable="false">10</string>
-    <string name="you_have_earned">You have earned</string>
     <string name="settings_section_google_account">Google Account</string>
     <string name="sign_out">Sign out</string>
     <string name="sign_in">Sign in</string>
@@ -80,20 +44,13 @@
     <string name="delete_all_completions_title">Delete all completions?</string>
     <string name="delete_all_completions_message">This action can not be undone. Do you really want to delete all your completions?</string>
     <string name="save">Save</string>
-    <string name="could_not_sign_in">Could not sign in</string>
-    <string name="offline_mode">Offline mode</string>
     <string name="welcome_app_desc">Track your work with ease</string>
-    <string name="edit_task_image">Image</string>
     <string name="no_tasks">No tasks</string>
     <string name="total_earnings">Total earnings</string>
     <string name="payment_history">Payment history</string>
     <string name="delete_completion">Delete completion</string>
-    <string name="edit_completion_title">Edit completion</string>
     <string name="item_time">Time</string>
     <string name="icon_filter">Filter</string>
-    <string name="timeline_filter_by_task">Filter by task</string>
-    <string name="timeline_filter_all_tasks">All tasks</string>
-    <string name="edit_completion">Edit completion</string>
     <string name="selected">selected</string>
     <string name="cancel_selection">Cancel selection</string>
     <string name="register_payment">Register payment</string>
@@ -101,19 +58,19 @@
     <string name="select_all">Select all</string>
     <string name="deselect_all">Deselect all</string>
     <string name="new_payment_date">Date</string>
-    <string name="completions">Completions</string>
     <string name="new_payment_title">New payment</string>
     <string name="register">Register</string>
     <string name="payments_timeline">Payments timeline</string>
     <string name="confirmation_dialog_register_payment">Register new payment?</string>
     <string name="confirmation_dialog_register_payment_msg">This action can not be undone. Do you really want to archive selected completions to a new payment?</string>
     <string name="confirmation_dialog_register_payment_positive">Register</string>
-    <string name="no_tasks_message">You don\'t have any tasks. Click below to add one!</string>
     <string name="menu_icon_title_timeline">Timeline</string>
     <string name="delete_payment">Delete payment</string>
     <string name="item_date">Date</string>
     <string name="delete_completion_confirmation_title">Delete completion?</string>
-    <string name="delete_completion_confirmation_message">This action can not be undone. Do you really want to delete this task?</string>
+    <string name="delete_completion_confirmation_message">This action can not be undone. Do you really want to delete this completion?</string>
+    <string name="delete_completions_confirmation_title">Delete completions?</string>
+    <string name="delete_completions_confirmation_message">This action can not be undone. Do you really want to delete these completions?</string>
     <string name="delete_payment_confirmation_title">Delete payment?</string>
     <string name="delete_payment_confirmation_message">This action can not be undone. Do you really want to delete this payment?</string>
     <string name="selected_color">Selected color</string>

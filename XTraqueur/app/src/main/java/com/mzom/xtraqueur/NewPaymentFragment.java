@@ -8,15 +8,14 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TextInputEditText;
-import android.support.v4.app.Fragment;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.support.v7.widget.Toolbar;
 import android.widget.DatePicker;
+
+import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
@@ -28,7 +27,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.Locale;
 
-public class NewPaymentFragment extends Fragment {
+public class NewPaymentFragment extends XFragment {
 
     private static final String TAG = "NewPaymentFragment";
 
@@ -51,11 +50,11 @@ public class NewPaymentFragment extends Fragment {
     interface NewPaymentFragmentListener {
         void onBackPressed();
 
-        void updatePaymentsDataOnDrive(XTaskPayment payment);
+        void updatePaymentsDataOnDrive(XTaskPayment payment, OnSuccessListener onSuccessListener);
 
         void updateTasksDataOnDrive(ArrayList<XTask> tasks);
 
-        void loadPaymentsFragment();
+        void loadPaymentsFragment(boolean addToBackStack);
     }
 
     public static NewPaymentFragment newInstance(ArrayList<XTask> tasks) {
@@ -264,18 +263,28 @@ public class NewPaymentFragment extends Fragment {
 
     private void loadCompletions() {
 
-        RecyclerView mRecyclerView = view.findViewById(R.id.register_payment_completions);
-
-        mRecyclerView.setHasFixedSize(true);
-
-        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getContext());
-        mRecyclerView.setLayoutManager(mLayoutManager);
+        TimelineRecycler mRecyclerView = view.findViewById(R.id.register_payment_completions);
 
         // Display completions in RecyclerView with TimelineAdapter
-        mAdapter = new TimelineAdapter(true, new TimelineAdapter.TimelineAdapterListener() {
+        mAdapter = new TimelineAdapter(TimelineAdapter.ALWAYS_SELECTING, new TimelineAdapter.TimelineAdapterListener() {
 
             @Override
             public void onItemClick(int pos, float y) {
+            }
+
+            @Override
+            public void deleteItemData(int index) {
+
+            }
+
+            @Override
+            public void onDatasetChanged() {
+
+            }
+
+            @Override
+            public void onSelectionModeToggled(boolean isSelecting) {
+
             }
 
             @Override
@@ -284,7 +293,7 @@ public class NewPaymentFragment extends Fragment {
             }
 
             @Override
-            public boolean onSelectionChanged(ArrayList<Boolean> updatedSelectionArray) {
+            public void onSelectionChanged(ArrayList<Boolean> updatedSelectionArray) {
 
                 // Update selection array
                 selectionArray = updatedSelectionArray;
@@ -305,9 +314,6 @@ public class NewPaymentFragment extends Fragment {
 
                 // Disable registering if no completions are selected, enable otherwise
                 setRegisterFieldEnabled(totalSelected() != 0);
-
-                // Return true to always have selectionMode enabled
-                return true;
             }
 
             @Override
@@ -324,6 +330,8 @@ public class NewPaymentFragment extends Fragment {
         mAdapter.setSelectionArray(selectionArray);
 
         mRecyclerView.setAdapter(mAdapter);
+
+        mRecyclerView.startLayoutAnimation();
 
 
     }
@@ -354,9 +362,7 @@ public class NewPaymentFragment extends Fragment {
 
         int total_selected = totalSelected();
         String toolbar_title;
-        if (total_selected == 0) {
-            toolbar_title = getString(R.string.select_completions);
-        } else {
+        if (total_selected > 0) {
 
             // Total value of all tasks
             double total = 0;
@@ -372,6 +378,8 @@ public class NewPaymentFragment extends Fragment {
 
             // Display number of selected completions and their total value
             toolbar_title = String.valueOf(total_selected) + " " + getString(R.string.selected) + " (" + totalString + ")";
+        } else {
+            toolbar_title = getString(R.string.select_completions);
         }
 
         mSelectionModeToolbar.setTitle(toolbar_title);
@@ -392,11 +400,13 @@ public class NewPaymentFragment extends Fragment {
         XTaskPayment newPayment = new XTaskPayment(getSelectedCompletions(), paymentDate.getTime());
 
         // Save new payment to drive
-        mNewPaymentFragmentListener.updatePaymentsDataOnDrive(newPayment);
-
-        // Show the new payment on the timeline
-        mNewPaymentFragmentListener.onBackPressed();
-        mNewPaymentFragmentListener.loadPaymentsFragment();
+        mNewPaymentFragmentListener.updatePaymentsDataOnDrive(newPayment, new OnSuccessListener() {
+            @Override
+            public void onSuccess(Object o) {
+                // Show the new payment on the timeline
+                mNewPaymentFragmentListener.loadPaymentsFragment(false);
+            }
+        });
 
     }
 

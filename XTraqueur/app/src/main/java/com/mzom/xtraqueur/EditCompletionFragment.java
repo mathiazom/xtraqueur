@@ -2,7 +2,6 @@ package com.mzom.xtraqueur;
 
 import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -105,9 +104,6 @@ public class EditCompletionFragment extends BaseEditFragment {
 
         // Update tasks data
         tasks.get(tasks.indexOf(completion.getTask())).setCompletionsList(completions);
-
-        Log.i("EditCompletion",String.valueOf(tempCompletionDate));
-        Log.i("EditCompletion",tasks.get(tasks.indexOf(completion.getTask())).getCompletionsList().toString());
 
         // Update tasks data with change
         getBaseEditListener().updateTasksDataOnDrive(tasks);

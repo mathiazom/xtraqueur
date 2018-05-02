@@ -102,7 +102,6 @@
                     app:layout_constraintTop_toBottomOf="@id/settings_google_account_photo" />
 
                 <Button
-                    android:id="@+id/button_account_sign_in"
                     android:layout_width="wrap_content"
                     android:layout_height="32dp"
                     android:layout_marginTop="15dp"
@@ -126,7 +125,6 @@
                 app:layout_constraintTop_toBottomOf="@id/settings_section_google_account" />
 
             <android.support.constraint.ConstraintLayout
-                android:id="@+id/settings_section_danger_zone"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"

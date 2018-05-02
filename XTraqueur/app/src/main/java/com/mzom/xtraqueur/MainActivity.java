@@ -20,6 +20,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity
         implements
@@ -77,14 +78,13 @@ public class MainActivity extends AppCompatActivity
         super.onResume();
 
         if (mTasksFragment != null && mTasksFragment.isAdded()) {
-            Log.i(TAG, "SharedPreferences: Getting tasks data from device");
             SharedPreferences sharedPreferences = getApplicationContext().getSharedPreferences("TASKS_DATA_ON_DEVICE", 0);
             String json = sharedPreferences.getString("TASKS_DATA_" + mGoogleSignInAccount.getId(), null);
 
             if (json != null) {
                 tasks = new Gson().fromJson(json, new TypeToken<ArrayList<XTask>>() {
                 }.getType());
-                loadTasksFragment();
+                reloadTasksFragment();
             } else {
                 Log.e(TAG, "SharedPreferences: No tasks data on device");
             }
@@ -138,58 +138,13 @@ public class MainActivity extends AppCompatActivity
                 getSupportFragmentManager().putFragment(outState, fragment.getClass().getSimpleName(), fragment);
             }
         }
-
-        /*// TasksFragment
-        if (mTasksFragment != null && mTasksFragment.isAdded()) {
-            getSupportFragmentManager().putFragment(outState, TASKS_FRAGMENT_NAME, mTasksFragment);
-        }
-
-        // EditTaskFragment
-        else if (mEditTaskFragment != null && mEditTaskFragment.isAdded()) {
-            getSupportFragmentManager().putFragment(outState, EDITTASK_FRAGMENT_NAME, mEditTaskFragment);
-        }
-
-        // NewTaskFragment
-        else if (mNewTaskFragment != null && mNewTaskFragment.isAdded()) {
-            getSupportFragmentManager().putFragment(outState, NEWTASK_FRAGMENT_NAME, mNewTaskFragment);
-        }
-
-        // SettingsFragment
-        else if (mSettingsFragment != null && mSettingsFragment.isAdded()) {
-            getSupportFragmentManager().putFragment(outState, SETTINGS_FRAGMENT_NAME, mSettingsFragment);
-        }
-
-        // CompletionsFragment
-        else if (mCompletionsFragment != null && mCompletionsFragment.isAdded()) {
-            getSupportFragmentManager().putFragment(outState, TIMELINE_FRAGMENT_NAME, mCompletionsFragment);
-        }
-
-        // EarningsFragment
-        else if (mEarningsFragment != null && mEarningsFragment.isAdded()) {
-            getSupportFragmentManager().putFragment(outState, EARNINGS_FRAGMENT_NAME, mEarningsFragment);
-        }
-
-        // NewPaymentFragment
-        else if (mNewPaymentFragment != null && mNewPaymentFragment.isAdded()) {
-            getSupportFragmentManager().putFragment(outState, NEWPAYMENT_FRAGMENT_NAME, mNewPaymentFragment);
-        }
-
-        // PaymentsFragment
-        else if (mPaymentsFragment != null && mPaymentsFragment.isAdded()) {
-            getSupportFragmentManager().putFragment(outState, PAYMENTS_FRAGMENT_NAME, mPaymentsFragment);
-        }
-
-        // WelcomeFragment
-        else if (mWelcomeFragment != null && mWelcomeFragment.isAdded()) {
-            getSupportFragmentManager().putFragment(outState, WELCOME_FRAGMENT_NAME, mWelcomeFragment);
-        }*/
     }
 
     // Restore tasks data and fragments that were saved before activity destruction
     private boolean restoreFromSavedInstanceState(Bundle savedInstanceState) {
 
         if (savedInstanceState == null) {
-            Log.i(TAG, "No saved instance states");
+            Log.e(TAG, "No saved instance states");
             return false;
         }
 
@@ -215,8 +170,6 @@ public class MainActivity extends AppCompatActivity
             if (mGoogleSignInAccount != null) {
                 mDriveResourceClient = Drive.getDriveResourceClient(this, mGoogleSignInAccount);
             }
-
-            //mGoogleSignInClient = buildGoogleSignInClient();
         }
 
 
@@ -226,36 +179,45 @@ public class MainActivity extends AppCompatActivity
 
     private boolean restoreFragmentsFromInstanceState(Bundle savedInstanceState) {
 
-        if (getSupportFragmentManager().getFragment(savedInstanceState, TasksFragment.class.getSimpleName()) != null) {
+        /*if (getSupportFragmentManager().getFragment(savedInstanceState, TasksFragment.class.getSimpleName()) != null) {
             mTasksFragment = (TasksFragment) getSupportFragmentManager().getFragment(savedInstanceState, TasksFragment.class.getSimpleName());
-            getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, mTasksFragment).commit();
+            replaceMainFragment(mTasksFragment,false,false);
+
         } else if (getSupportFragmentManager().getFragment(savedInstanceState, EditTaskFragment.class.getSimpleName()) != null) {
             mEditTaskFragment = (EditTaskFragment) getSupportFragmentManager().getFragment(savedInstanceState, EditTaskFragment.class.getSimpleName());
-            getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, mEditTaskFragment).commit();
+            replaceMainFragment(mEditTaskFragment,false,false);
+
         } else if (getSupportFragmentManager().getFragment(savedInstanceState, NewTaskFragment.class.getSimpleName()) != null) {
             mNewTaskFragment = (NewTaskFragment) getSupportFragmentManager().getFragment(savedInstanceState, NewTaskFragment.class.getSimpleName());
-            getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, mNewTaskFragment).commit();
+            replaceMainFragment(mNewTaskFragment,false,false);
+
         } else if (getSupportFragmentManager().getFragment(savedInstanceState, CompletionsFragment.class.getSimpleName()) != null) {
             mCompletionsFragment = (CompletionsFragment) getSupportFragmentManager().getFragment(savedInstanceState, CompletionsFragment.class.getSimpleName());
-            getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, mCompletionsFragment).commit();
+            replaceMainFragment(mCompletionsFragment,false,false);
+
         } else if (getSupportFragmentManager().getFragment(savedInstanceState, EarningsFragment.class.getSimpleName()) != null) {
-            mEarningsFragment = (EarningsFragment) getSupportFragmentManager().getFragment(savedInstanceState, EarningsFragment.class.getSimpleName());
-            getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, mEarningsFragment).commit();
+            //mEarningsFragment = (EarningsFragment) getSupportFragmentManager().getFragment(savedInstanceState, EarningsFragment.class.getSimpleName());
+            //replaceMainFragment(mEarningsFragment,false,false);
+
         } else if (getSupportFragmentManager().getFragment(savedInstanceState, NewPaymentFragment.class.getSimpleName()) != null) {
             mNewPaymentFragment = (NewPaymentFragment) getSupportFragmentManager().getFragment(savedInstanceState, NewPaymentFragment.class.getSimpleName());
-            getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, mNewPaymentFragment).commit();
+            replaceMainFragment(mNewPaymentFragment,false,false);
+
         } else if (getSupportFragmentManager().getFragment(savedInstanceState, PaymentsFragment.class.getSimpleName()) != null) {
             mPaymentsFragment = (PaymentsFragment) getSupportFragmentManager().getFragment(savedInstanceState, PaymentsFragment.class.getSimpleName());
-            getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, mPaymentsFragment).commit();
+            replaceMainFragment(mPaymentsFragment,false,false);
+
         } else if (getSupportFragmentManager().getFragment(savedInstanceState, EditCompletionFragment.class.getSimpleName()) != null) {
             mEditCompletionFragment = (EditCompletionFragment) getSupportFragmentManager().getFragment(savedInstanceState, EditCompletionFragment.class.getSimpleName());
-            getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, mEditCompletionFragment).commit();
+            replaceMainFragment(mEditCompletionFragment,false,false);
+
         } else if (getSupportFragmentManager().getFragment(savedInstanceState, EditPaymentFragment.class.getSimpleName()) != null) {
             mEditPaymentFragment = (EditPaymentFragment) getSupportFragmentManager().getFragment(savedInstanceState, EditPaymentFragment.class.getSimpleName());
-            getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, mEditPaymentFragment).commit();
+            replaceMainFragment(mEditPaymentFragment,false,false);
+
         } else {
             return false;
-        }
+        }*/
 
         return true;
     }
@@ -304,6 +266,15 @@ public class MainActivity extends AppCompatActivity
                     payments = retrievedPayments;
                 }
             }
+
+            @Override
+            public void updatePaymentsDataOnDrive(ArrayList<XTaskPayment> payments) {
+
+                XTasksDataUploader dataUploader = new XTasksDataUploader(mGoogleSignInAccount, mDriveResourceClient, getApplicationContext());
+                XTasksDataPackage dataPackage = new XTasksDataPackage(null, payments);
+                dataUploader.execute(dataPackage);
+
+            }
         });
 
         dataRetriever.execute(mDriveResourceClient);
@@ -311,15 +282,24 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void updatePaymentsDataOnDrive(XTaskPayment payment) {
+    public void updatePaymentsDataOnDrive(XTaskPayment payment, OnSuccessListener onSuccessListener) {
 
         payments.add(payment);
-        updatePaymentsDataOnDrive(payments);
+        updatePaymentsDataOnDrive(payments, onSuccessListener);
 
     }
 
     @Override
-    public void updatePaymentsDataOnDrive(ArrayList<XTaskPayment> payments) {
+    public void updatePaymentsDataOnDrive(ArrayList<XTaskPayment> payments){
+        updatePaymentsDataOnDrive(payments, new OnSuccessListener() {
+            @Override
+            public void onSuccess(Object o) {
+
+            }
+        });
+    }
+
+    public void updatePaymentsDataOnDrive(ArrayList<XTaskPayment> payments, OnSuccessListener onSuccessListener) {
 
         this.payments = payments;
 
@@ -327,7 +307,7 @@ public class MainActivity extends AppCompatActivity
 
         XTasksDataPackage dataPackage = new XTasksDataPackage(null, payments);
 
-        XTasksDataUploader uploader = new XTasksDataUploader(mGoogleSignInAccount, driveResourceClient, getApplicationContext());
+        XTasksDataUploader uploader = new XTasksDataUploader(mGoogleSignInAccount, driveResourceClient, getApplicationContext(), onSuccessListener);
         uploader.execute(dataPackage);
 
     }
@@ -360,30 +340,26 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void loadTasksFragment() {
         mTasksFragment = TasksFragment.newInstance(tasks);
-        getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, mTasksFragment).addToBackStack(TasksFragment.class.getSimpleName()).commit();
+        replaceMainFragment(mTasksFragment);
+    }
+
+    private void reloadTasksFragment(){
+        mTasksFragment = TasksFragment.newInstance(tasks);
+        replaceMainFragment(mTasksFragment,false);
     }
 
     // Fragment to create new tasks
     @Override
     public void loadNewTaskFragment() {
         mNewTaskFragment = NewTaskFragment.newInstance(tasks, getRandomMaterialColor());
-        getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.enter_from_top, R.anim.exit_to_bottom, R.anim.enter_from_bottom, R.anim.exit_to_top).replace(R.id.main_frame_layout, mNewTaskFragment).addToBackStack(NewTaskFragment.class.getSimpleName()).commit();
+        replaceMainFragment(mNewTaskFragment,R.anim.enter_from_top, R.anim.exit_to_bottom, R.anim.enter_from_bottom, R.anim.exit_to_top,true);
     }
 
     // Fragment to edit the task passed in as an argument
     @Override
     public void loadEditTaskFragment(XTask task, int index) {
         mEditTaskFragment = EditTaskFragment.newInstance(tasks, task, index);
-
-        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-        fragmentTransaction.replace(R.id.main_frame_layout, mEditTaskFragment).addToBackStack(EditTaskFragment.class.getSimpleName()).commit();
-    }
-
-    @Override
-    public void loadSettingsActivity() {
-        Intent intent = new Intent(this, SettingsActivity.class);
-        intent.putExtra("GOOGLE_SIGN_IN_ACCOUNT", mGoogleSignInAccount);
-        startActivity(intent);
+        replaceMainFragment(mEditTaskFragment);
     }
 
     // Fragment to show completions timeline
@@ -401,32 +377,27 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void loadCompletionsFragment(ArrayList<XTask> tasks, XTask filterTask) {
         mCompletionsFragment = CompletionsFragment.newInstance(tasks, filterTask);
-        getSupportFragmentManager()
-                .beginTransaction()
-                .setCustomAnimations(R.anim.enter_from_bottom, R.anim.exit_to_top, R.anim.enter_from_top, R.anim.exit_to_bottom)
-                .replace(R.id.main_frame_layout, mCompletionsFragment)
-                .addToBackStack(CompletionsFragment.class.getSimpleName())
-                .commit();
+        replaceMainFragment(mCompletionsFragment,R.anim.enter_from_bottom, R.anim.exit_to_top, R.anim.enter_from_top, R.anim.exit_to_bottom,true);
     }
 
     // Fragment to see unpaid earnings and to launch NewPaymentFragment
     @Override
     public void loadEarningsFragment() {
         mEarningsFragment = EarningsFragment.newInstance(tasks, payments);
-        getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.enter_from_bottom, R.anim.exit_to_top, R.anim.enter_from_top, R.anim.exit_to_bottom).replace(R.id.main_frame_layout, mEarningsFragment).addToBackStack(EarningsFragment.class.getSimpleName()).commit();
+        replaceMainFragment(mEarningsFragment,R.anim.enter_from_bottom, R.anim.exit_to_top, R.anim.enter_from_top, R.anim.exit_to_bottom,true);
     }
 
     // Fragment to register new payments
     @Override
     public void loadNewPaymentFragment() {
         mNewPaymentFragment = NewPaymentFragment.newInstance(tasks);
-        getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.enter_from_right, R.anim.exit_to_left, R.anim.enter_from_left, R.anim.exit_to_right).replace(R.id.main_frame_layout, mNewPaymentFragment).addToBackStack(NewPaymentFragment.class.getSimpleName()).commit();
+        replaceMainFragment(mNewPaymentFragment,R.anim.enter_from_right, R.anim.exit_to_left, R.anim.enter_from_left, R.anim.exit_to_right,true);
     }
 
     @Override
     public void loadNewPaymentFragment(ArrayList<Boolean> selectionArray) {
         mNewPaymentFragment = NewPaymentFragment.newInstance(tasks, selectionArray);
-        getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.enter_from_right, R.anim.exit_to_left, R.anim.enter_from_left, R.anim.exit_to_right).replace(R.id.main_frame_layout, mNewPaymentFragment).addToBackStack(NewPaymentFragment.class.getSimpleName()).commit();
+        replaceMainFragment(mNewPaymentFragment,R.anim.enter_from_right, R.anim.exit_to_left, R.anim.enter_from_left, R.anim.exit_to_right,true);
     }
 
     @Override
@@ -436,9 +407,9 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void loadPaymentsFragment() {
+    public void loadPaymentsFragment(boolean addToBackStack) {
         mPaymentsFragment = PaymentsFragment.newInstance(payments);
-        getSupportFragmentManager().beginTransaction().setCustomAnimations(R.anim.enter_from_right, R.anim.exit_to_left, R.anim.enter_from_left, R.anim.exit_to_right).replace(R.id.main_frame_layout, mPaymentsFragment).addToBackStack(PaymentsFragment.class.getSimpleName()).commit();
+        replaceMainFragment(mPaymentsFragment,R.anim.enter_from_right, R.anim.exit_to_left, R.anim.enter_from_left, R.anim.exit_to_right,addToBackStack);
     }
 
     @Override
@@ -448,8 +419,62 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-    private void replaceMainFragment(Fragment newFragment) {
-        getSupportFragmentManager().beginTransaction().replace(R.id.main_frame_layout, newFragment).addToBackStack(newFragment.getClass().getSimpleName()).commit();
+    private void replaceMainFragment(Fragment fragment){
+        replaceMainFragment(fragment,true);
+    }
+
+    private void replaceMainFragment(Fragment newFragment, boolean addToBackStack){
+        replaceMainFragment(newFragment,addToBackStack,false);
+    }
+
+    // Fragment transaction without animation
+    private void replaceMainFragment(Fragment newFragment, boolean addToBackStack, boolean keepAnimation) {
+
+        FragmentTransaction transaction = getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.main_frame_layout, newFragment);
+
+        if(addToBackStack){
+            Log.i(TAG,"Added " + newFragment.getClass().getSimpleName() + " to back stack");
+            transaction.addToBackStack(newFragment.getClass().getSimpleName());
+        }
+
+        if(!keepAnimation){
+            Log.i(TAG,"No animation");
+            transaction.setCustomAnimations(FragmentTransaction.TRANSIT_FRAGMENT_FADE,FragmentTransaction.TRANSIT_FRAGMENT_FADE,FragmentTransaction.TRANSIT_FRAGMENT_FADE,FragmentTransaction.TRANSIT_FRAGMENT_FADE);
+        }
+
+        transaction.commit();
+
+        Log.i(TAG,newFragment.getClass().getSimpleName() + " is now main fragment");
+
+    }
+
+    // Fragment transaction with animation
+    private void replaceMainFragment(Fragment newFragment, int enter, int exit, int popEnter, int popExit, boolean addToBackStack){
+
+        FragmentTransaction transaction = getSupportFragmentManager()
+                .beginTransaction()
+                .setCustomAnimations(enter, exit, popEnter, popExit)
+                .replace(R.id.main_frame_layout, newFragment);
+
+        if(addToBackStack){
+            Log.i(TAG,"Added " + newFragment.getClass().getSimpleName() + " to back stack");
+            transaction.addToBackStack(newFragment.getClass().getSimpleName());
+        }
+
+        transaction.commit();
+
+        Log.i(TAG,newFragment.getClass().getSimpleName() + " is now main fragment");
+
+    }
+
+
+    @Override
+    public void loadSettingsActivity() {
+        Intent intent = new Intent(this, SettingsActivity.class);
+        intent.putExtra("GOOGLE_SIGN_IN_ACCOUNT", mGoogleSignInAccount);
+        startActivity(intent);
     }
 
 
@@ -458,6 +483,14 @@ public class MainActivity extends AppCompatActivity
         getSupportFragmentManager().addOnBackStackChangedListener(new FragmentManager.OnBackStackChangedListener() {
             @Override
             public void onBackStackChanged() {
+
+                for (int f = 0; f < getSupportFragmentManager().getBackStackEntryCount(); f++) {
+
+                    Log.i("Backstack", getSupportFragmentManager().getBackStackEntryAt(f).toString());
+
+                }
+
+
                 // Index of last entry in backStack
                 int index = getSupportFragmentManager().getBackStackEntryCount() - 1;
                 // Do nothing if backStack is empty
@@ -478,12 +511,27 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onBackPressed() {
 
+        Log.i(TAG,"Back press");
+
         if (getSupportFragmentManager().getBackStackEntryCount() == 1) {
 
             // Finish activity if backstack is empty of fragments on back button press
             finish();
 
             return;
+        }
+
+        // Check if any visible fragment extend BaseEditFragment
+        List<Fragment> fragments = getSupportFragmentManager().getFragments();
+        if (fragments != null) {
+            for (Fragment fragment : fragments) {
+                if (!fragment.isVisible()) continue;
+
+                if (fragment instanceof BaseEditFragment && ((BaseEditFragment) fragment).onBackPressed()) {
+                    // Fragment handles back press, no further actions from this activity
+                    return;
+                }
+            }
         }
 
         // Otherwise let super handle the back press
@@ -504,4 +552,5 @@ public class MainActivity extends AppCompatActivity
 
         return randColor;
     }
+
 }

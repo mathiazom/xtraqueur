@@ -14,7 +14,6 @@ import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
-import android.support.v4.app.Fragment;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -29,7 +28,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 
-public abstract class BaseEditFragment extends Fragment {
+public abstract class BaseEditFragment extends XFragment {
 
     // Fragment main views
     private View baseView;
@@ -41,6 +40,8 @@ public abstract class BaseEditFragment extends Fragment {
     private String deleteConfirmationMessage;
 
     private int itemColor;
+
+    private boolean discardChanges;
 
     private BaseEditFragmentListener mBaseEditFragmentListener;
 
@@ -197,6 +198,7 @@ public abstract class BaseEditFragment extends Fragment {
                     .setPositiveButton(R.string.discard_option, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
+                            discardChanges = true;
                             returnToItemsList();
                         }
                     })
@@ -311,6 +313,21 @@ public abstract class BaseEditFragment extends Fragment {
         return Color.HSVToColor(hsv);
     }
 
+    boolean onBackPressed(){
+
+        if(discardChanges) return false;
+
+        if(itemDataIsChanged()){
+            confirmDiscardChanges();
+            return true;
+        }
+
+        return false;
+
+    }
+
+
+
     @NonNull
     abstract ConstraintLayout getEditLayout(ConstraintLayout baseEditContainer);
 
@@ -326,4 +343,7 @@ public abstract class BaseEditFragment extends Fragment {
     abstract void deleteItem();
 
     abstract void onDatePicked(Date newDate);
+
+
+
 }

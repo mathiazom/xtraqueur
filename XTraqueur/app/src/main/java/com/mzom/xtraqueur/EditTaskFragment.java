@@ -6,7 +6,6 @@ import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.TextInputEditText;
 import android.support.design.widget.TextInputLayout;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -212,8 +211,6 @@ public class EditTaskFragment extends BaseEditFragment {
             return;
         }
 
-        Log.i("Colortesting",String.valueOf(task.getColor()) + " vs " + String.valueOf(temp_color));
-
         // Check if any changes have been made
         if (itemDataIsChanged()) {
 
@@ -222,9 +219,6 @@ public class EditTaskFragment extends BaseEditFragment {
             edit.setName(name);
             edit.setFee(fee);
             edit.setColor(temp_color);
-
-
-            Log.i("Colortesting", "setColor: " + String.valueOf(temp_color));
 
             // Commit changes
             tasks.set(index, edit);

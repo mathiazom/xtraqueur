@@ -177,12 +177,7 @@ class XTasksDataUploader extends AsyncTask<XTasksDataPackage,Void,Void> {
                         return mDriveResourceClient.createFile(parent, changeSet, contents);
                     }
                 })
-                .addOnSuccessListener(new OnSuccessListener<DriveFile>() {
-                            @Override
-                            public void onSuccess(final DriveFile driveFile) {
-                                Log.i(TAG, "Google Drive API: Payments data on drive updated successfully");
-                            }
-                        })
+                .addOnSuccessListener(onSuccessListener)
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {

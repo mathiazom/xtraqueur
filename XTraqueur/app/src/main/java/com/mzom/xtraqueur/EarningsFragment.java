@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
-import android.support.v4.app.Fragment;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,7 +16,7 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Locale;
 
-public class EarningsFragment extends Fragment {
+public class EarningsFragment extends XFragment {
 
     private static final String TAG = "Xtraqueur-EarningsFrag";
 
@@ -34,7 +33,7 @@ public class EarningsFragment extends Fragment {
 
         void loadNewPaymentFragment();
 
-        void loadPaymentsFragment();
+        void loadPaymentsFragment(boolean addToBackStack);
 
         void loadTasksFragment();
     }
@@ -55,7 +54,8 @@ public class EarningsFragment extends Fragment {
         return view;
     }
 
-    public static EarningsFragment newInstance(ArrayList<XTask> tasks,ArrayList<XTaskPayment> payments) {
+
+    public static EarningsFragment newInstance(ArrayList<XTask> tasks, ArrayList<XTaskPayment> payments) {
 
         EarningsFragment fragment = new EarningsFragment();
         fragment.tasks = tasks;
@@ -112,7 +112,7 @@ public class EarningsFragment extends Fragment {
         button_payments_timeline.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-            mEarningsFragmentListener.loadPaymentsFragment();
+            mEarningsFragmentListener.loadPaymentsFragment(true);
             }
         });
 

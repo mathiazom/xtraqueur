@@ -55,7 +55,6 @@ public class SettingsActivity extends AppCompatActivity implements SettingsFragm
 
     private void loadData(){
 
-        Log.i(TAG, "SharedPreferences: Getting tasks data from device");
         SharedPreferences sharedPreferences = getApplicationContext().getSharedPreferences("TASKS_DATA_ON_DEVICE", 0);
         String json = sharedPreferences.getString("TASKS_DATA_" + mGoogleSignInAccount.getId(), null);
 
@@ -99,7 +98,6 @@ public class SettingsActivity extends AppCompatActivity implements SettingsFragm
         // Use path to check if account photo is stored on device
         Bitmap bitmap = BitmapFactory.decodeFile(path);
         if (bitmap != null) {
-            Log.i(TAG, "Google Account Photo already downloaded to device");
             mGoogleAccountPhoto = bitmap;
             return;
         }
