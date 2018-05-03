@@ -5,12 +5,14 @@ import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.text.SimpleDateFormat;
@@ -24,7 +26,13 @@ import java.util.Locale;
 
 public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.ViewHolder> {
 
-    private int customViewResId;
+    private static final String TAG = "XTQ-TimelineAdapter";
+
+    private boolean hasCustomItemView;
+    private int customLayoutRes;
+    private int customTitleViewResId;
+    private int customDateViewResId;
+    private int customMarkerResId;
 
     private ArrayList<Boolean> selectionArray;
 
@@ -42,7 +50,7 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.ViewHo
 
         TimelineItem getTimelineItem(int pos);
 
-        void onItemClick(int pos,float y);
+        void onItemClick(int pos, float y);
 
         void onDatasetChanged();
 
@@ -56,11 +64,13 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.ViewHo
 
     }
 
-    interface TimelineAdapterCustomViewListener extends TimelineAdapterListener{
+    private TimelineCustomViewListener timelineCustomViewListener;
 
-        ConstraintLayout getCustomView(ViewGroup parent);
+    interface TimelineCustomViewListener {
 
-        void displayCustomItemData(@NonNull final ViewHolder holder, final TimelineItem timelineItem);
+        void displayItemData(@NonNull final ViewHolder holder, final TimelineItem timelineItem);
+
+        void markSelection(final ViewHolder holder, final TimelineItem timelineItem, final int position, final boolean isSelected);
 
     }
 
@@ -76,14 +86,14 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.ViewHo
 
 
     TimelineAdapter(boolean selectionMode, TimelineAdapterListener timelineAdapterListener) {
-        this(selectionMode,NO_SELECTION_LOCK,timelineAdapterListener);
+        this(selectionMode, NO_SELECTION_LOCK, timelineAdapterListener);
     }
 
-    TimelineAdapter(int selectionModeLock, TimelineAdapterListener timelineAdapterListener){
-        this(selectionModeLock == ALWAYS_SELECTING,selectionModeLock,timelineAdapterListener);
+    TimelineAdapter(int selectionModeLock, TimelineAdapterListener timelineAdapterListener) {
+        this(selectionModeLock == ALWAYS_SELECTING, selectionModeLock, timelineAdapterListener);
     }
 
-    private TimelineAdapter(boolean selectionMode, int selectionModeLock, TimelineAdapterListener timelineAdapterListener){
+    private TimelineAdapter(boolean selectionMode, int selectionModeLock, TimelineAdapterListener timelineAdapterListener) {
         this.timelineAdapterListener = timelineAdapterListener;
         this.selectionMode = selectionMode;
         this.selectionModeLock = selectionModeLock;
@@ -91,16 +101,48 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.ViewHo
     }
 
 
-
-
+    // Base view holder for both default and custom view
     static class ViewHolder extends RecyclerView.ViewHolder {
-        final ConstraintLayout mItemLayout;
-        final ConstraintLayout mMainItemLayout;
+        final ConstraintLayout itemBaseLayout;
+        final ConstraintLayout itemLayout;
+        final TextView itemDateHeader;
 
-        ViewHolder(ConstraintLayout v) {
-            super(v);
-            mItemLayout = v;
-            mMainItemLayout = v.findViewById(R.id.item_container);
+        final TextView itemTitleView;
+        final TextView itemDateView;
+        final ImageView itemSelectedMark;
+
+        ViewHolder(ConstraintLayout itemContainer) {
+            super(itemContainer);
+
+            // Required views
+            this.itemBaseLayout = itemContainer;
+            this.itemLayout = itemContainer.findViewById(R.id.item_default_view);
+            this.itemDateHeader = itemContainer.findViewById(R.id.timeline_item_date_header);
+
+            // Optional views
+            this.itemTitleView = itemContainer.findViewById(R.id.timeline_item_title);
+            this.itemDateView = itemContainer.findViewById(R.id.timeline_item_date);
+            this.itemSelectedMark = itemContainer.findViewById(R.id.timeline_item_selected_mark);
+        }
+
+        ViewHolder(ConstraintLayout itemContainer,
+                   ConstraintLayout customLayout,
+                   @Nullable TextView itemTitleView,
+                   @Nullable TextView itemDateView,
+                   @Nullable ImageView itemSelectedMark) {
+
+            super(itemContainer);
+
+            // Required views
+            this.itemBaseLayout = itemContainer;
+            this.itemLayout = customLayout;
+            this.itemDateHeader = itemContainer.findViewById(R.id.timeline_item_date_header);
+
+            // Optional views
+            this.itemTitleView = itemTitleView;
+            this.itemDateView = itemDateView;
+            this.itemSelectedMark = itemSelectedMark;
+
         }
     }
 
@@ -108,64 +150,104 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.ViewHo
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
 
-        ConstraintLayout v;
+        // Base item layout (both for custom and default layout)
+        final ConstraintLayout itemBase = (ConstraintLayout) LayoutInflater.from(parent.getContext()).inflate(R.layout.template_timeline_item, parent, false);
+        final ConstraintLayout layoutContainer = itemBase.findViewById(R.id.item_container);
 
-        if(timelineAdapterListener instanceof TimelineAdapterCustomViewListener){
-            v = ((TimelineAdapterCustomViewListener) timelineAdapterListener).getCustomView(parent);
-        }else{
-            v = (ConstraintLayout) LayoutInflater.from(parent.getContext()).inflate(R.layout.template_timeline_item, parent, false);
+        // Use custom layout
+        if (hasCustomItemView && customLayoutRes != 0) {
+            final ConstraintLayout customLayout = (ConstraintLayout) LayoutInflater.from(parent.getContext()).inflate(customLayoutRes, itemBase, false);
+            layoutContainer.addView(customLayout);
+
+            final TextView customTitleView = customTitleViewResId == 0 ? null : (TextView) customLayout.findViewById(customTitleViewResId);
+            final TextView customDateView = customDateViewResId == 0 ? null : (TextView) customLayout.findViewById(customDateViewResId);
+            final ImageView customMarker = customMarkerResId == 0 ? null : (ImageView) customLayout.findViewById(customMarkerResId);
+
+            return new ViewHolder(itemBase, customLayout, customTitleView, customDateView, customMarker);
         }
 
-        return new ViewHolder(v);
+        // Use default layout
+        final ConstraintLayout defaultLayout = (ConstraintLayout) LayoutInflater.from(itemBase.getContext()).inflate(R.layout.template_timeline_default_item, itemBase, false);
+        layoutContainer.addView(defaultLayout);
+
+        // Use default view holder
+        return new ViewHolder(itemBase);
+
+
     }
 
     @Override
     public void onBindViewHolder(@NonNull final ViewHolder holder, final int position) {
 
-        Log.i("Timeline","OnBindViewHolder");
+        Log.i(TAG, "OnBindViewHolder");
 
         // Current item
         final TimelineItem timelineItem = timelineAdapterListener.getTimelineItem(position);
 
-        // Item date
-        final Date itemDate = new Date(timelineItem.getDate());
+        if (hasCustomItemView && timelineCustomViewListener != null) {
 
-        // Display item title, date and color
-        if(timelineAdapterListener instanceof TimelineAdapterCustomViewListener){
-            ((TimelineAdapterCustomViewListener) timelineAdapterListener).displayCustomItemData(holder, timelineItem);
-        }else{
-            displayItemData(holder,timelineItem);
+            Log.i(TAG, "Display custom data layout");
+
+            // Display item with custom layout
+            timelineCustomViewListener.displayItemData(holder, timelineItem);
+
         }
 
-        // Additional date header if item starts new date
-        setItemDateHeader(holder,itemDate);
+        // Display item title, date and color with default layout
+        displayItemData(holder, timelineItem);
 
         // Change layout to mark item selection state
-        markSelection(holder,position);
+        markSelection(holder, position);
+
+        // Additional date header if item starts new date
+        final Date itemDate = new Date(timelineItem.getDate());
+        setItemDateHeader(holder, itemDate);
 
         // Set item click- and hold listener
         setItemListeners(holder);
     }
 
-    private void displayItemData(@NonNull final ViewHolder holder, final TimelineItem timelineItem){
+
+    void setCustomItemView(int customLayoutRes, int customTitleViewResId, int customDateViewResId, int customMarkerResId, TimelineCustomViewListener timelineCustomViewListener) {
+
+        Log.i(TAG, "SetCustomItemView");
+
+        if (customLayoutRes == 0) return;
+
+        this.hasCustomItemView = true;
+
+        // Layout resource for item
+        this.customLayoutRes = customLayoutRes;
+
+        // Resource ids for base views
+        this.customTitleViewResId = customTitleViewResId;
+        this.customDateViewResId = customDateViewResId;
+        this.customMarkerResId = customMarkerResId;
+
+        this.timelineCustomViewListener = timelineCustomViewListener;
+
+    }
+
+
+    private void displayItemData(@NonNull final ViewHolder holder, final TimelineItem timelineItem) {
 
         // Item title
-        final TextView itemTitleView = holder.mItemLayout.findViewById(R.id.timeline_item_title);
+        final TextView itemTitleView = holder.itemTitleView;
         itemTitleView.setText(timelineItem.getTitle());
 
         // Item date
-        final TextView itemDateView = holder.mItemLayout.findViewById(R.id.timeline_item_date);
+        final TextView itemDateView = holder.itemDateView;
         final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("EEEE d MMM yyyy HH:mm", Locale.getDefault());
         final Date itemDate = new Date(timelineItem.getDate());
         itemDateView.setText(simpleDateFormat.format(itemDate));
 
         // Item background
-        Drawable itemBackground = holder.mMainItemLayout.getBackground();
+        Drawable itemBackground = holder.itemLayout.getBackground();
         itemBackground.setColorFilter(timelineItem.getColor(), PorterDuff.Mode.SRC_ATOP);
-        holder.mMainItemLayout.setBackground(itemBackground);
+        holder.itemLayout.setBackground(itemBackground);
     }
 
-    private void setItemDateHeader(@NonNull final ViewHolder holder,final Date itemDate){
+    private void setItemDateHeader(@NonNull final ViewHolder holder, final Date itemDate) {
 
         // Marks if item layout needs an additional date header to mark a new date
         boolean needsDateHeader;
@@ -178,43 +260,45 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.ViewHo
             calendar.setTime(itemDate);
 
             // Time of previous item
-            final Date prevDate = new Date(timelineAdapterListener.getTimelineItem(holder.getAdapterPosition()-1).getDate());
+            final Date prevDate = new Date(timelineAdapterListener.getTimelineItem(holder.getAdapterPosition() - 1).getDate());
             final Calendar prevCalendar = Calendar.getInstance();
             prevCalendar.setTime(prevDate);
 
             // Check if item has different date than previous item and needs date header
             needsDateHeader = calendar.get(Calendar.DAY_OF_YEAR) != prevCalendar.get(Calendar.DAY_OF_YEAR) || calendar.get(Calendar.YEAR) != prevCalendar.get(Calendar.YEAR);
 
-        }else {
+        } else {
             // item is first item on the list, therefore also needs a date header
             needsDateHeader = true;
         }
 
-
-        final TextView dateHeader = holder.mItemLayout.findViewById(R.id.timeline_item_date_header);
-
         if (needsDateHeader) {
+
             // Date formatting pattern
             final SimpleDateFormat newDateFormat = new SimpleDateFormat("d MMM yyyy", Locale.getDefault());
 
+            Log.i(TAG,"NeedsDateHeader " + newDateFormat.format(itemDate));
+
             // Set date header text
-            dateHeader.setText(newDateFormat.format(itemDate));
+            holder.itemDateHeader.setText(newDateFormat.format(itemDate));
 
             // Show date header
-            dateHeader.setVisibility(View.VISIBLE);
+            holder.itemDateHeader.setVisibility(View.VISIBLE);
         } else {
 
             // Hide date header
-            dateHeader.setVisibility(View.GONE);
+            holder.itemDateHeader.setVisibility(View.GONE);
         }
     }
 
-    private void setItemListeners(@NonNull final ViewHolder holder){
+    private void setItemListeners(@NonNull final ViewHolder holder) {
 
         // Item on click listener
-        holder.mMainItemLayout.setOnClickListener(new View.OnClickListener() {
+        holder.itemLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+                Log.i(TAG, "OnClick");
 
                 // Fire long click listener if selection mode is enabled
                 if (selectionMode) {
@@ -225,14 +309,16 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.ViewHo
                 // Get view screen location for edit fragment animation
                 int[] location = new int[2];
                 v.getLocationOnScreen(location);
-                timelineAdapterListener.onItemClick(holder.getAdapterPosition(),location[1]);
+                timelineAdapterListener.onItemClick(holder.getAdapterPosition(), location[1]);
             }
         });
 
         // Item on hold listener
-        holder.mMainItemLayout.setOnLongClickListener(new View.OnLongClickListener() {
+        holder.itemLayout.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
+
+                Log.i(TAG, "OnLong");
 
                 toggleItemSelection(holder);
 
@@ -242,25 +328,25 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.ViewHo
     }
 
     void timelineItemRangeInserted(int positionStart, int itemCount) {
-        notifyItemRangeInserted(positionStart,itemCount);
+        notifyItemRangeInserted(positionStart, itemCount);
         startLayoutAnimation();
     }
 
-    private void startLayoutAnimation(){
+    private void startLayoutAnimation() {
         mRecyclerView.scheduleLayoutAnimation();
     }
 
 
     // Create new selection array with no items selected
-    private void initSelectionArray(){
+    private void initSelectionArray() {
         selectionArray = new ArrayList<>(Arrays.asList(new Boolean[getItemCount()]));
-        Collections.fill(selectionArray,false);
+        Collections.fill(selectionArray, false);
     }
 
     // Apply predefined selection
-    void setSelectionArray(ArrayList<Boolean> newSelectionArray){
+    void setSelectionArray(ArrayList<Boolean> newSelectionArray) {
 
-        if(newSelectionArray.size() != getItemCount()){
+        if (newSelectionArray.size() != getItemCount()) {
             initSelectionArray();
             return;
         }
@@ -275,11 +361,11 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.ViewHo
     }
 
     // Set selectionMode (controlled by selectionModeLock)
-    private void setSelecting(boolean selectionMode){
+    private void setSelecting(boolean selectionMode) {
 
         boolean oldSelecting = this.selectionMode;
 
-        switch (selectionModeLock){
+        switch (selectionModeLock) {
             case ALWAYS_SELECTING:
                 this.selectionMode = true;
                 break;
@@ -294,24 +380,24 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.ViewHo
         }
 
         // Check if selection state has changed
-        if(oldSelecting != selectionMode){
+        if (oldSelecting != selectionMode) {
             // If so, notify fragment to update selection based UI
             timelineAdapterListener.onSelectionModeToggled(this.selectionMode);
         }
     }
 
     // Get total number of selected adapter items
-    int getTotalSelected(){
+    int getTotalSelected() {
 
         // If selectionArray does not exist, then no items are selected (return 0)
-        if(selectionArray == null){
+        if (selectionArray == null) {
             initSelectionArray();
             return 0;
         }
 
         int total_selected = 0;
-        for(int b = 0; b < getItemCount();b++){
-            if(selectionArray.get(b)){
+        for (int b = 0; b < getItemCount(); b++) {
+            if (selectionArray.get(b)) {
                 total_selected++;
             }
         }
@@ -321,14 +407,14 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.ViewHo
 
     private void toggleItemSelection(final ViewHolder holder) {
 
-        if(selectionArray == null || selectionArray.size() == 0){
+        if (selectionArray == null || selectionArray.size() == 0) {
             initSelectionArray();
         }
 
         // Get correct ViewHolder position
         int position = holder.getAdapterPosition();
 
-        if(position == -1) return;
+        if (position == -1) return;
 
         // Toggle selection array value for current position
         selectionArray.set(position, !selectionArray.get(position));
@@ -340,15 +426,20 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.ViewHo
         setSelecting(getTotalSelected() > 0);
 
         // Change item layout based on selection
-        markSelection(holder,position);
+        if (hasCustomItemView) {
+            boolean isSelected = selectionArray.size() != 0 && selectionArray.get(position);
+            timelineCustomViewListener.markSelection(holder, timelineAdapterListener.getTimelineItem(position), position, isSelected);
+        } else {
+            markSelection(holder, position);
+        }
     }
 
     // Apply a common selection state to all adapter items
     void setUniversalItemSelection(boolean selected) {
 
         // Set all selectionArray values to true
-        for (int b = 0;b<getItemCount();b++){
-            selectionArray.set(b,selected);
+        for (int b = 0; b < getItemCount(); b++) {
+            selectionArray.set(b, selected);
         }
 
         // Update items layout
@@ -366,28 +457,28 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.ViewHo
         // Selected
         if (selectionArray.size() != 0 && selectionArray.get(position)) {
             // Selected item background
-            Drawable itemBackground = holder.mMainItemLayout.getBackground();
+            Drawable itemBackground = holder.itemLayout.getBackground();
             itemBackground.setColorFilter(darkenColor(timelineItem.getColor()), PorterDuff.Mode.SRC_ATOP);
-            holder.mMainItemLayout.setBackground(itemBackground);
+            holder.itemLayout.setBackground(itemBackground);
 
             // Show selection check mark
-            holder.mMainItemLayout.findViewById(R.id.timeline_item_selected_mark).setVisibility(View.VISIBLE);
+            holder.itemSelectedMark.setVisibility(View.VISIBLE);
         }
         // Not selected
         else {
             // Regular item background
-            Drawable itemBackground = holder.mMainItemLayout.getBackground();
+            Drawable itemBackground = holder.itemLayout.getBackground();
             itemBackground.setColorFilter(timelineItem.getColor(), PorterDuff.Mode.SRC_ATOP);
-            holder.mMainItemLayout.setBackground(itemBackground);
+            holder.itemLayout.setBackground(itemBackground);
 
             // Hide selection check mark
-            holder.mMainItemLayout.findViewById(R.id.timeline_item_selected_mark).setVisibility(View.GONE);
+            holder.itemSelectedMark.setVisibility(View.GONE);
         }
     }
 
 
     // Delete item from adapter with animation
-    private void deleteItem(final int index){
+    private void deleteItem(final int index) {
 
         selectionArray.remove(index);
 
@@ -398,11 +489,11 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.ViewHo
         notifyItemChanged(index);
     }
 
-    void deleteItemRange(int position, int itemCount){
+    void deleteItemRange(int position, int itemCount) {
 
         initSelectionArray();
 
-        notifyItemRangeRemoved(position,itemCount);
+        notifyItemRangeRemoved(position, itemCount);
 
         startLayoutAnimation();
 
@@ -413,14 +504,14 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.ViewHo
         ArrayList<Integer> selectedIndices = getSelectedIndices();
 
         // Make sure that array is sorted from largest to smallest index
-        Collections.sort(selectedIndices,new Comparator<Integer>() {
+        Collections.sort(selectedIndices, new Comparator<Integer>() {
             @Override
             public int compare(Integer o1, Integer o2) {
-                return Integer.compare(o1,o2);
+                return Integer.compare(o1, o2);
             }
         });
 
-        for (int x = selectedIndices.size()-1;x >= 0;x--) {
+        for (int x = selectedIndices.size() - 1; x >= 0; x--) {
 
             int index = selectedIndices.get(x);
 

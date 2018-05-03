@@ -7,18 +7,19 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.util.SparseIntArray;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.ScaleAnimation;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -150,75 +151,7 @@ public class PaymentsFragment extends XFragment {
             }
         });
 
-        mAdapter = new TimelineAdapter(false, new TimelineAdapter.TimelineAdapterCustomViewListener() {
-
-            @Override
-            public ConstraintLayout getCustomView(ViewGroup parent) {
-
-                ConstraintLayout v = (ConstraintLayout) LayoutInflater.from(getContext()).inflate(R.layout.template_timeline_payment_item, parent, false);
-
-                return v;
-            }
-
-            @Override
-            public void displayCustomItemData(@NonNull TimelineAdapter.ViewHolder holder, TimelineItem timelineItem) {
-
-                Log.i(TAG,"displayCustomItemData");
-
-                // Item title
-                final TextView itemTitleView = holder.mItemLayout.findViewById(R.id.timeline_item_title);
-                itemTitleView.setText(timelineItem.getTitle());
-
-                // Item date
-                final TextView itemDateView = holder.mItemLayout.findViewById(R.id.timeline_item_date);
-                final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("EEEE d MMM yyyy HH:mm", Locale.getDefault());
-                final Date itemDate = new Date(timelineItem.getDate());
-                itemDateView.setText(simpleDateFormat.format(itemDate));
-
-                // Item background
-                Drawable itemBackground = holder.mMainItemLayout.getBackground();
-                itemBackground.setColorFilter(timelineItem.getColor(), PorterDuff.Mode.SRC_ATOP);
-                holder.mMainItemLayout.setBackground(itemBackground);
-
-
-                ArrayList<XTaskCompletion> completions = payments.get(holder.getAdapterPosition()).getCompletions();
-
-                float paymentLayoutWidth = holder.mItemLayout.getWidth();
-
-                HashMap<XTask,Integer> hashMap = new HashMap<>();
-
-                for(int c = 0;c<completions.size();c++){
-
-                    XTask task = completions.get(c).getTask();
-
-                    if(hashMap.get(task) == null){
-                        hashMap.put(task,1);
-                    }else{
-                        hashMap.put(task,hashMap.get(task)+1);
-                    }
-
-
-
-                }
-
-                for(Map.Entry<XTask,Integer> entry : hashMap.entrySet()){
-
-                    LinearLayout taskBar = new LinearLayout(getContext());
-
-                    float percent = (float) entry.getValue() / hashMap.size();
-
-                    LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams((int)(paymentLayoutWidth*percent),
-                            100);
-
-                    taskBar.setLayoutParams(lp);
-
-                    taskBar.setBackground(new ColorDrawable(entry.getKey().getColor()));
-
-                    ((LinearLayout) holder.mMainItemLayout.findViewById(R.id.tasks_percents_container)).addView(taskBar);
-
-                }
-
-            }
+        mAdapter = new TimelineAdapter(false, new TimelineAdapter.TimelineAdapterListener() {
 
             @Override
             public void onItemClick(int pos,float y) {
@@ -260,14 +193,132 @@ public class PaymentsFragment extends XFragment {
                     title = String.valueOf(payments.get(pos).getCompletions().size()) + " completions";
                 }
 
-                int color = Color.BLACK;
+                /*int color = Color.BLACK;
                 if(getContext() != null){
                     color = getResources().getColor(R.color.colorAccentDark);
+                }*/
+
+                int redTotal = 0;
+                int greenTotal = 0;
+                int blueTotal = 0;
+
+                ArrayList<XTaskCompletion> completions = payments.get(pos).getCompletions();
+
+                for(XTaskCompletion completion : completions){
+
+                    int color = completion.getTask().getColor();
+
+                    redTotal += Color.red(color);
+                    greenTotal += Color.green(color);
+                    blueTotal += Color.blue(color);
                 }
+
+                int redMean = redTotal/completions.size();
+                int greenMean = greenTotal/completions.size();
+                int blueMean = blueTotal/completions.size();
+
+                int color = Color.rgb(redMean,greenMean,blueMean);
 
                 long date = payments.get(pos).getPaymentDate();
 
                 return new TimelineItem(title,color,date);
+            }
+        });
+
+        mAdapter.setCustomItemView(R.layout.template_timeline_payment_item, R.id.timeline_item_title,R.id.timeline_item_date,R.id.timeline_item_selected_mark,new TimelineAdapter.TimelineCustomViewListener() {
+            @Override
+            public void displayItemData(@NonNull TimelineAdapter.ViewHolder holder, TimelineItem timelineItem) {
+
+                Log.i(TAG, "displayCustomItemData: " + holder.getAdapterPosition());
+
+                // Item title
+                final TextView itemTitleView = holder.itemBaseLayout.findViewById(R.id.timeline_item_title);
+                itemTitleView.setText(timelineItem.getTitle());
+
+                // Item date
+                final TextView itemDateView = holder.itemBaseLayout.findViewById(R.id.timeline_item_date);
+                final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("EEEE d MMM yyyy HH:mm", Locale.getDefault());
+                final Date itemDate = new Date(timelineItem.getDate());
+                itemDateView.setText(simpleDateFormat.format(itemDate));
+
+                // Item background
+                Drawable itemBackground = holder.itemLayout.getBackground();
+                itemBackground.setColorFilter(timelineItem.getColor(), PorterDuff.Mode.SRC_ATOP);
+                holder.itemLayout.setBackground(itemBackground);
+
+
+                /*ArrayList<XTaskCompletion> completions = payments.get(holder.getAdapterPosition()).getCompletions();
+
+                float paymentLayoutWidth = holder.itemBaseLayout.getWidth();
+
+                HashMap<XTask, Integer> hashMap = new HashMap<>();
+
+                ArrayList<XTask> tasks = new ArrayList<>();
+
+                for (int c = 0; c < completions.size(); c++) {
+
+                    XTask task = completions.get(c).getTask();
+
+                    for(Map.Entry<XTask, Integer> entry : hashMap.entrySet()){
+                        if(task.getName().equals(entry.getKey().getName())){
+                            hashMap.put(task, hashMap.get(entry.getKey()) + 1);
+                            task = entry.getKey();
+                            break;
+                        }
+                    }
+
+                    if (hashMap.get(task) == null) {
+                        hashMap.put(task, 1);
+                    }
+
+                }
+
+                Log.i(TAG,"Tasks in payment: " + tasks);
+
+                for (Map.Entry<XTask, Integer> entry : hashMap.entrySet()) {
+
+                    LinearLayout taskBar = new LinearLayout(getContext());
+
+                    float percent = (float) entry.getValue() / hashMap.size();
+
+                    LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams((int) (paymentLayoutWidth * percent),
+                            100);
+
+                    taskBar.setLayoutParams(lp);
+
+                    taskBar.setBackground(new ColorDrawable(entry.getKey().getColor()));
+
+                    ((LinearLayout) holder.itemLayout.findViewById(R.id.tasks_percents_container)).addView(taskBar);
+
+                }*/
+
+            }
+
+            @Override
+            public void markSelection(final TimelineAdapter.ViewHolder holder, final TimelineItem timelineItem, int position, final boolean isSelected) {
+
+                ImageView itemSelectedMark = holder.itemBaseLayout.findViewById(R.id.timeline_item_selected_mark);
+
+                // Selected
+                if (isSelected) {
+                    // Selected item background
+                    Drawable itemBackground = holder.itemLayout.getBackground();
+                    itemBackground.setColorFilter(darkenColor(timelineItem.getColor()), PorterDuff.Mode.SRC_ATOP);
+                    holder.itemLayout.setBackground(itemBackground);
+
+                    // Show selection check mark
+                    itemSelectedMark.setVisibility(View.VISIBLE);
+                }
+                // Not selected
+                else {
+                    // Regular item background
+                    Drawable itemBackground = holder.itemLayout.getBackground();
+                    itemBackground.setColorFilter(timelineItem.getColor(), PorterDuff.Mode.SRC_ATOP);
+                    holder.itemLayout.setBackground(itemBackground);
+
+                    // Hide selection check mark
+                    itemSelectedMark.setVisibility(View.GONE);
+                }
             }
         });
 
@@ -369,5 +420,13 @@ public class PaymentsFragment extends XFragment {
 
     private int getTotalPayments(){
         return this.payments.size();
+    }
+
+    @ColorInt
+    private int darkenColor(@ColorInt int color) {
+        float[] hsv = new float[3];
+        Color.colorToHSV(color, hsv);
+        hsv[2] *= 0.8f;
+        return Color.HSVToColor(hsv);
     }
 }
