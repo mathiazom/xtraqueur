@@ -127,7 +127,7 @@ public class SettingsFragment extends android.support.v4.app.Fragment {
 
         int completions = 0;
         for(XTask t : tasks){
-            completions += t.getCompletions();
+            completions += t.getCompletionsCount();
         }
 
         // Disable button if user doesn't have any task completions

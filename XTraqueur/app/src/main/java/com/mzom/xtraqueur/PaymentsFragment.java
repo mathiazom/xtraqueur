@@ -13,25 +13,26 @@ import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.util.SparseIntArray;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.ScaleAnimation;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
 
 public class PaymentsFragment extends XFragment {
 
@@ -51,7 +52,7 @@ public class PaymentsFragment extends XFragment {
 
     private PaymentsFragmentListener mPaymentsFragmentListener;
 
-    interface PaymentsFragmentListener{
+    interface PaymentsFragmentListener {
         void onBackPressed();
 
         void loadEditPaymentFragment(XTaskPayment payment);
@@ -63,9 +64,9 @@ public class PaymentsFragment extends XFragment {
     public void onAttach(Context context) {
         super.onAttach(context);
 
-        try{
+        try {
             mPaymentsFragmentListener = (PaymentsFragmentListener) context;
-        }catch (ClassCastException e){
+        } catch (ClassCastException e) {
             throw new ClassCastException(context.toString() + " must implement PaymentsFragmentListener");
         }
     }
@@ -84,7 +85,7 @@ public class PaymentsFragment extends XFragment {
 
         setRetainInstance(true);
 
-        this.view = inflater.inflate(R.layout.fragment_payments_timeline,container,false);
+        this.view = inflater.inflate(R.layout.fragment_payments_timeline, container, false);
 
         initToolbar();
 
@@ -93,7 +94,7 @@ public class PaymentsFragment extends XFragment {
         return view;
     }
 
-    private void initToolbar(){
+    private void initToolbar() {
         mToolbar = view.findViewById(R.id.toolbar);
 
         // Set back button as toolbar navigation icon
@@ -119,7 +120,7 @@ public class PaymentsFragment extends XFragment {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
 
-                switch (item.getItemId()){
+                switch (item.getItemId()) {
                     case R.id.payments_selection_mode_icon_delete:
                         mAdapter.deleteSelectedItems();
                         break;
@@ -138,7 +139,23 @@ public class PaymentsFragment extends XFragment {
 
     }
 
-    private void loadPayments(){
+    static class PaymentViewHolder extends TimelineAdapter.ViewHolder {
+
+        final TextView paymentValueText;
+        final String paymentValueString = "";
+
+        PaymentViewHolder(ConstraintLayout itemBase) {
+            super(itemBase,
+                    (ConstraintLayout) itemBase.findViewById(R.id.item_custom_view),
+                    (TextView) itemBase.findViewById(R.id.timeline_item_title),
+                    (TextView) itemBase.findViewById(R.id.timeline_item_date),
+                    (ImageView) itemBase.findViewById(R.id.timeline_item_selected_mark));
+
+            this.paymentValueText = itemBase.findViewById(R.id.payment_value_text);
+        }
+    }
+
+    private void loadPayments() {
 
         // Load recycler view
         TimelineRecycler mRecyclerView = view.findViewById(R.id.timeline_recycler);
@@ -151,11 +168,12 @@ public class PaymentsFragment extends XFragment {
             }
         });
 
+        Log.i(TAG,"Regular timelineAdapter");
         mAdapter = new TimelineAdapter(false, new TimelineAdapter.TimelineAdapterListener() {
 
             @Override
-            public void onItemClick(int pos,float y) {
-                editPayment(pos,y);
+            public void onItemClick(int pos, float y) {
+                editPayment(pos, y, getTimelineItem(pos));
             }
 
             @Override
@@ -189,22 +207,20 @@ public class PaymentsFragment extends XFragment {
             public TimelineItem getTimelineItem(int pos) {
 
                 String title = "";
-                if(payments != null && payments.get(pos) != null && payments.get(pos).getCompletions() != null){
-                    title = String.valueOf(payments.get(pos).getCompletions().size()) + " completions";
+                if (payments != null && payments.get(pos) != null && payments.get(pos).getCompletions() != null) {
+                    //title = String.valueOf(payments.get(pos).getCompletions().size()) + " completions";
+                    // Get currency format
+                    title =  payments.get(pos).getCompletions().size() + " " + getString(R.string.completions);
+
                 }
 
-                /*int color = Color.BLACK;
-                if(getContext() != null){
-                    color = getResources().getColor(R.color.colorAccentDark);
-                }*/
-
-                int redTotal = 0;
+                /*int redTotal = 0;
                 int greenTotal = 0;
                 int blueTotal = 0;
 
                 ArrayList<XTaskCompletion> completions = payments.get(pos).getCompletions();
 
-                for(XTaskCompletion completion : completions){
+                for (XTaskCompletion completion : completions) {
 
                     int color = completion.getTask().getColor();
 
@@ -213,112 +229,87 @@ public class PaymentsFragment extends XFragment {
                     blueTotal += Color.blue(color);
                 }
 
-                int redMean = redTotal/completions.size();
-                int greenMean = greenTotal/completions.size();
-                int blueMean = blueTotal/completions.size();
+                int redMean = redTotal / completions.size();
+                int greenMean = greenTotal / completions.size();
+                int blueMean = blueTotal / completions.size();
 
-                int color = Color.rgb(redMean,greenMean,blueMean);
+                int color = Color.rgb(redMean, greenMean, blueMean);*/
 
                 long date = payments.get(pos).getPaymentDate();
 
-                return new TimelineItem(title,color,date);
+                int color = getResources().getColor(R.color.colorGrey);
+
+                return new TimelineItem(title, color, date);
             }
         });
 
-        mAdapter.setCustomItemView(R.layout.template_timeline_payment_item, R.id.timeline_item_title,R.id.timeline_item_date,R.id.timeline_item_selected_mark,new TimelineAdapter.TimelineCustomViewListener() {
+        mAdapter.setCustomViewHolder(new TimelineAdapter.TimelineCustomViewListener() {
+
+            @Override
+            public TimelineAdapter.ViewHolder getCustomViewHolder(ConstraintLayout itemBase) {
+
+                // Base item layout (both for custom and default layout)
+                final ConstraintLayout layoutContainer = itemBase.findViewById(R.id.item_container);
+
+                // Use custom layout
+                final ConstraintLayout customLayout = (ConstraintLayout) LayoutInflater.from(itemBase.getContext()).inflate(R.layout.template_timeline_payment_item, itemBase, false);
+                layoutContainer.addView(customLayout);
+
+                return new PaymentViewHolder(itemBase);
+            }
+
             @Override
             public void displayItemData(@NonNull TimelineAdapter.ViewHolder holder, TimelineItem timelineItem) {
 
-                Log.i(TAG, "displayCustomItemData: " + holder.getAdapterPosition());
+                ArrayList<XTaskCompletion> completions = payments.get(holder.getAdapterPosition()).getCompletions();
 
-                // Item title
-                final TextView itemTitleView = holder.itemBaseLayout.findViewById(R.id.timeline_item_title);
-                itemTitleView.setText(timelineItem.getTitle());
-
-                // Item date
-                final TextView itemDateView = holder.itemBaseLayout.findViewById(R.id.timeline_item_date);
-                final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("EEEE d MMM yyyy HH:mm", Locale.getDefault());
-                final Date itemDate = new Date(timelineItem.getDate());
-                itemDateView.setText(simpleDateFormat.format(itemDate));
-
-                // Item background
-                Drawable itemBackground = holder.itemLayout.getBackground();
-                itemBackground.setColorFilter(timelineItem.getColor(), PorterDuff.Mode.SRC_ATOP);
-                holder.itemLayout.setBackground(itemBackground);
-
-
-                /*ArrayList<XTaskCompletion> completions = payments.get(holder.getAdapterPosition()).getCompletions();
-
-                float paymentLayoutWidth = holder.itemBaseLayout.getWidth();
-
-                HashMap<XTask, Integer> hashMap = new HashMap<>();
-
-                ArrayList<XTask> tasks = new ArrayList<>();
+                SparseIntArray colorsCount = new SparseIntArray();
 
                 for (int c = 0; c < completions.size(); c++) {
 
-                    XTask task = completions.get(c).getTask();
+                    int color = completions.get(c).getTask().getColor();
 
-                    for(Map.Entry<XTask, Integer> entry : hashMap.entrySet()){
-                        if(task.getName().equals(entry.getKey().getName())){
-                            hashMap.put(task, hashMap.get(entry.getKey()) + 1);
-                            task = entry.getKey();
-                            break;
-                        }
-                    }
-
-                    if (hashMap.get(task) == null) {
-                        hashMap.put(task, 1);
+                    if (colorsCount.indexOfKey(color) == -1) {
+                        colorsCount.put(color, 1);
+                    } else {
+                        colorsCount.put(color, colorsCount.get(color) + 1);
                     }
 
                 }
 
-                Log.i(TAG,"Tasks in payment: " + tasks);
+                float paymentLayoutWidth = holder.itemBaseLayout.getWidth();
 
-                for (Map.Entry<XTask, Integer> entry : hashMap.entrySet()) {
+                int topColor = 0;
 
-                    LinearLayout taskBar = new LinearLayout(getContext());
+                for (int i = 0; i < colorsCount.size(); i++) {
 
-                    float percent = (float) entry.getValue() / hashMap.size();
+                    if(colorsCount.valueAt(i) > colorsCount.get(topColor)){
+                        topColor = colorsCount.keyAt(i);
+                    }
+
+                    /*LinearLayout taskBar = new LinearLayout(getContext());
+
+                    float percent = (float) colorsCount.valueAt(i) / colorsCount.size();
 
                     LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams((int) (paymentLayoutWidth * percent),
                             100);
 
                     taskBar.setLayoutParams(lp);
 
-                    taskBar.setBackground(new ColorDrawable(entry.getKey().getColor()));
+                    taskBar.setBackground(new ColorDrawable(colorsCount.keyAt(i)));
 
-                    ((LinearLayout) holder.itemLayout.findViewById(R.id.tasks_percents_container)).addView(taskBar);
+                    ((PaymentViewHolder) holder).tasksDiagramLayout.addView(taskBar);*/
+                }
 
-                }*/
+                //((PaymentViewHolder) holder).tasksDiagramLayout.setBackground(new ColorDrawable(topColor));
 
+                NumberFormat nf = NumberFormat.getCurrencyInstance(Locale.getDefault());
+                ((PaymentViewHolder)holder).paymentValueText.setText(nf.format(payments.get(holder.getAdapterPosition()).getPaymentValue()));
             }
 
             @Override
-            public void markSelection(final TimelineAdapter.ViewHolder holder, final TimelineItem timelineItem, int position, final boolean isSelected) {
+            public void markSelection(TimelineAdapter.ViewHolder holder, TimelineItem timelineItem, int position, boolean isSelected) {
 
-                ImageView itemSelectedMark = holder.itemBaseLayout.findViewById(R.id.timeline_item_selected_mark);
-
-                // Selected
-                if (isSelected) {
-                    // Selected item background
-                    Drawable itemBackground = holder.itemLayout.getBackground();
-                    itemBackground.setColorFilter(darkenColor(timelineItem.getColor()), PorterDuff.Mode.SRC_ATOP);
-                    holder.itemLayout.setBackground(itemBackground);
-
-                    // Show selection check mark
-                    itemSelectedMark.setVisibility(View.VISIBLE);
-                }
-                // Not selected
-                else {
-                    // Regular item background
-                    Drawable itemBackground = holder.itemLayout.getBackground();
-                    itemBackground.setColorFilter(timelineItem.getColor(), PorterDuff.Mode.SRC_ATOP);
-                    holder.itemLayout.setBackground(itemBackground);
-
-                    // Hide selection check mark
-                    itemSelectedMark.setVisibility(View.GONE);
-                }
             }
         });
 
@@ -329,7 +320,7 @@ public class PaymentsFragment extends XFragment {
     }
 
     // Animate launch of EditTaskFragment with the selected task
-    private void editPayment(final int pos, float y) {
+    private void editPayment(final int pos, float y, TimelineItem timelineItem) {
 
         // View that acts as a drawable with task color expanding and covering the whole screen
         final View scaleView = new View(getContext());
@@ -340,7 +331,7 @@ public class PaymentsFragment extends XFragment {
         }
 
         // Set drawable color to task color
-        scaleView.setBackground(new ColorDrawable(getResources().getColor(R.color.colorAccentDark)));
+        scaleView.setBackground(new ColorDrawable(timelineItem.getColor()));
 
         // Add view to the fragment root view (get access to ViewGroup method addView() by casting to ConstraintLayout)
         ((ConstraintLayout) view).addView(scaleView);
@@ -371,7 +362,7 @@ public class PaymentsFragment extends XFragment {
         scaleView.startAnimation(expand_animation);
     }
 
-    private void updateSelectionUI(boolean isSelecting){
+    private void updateSelectionUI(boolean isSelecting) {
 
         // Update toolbar title based on number of selected
         int total_selected = mAdapter.getTotalSelected();
@@ -392,7 +383,7 @@ public class PaymentsFragment extends XFragment {
         hideSelectionUI();
     }
 
-    private void displaySelectionUI(){
+    private void displaySelectionUI() {
 
         // Hide regular toolbar
         mToolbar = view.findViewById(R.id.toolbar);
@@ -403,11 +394,11 @@ public class PaymentsFragment extends XFragment {
         mSelectionModeToolbar.setVisibility(View.VISIBLE);
     }
 
-    private void hideSelectionUI(){
+    private void hideSelectionUI() {
 
         // Selection array with none selected
         selectionArray = new ArrayList<>(Arrays.asList(new Boolean[payments.size()]));
-        Collections.fill(selectionArray,false);
+        Collections.fill(selectionArray, false);
 
         // Hide selection mode toolbar
         mSelectionModeToolbar = view.findViewById(R.id.toolbar_selection_mode);
@@ -418,7 +409,7 @@ public class PaymentsFragment extends XFragment {
         mToolbar.setVisibility(View.VISIBLE);
     }
 
-    private int getTotalPayments(){
+    private int getTotalPayments() {
         return this.payments.size();
     }
 

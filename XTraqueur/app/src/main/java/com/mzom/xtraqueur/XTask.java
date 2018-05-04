@@ -39,16 +39,16 @@ class XTask implements Serializable {
         return this.color;
     }
 
-    ArrayList<Long> getCompletionsList() {
+    ArrayList<Long> getCompletions() {
         return this.completionsList;
     }
 
-    int getCompletions() {
+    int getCompletionsCount() {
         return this.completionsList.size();
     }
 
     double getValue() {
-        return this.fee * this.getCompletions();
+        return this.fee * this.getCompletionsCount();
     }
 
     void setName(String name) {
@@ -81,9 +81,5 @@ class XTask implements Serializable {
 
     void removeCompletion(Long completion){
         this.completionsList.remove(completion);
-    }
-
-    void applyCompletionChange(XTaskCompletion completion){
-        getCompletionsList().set(completion.getIndex(),completion.getDate());
     }
 }

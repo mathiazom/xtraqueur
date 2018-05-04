@@ -70,4 +70,7 @@
     <string name="selected_item">"Valgt "</string>
     <string name="delete_completions_confirmation_title">Slette utførelser?</string>
     <string name="delete_completions_confirmation_message">Denne handlingen kan ikke angres. Er du sikker på at du vil slette disse utførelsene?</string>
+    <string name="completions">utførelser</string>
+    <string name="TEMPLATE_item_title">Betalingstittel</string>
+    <string name="TEMPLATE_item_date">fredag 4 mai 2018 18:57</string>
 </resources>

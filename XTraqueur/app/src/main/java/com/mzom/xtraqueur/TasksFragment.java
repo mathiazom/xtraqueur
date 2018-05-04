@@ -187,8 +187,8 @@ public class TasksFragment extends XFragment {
         // Timeline action button enable/disable
         int total_completions = 0;
         for(XTask t:tasks){
-            if(t.getCompletionsList() != null)
-                total_completions += t.getCompletionsList().size();
+            if(t.getCompletions() != null)
+                total_completions += t.getCompletions().size();
         }
 
         MenuItem timeline_icon = mToolbar.getMenu().findItem(R.id.tasks_timeline_icon);

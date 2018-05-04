@@ -128,7 +128,7 @@ public class EditTaskFragment extends BaseEditFragment {
         mManageButton.setBackground(manage_drawable);
 
         // Visually disable completion manage button if there are no task completions
-        if(task.getCompletionsList().size() == 0) mManageButton.setAlpha(0.30f);
+        if(task.getCompletions().size() == 0) mManageButton.setAlpha(0.30f);
 
         Button deleteButton = fragmentView.findViewById(R.id.delete_task);
 
@@ -145,7 +145,7 @@ public class EditTaskFragment extends BaseEditFragment {
         mManageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (task.getCompletionsList() == null || task.getCompletionsList().size() == 0) {
+                if (task.getCompletions() == null || task.getCompletions().size() == 0) {
                     return;
                 }
 

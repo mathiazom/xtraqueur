@@ -244,10 +244,11 @@ public class NewPaymentFragment extends XFragment {
         ArrayList<XTaskCompletion> completions = new ArrayList<>();
 
         for (XTask t : tasks) {
-            if (t.getCompletionsList() != null)
-                for (Long l : t.getCompletionsList()) {
-                    completions.add(new XTaskCompletion(l, t));
+            if (t.getCompletions() != null){
+                for(Long l : t.getCompletions()){
+                    completions.add(new XTaskCompletion(l,t));
                 }
+            }
         }
 
         // Sort completions based on recency
@@ -388,16 +389,19 @@ public class NewPaymentFragment extends XFragment {
     // Register new payment for selected completions
     private void registerPayment() {
 
+        double paymentValue = 0;
+
         // Completions will be archived, so remove them from regular completion list
         for (XTaskCompletion completion : getSelectedCompletions()) {
             tasks.get(tasks.indexOf(completion.getTask())).removeCompletion(completion.getDate());
+            paymentValue += completion.getTask().getFee();
         }
 
         // Save changes
         mNewPaymentFragmentListener.updateTasksDataOnDrive(tasks);
 
         // Add completions to payment object
-        XTaskPayment newPayment = new XTaskPayment(getSelectedCompletions(), paymentDate.getTime());
+        XTaskPayment newPayment = new XTaskPayment(getSelectedCompletions(), paymentValue, paymentDate.getTime());
 
         // Save new payment to drive
         mNewPaymentFragmentListener.updatePaymentsDataOnDrive(newPayment, new OnSuccessListener() {

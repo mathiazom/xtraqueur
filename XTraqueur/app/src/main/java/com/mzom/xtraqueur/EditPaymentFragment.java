@@ -1,10 +1,17 @@
 package com.mzom.xtraqueur;
 
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.TextInputEditText;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
+import org.w3c.dom.Text;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -30,12 +37,82 @@ public class EditPaymentFragment extends BaseEditFragment {
         return fragment;
     }
 
+    private int totalCompletionsFromTask(XTaskPayment payment, XTask task){
+
+        int total = 0;
+
+        for(XTaskCompletion completion : payment.getCompletions()){
+
+            if(completion.getTask().getName().equals(task.getName())){
+                total += 1;
+            }
+
+        }
+
+        return total;
+
+    }
+
+    private ArrayList<XTask> tasksFromPayment(XTaskPayment payment){
+
+        ArrayList<XTask> tasks = new ArrayList<>();
+
+        for(XTaskCompletion completion : payment.getCompletions()){
+
+            boolean notAdded = true;
+
+            for(XTask task : tasks){
+                if(task.getName().equals(completion.getTask().getName())){
+                    notAdded = false;
+                    break;
+                }
+            }
+
+            if(notAdded){
+                tasks.add(completion.getTask());
+            }
+
+        }
+
+        return tasks;
+
+    }
+
     @NonNull
     @Override
     ConstraintLayout getEditLayout(ConstraintLayout baseEditContainer) {
 
         // Fragment view
         final ConstraintLayout fragmentView = (ConstraintLayout) getLayoutInflater().inflate(R.layout.fragment_edit_payment,baseEditContainer,false);
+
+        final LinearLayout paymentCompletionsContainer = fragmentView.findViewById(R.id.payment_completions_container);
+
+        for(XTask task : tasksFromPayment(payment)){
+
+            final ConstraintLayout taskLayout = (ConstraintLayout) getLayoutInflater().inflate(R.layout.template_payment_task_item,fragmentView,false);
+            Drawable layoutBackround = taskLayout.getBackground();
+            layoutBackround.setColorFilter(task.getColor(), PorterDuff.Mode.SRC_ATOP);
+            layoutBackround.setAlpha(150);
+            taskLayout.setBackground(layoutBackround);
+
+            TextView completionTitle = taskLayout.findViewById(R.id.payment_task_title);
+            completionTitle.setText(task.getName());
+
+            ConstraintLayout colorMarker = taskLayout.findViewById(R.id.payment_task_color_marker);
+            Drawable markerBackground = colorMarker.getBackground();
+            markerBackground.setColorFilter(getResources().getColor(R.color.colorWhite), PorterDuff.Mode.SRC_ATOP);
+            colorMarker.setBackground(markerBackground);
+
+            TextView taskCount = taskLayout.findViewById(R.id.payment_task_completions_total);
+            taskCount.setText(String.valueOf(totalCompletionsFromTask(payment,task)));
+            taskCount.setTextColor(task.getColor());
+            taskCount.setAlpha(0.80f);
+
+            paymentCompletionsContainer.addView(taskLayout);
+
+        }
+
+
 
         final Date paymentDate = new Date(tempPaymentDate);
 
@@ -65,13 +142,14 @@ public class EditPaymentFragment extends BaseEditFragment {
         Button deleteButton = fragmentView.findViewById(R.id.button_delete_payment);
         setItemDeleteButton(deleteButton,getString(R.string.delete_payment_confirmation_title),getString(R.string.delete_payment_confirmation_message));
 
+
         // Returning will attach fragment view to base view (BaseEditFragment)
         return fragmentView;
     }
 
     @Override
     int getItemColor() {
-        return getResources().getColor(R.color.colorAccentDark);
+        return getResources().getColor(R.color.colorGrey);
     }
 
     @Override

@@ -85,7 +85,7 @@ class XTaskListAdapter extends ArrayAdapter<XTask> {
 
         // Task completions count
         TextView tv_completions = holder.mTaskCompletions;
-        tv_completions.setText(String.valueOf(task.getCompletions()));
+        tv_completions.setText(String.valueOf(task.getCompletionsCount()));
         tv_completions.setTextColor(textColor);
 
         // Addition button
@@ -117,7 +117,7 @@ class XTaskListAdapter extends ArrayAdapter<XTask> {
         button_subtract.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (task.getCompletionsList().size() == 0) return;
+                if (task.getCompletions().size() == 0) return;
 
                 xTaskListAdapterListener.loadTimeline(tasks,task);
             }

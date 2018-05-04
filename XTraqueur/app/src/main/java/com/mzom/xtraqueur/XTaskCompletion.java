@@ -9,7 +9,7 @@ class XTaskCompletion {
     XTaskCompletion(long date, XTask task) {
         this.date = date;
         this.task = task;
-        this.index = task.getCompletionsList().indexOf(date);
+        this.index = task.getCompletions().indexOf(date);
     }
 
     long getDate() {

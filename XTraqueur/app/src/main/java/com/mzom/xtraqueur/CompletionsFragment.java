@@ -202,7 +202,7 @@ public class CompletionsFragment extends XFragment {
 
         for(final XTask task : tasks){
 
-            if(task.getCompletions() == 0) continue;
+            if(task.getCompletionsCount() == 0) continue;
 
             final ConstraintLayout taskLayout = createTaskFilterItem(task,tasksContainer);
 
@@ -254,7 +254,7 @@ public class CompletionsFragment extends XFragment {
                     mAdapter.deleteItemRange(0,allCompletions.size());
                 }
                 else{
-                    mAdapter.deleteItemRange(0,filterTask.getCompletions());
+                    mAdapter.deleteItemRange(0,filterTask.getCompletionsCount());
                 }
 
                 // Remove task filter
@@ -316,7 +316,7 @@ public class CompletionsFragment extends XFragment {
                     mAdapter.deleteItemRange(0,allCompletions.size());
                 }
                 else{
-                    mAdapter.deleteItemRange(0,filterTask.getCompletions());
+                    mAdapter.deleteItemRange(0,filterTask.getCompletionsCount());
                 }
 
                 // Add new completions
@@ -333,7 +333,7 @@ public class CompletionsFragment extends XFragment {
                     }
                 });
 
-                mAdapter.timelineItemRangeInserted(0,filterTask.getCompletions());
+                mAdapter.timelineItemRangeInserted(0,filterTask.getCompletionsCount());
 
 
                 // Change toolbar background according to task
@@ -366,10 +366,11 @@ public class CompletionsFragment extends XFragment {
         allCompletions = new ArrayList<>();
 
         for (XTask t : tasks) {
-            if (t.getCompletionsList() != null)
-                for (Long l : t.getCompletionsList()) {
-                    allCompletions.add(new XTaskCompletion(l, t));
+            if (t.getCompletions() != null){
+                for(Long l:t.getCompletions()){
+                    allCompletions.add(new XTaskCompletion(l,t));
                 }
+            }
         }
 
         // Sort completions based on recency
@@ -382,7 +383,7 @@ public class CompletionsFragment extends XFragment {
 
         // Filtered for single task (from EditTaskFragment)
         if (filterTask != null) {
-            if (filterTask.getCompletionsList() != null) {
+            if (filterTask.getCompletions() != null) {
 
                 completions = new ArrayList<>();
 

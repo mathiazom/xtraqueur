@@ -99,7 +99,7 @@ public class EditCompletionFragment extends BaseEditFragment {
         completion.setDate(tempCompletionDate);
 
         // Update completionsList
-        ArrayList<Long> completions = completion.getTask().getCompletionsList();
+        ArrayList<Long> completions = completion.getTask().getCompletions();
         completions.set(completion.getIndex(),completion.getDate());
 
         // Update tasks data

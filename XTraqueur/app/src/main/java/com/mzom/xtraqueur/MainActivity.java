@@ -144,7 +144,6 @@ public class MainActivity extends AppCompatActivity
     private boolean restoreFromSavedInstanceState(Bundle savedInstanceState) {
 
         if (savedInstanceState == null) {
-            Log.e(TAG, "No saved instance states");
             return false;
         }
 
@@ -403,7 +402,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void loadEditCompletionFragment(XTaskCompletion completion) {
         mEditCompletionFragment = EditCompletionFragment.newInstance(tasks, completion);
-        replaceMainFragment(mEditCompletionFragment);
+        replaceMainFragment(mEditCompletionFragment, R.anim.fade_in,R.anim.fade_out,R.anim.fade_out,R.anim.fade_in, true);
     }
 
     @Override
@@ -423,12 +422,8 @@ public class MainActivity extends AppCompatActivity
         replaceMainFragment(fragment,true);
     }
 
-    private void replaceMainFragment(Fragment newFragment, boolean addToBackStack){
-        replaceMainFragment(newFragment,addToBackStack,false);
-    }
-
     // Fragment transaction without animation
-    private void replaceMainFragment(Fragment newFragment, boolean addToBackStack, boolean keepAnimation) {
+    private void replaceMainFragment(Fragment newFragment, boolean addToBackStack) {
 
         FragmentTransaction transaction = getSupportFragmentManager()
                 .beginTransaction()
@@ -437,11 +432,6 @@ public class MainActivity extends AppCompatActivity
         if(addToBackStack){
             Log.i(TAG,"Added " + newFragment.getClass().getSimpleName() + " to back stack");
             transaction.addToBackStack(newFragment.getClass().getSimpleName());
-        }
-
-        if(!keepAnimation){
-            Log.i(TAG,"No animation");
-            transaction.setCustomAnimations(FragmentTransaction.TRANSIT_FRAGMENT_FADE,FragmentTransaction.TRANSIT_FRAGMENT_FADE,FragmentTransaction.TRANSIT_FRAGMENT_FADE,FragmentTransaction.TRANSIT_FRAGMENT_FADE);
         }
 
         transaction.commit();
@@ -510,8 +500,6 @@ public class MainActivity extends AppCompatActivity
     // Handle back presses
     @Override
     public void onBackPressed() {
-
-        Log.i(TAG,"Back press");
 
         if (getSupportFragmentManager().getBackStackEntryCount() == 1) {
 
