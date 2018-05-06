@@ -10,6 +10,8 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.google.android.gms.tasks.OnSuccessListener;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -142,7 +144,12 @@ public class EditPaymentFragment extends BaseEditFragment {
         payments.set(payments.indexOf(payment),payment);
 
         // Update payments data on drive
-        getBaseEditListener().updatePaymentsDataOnDrive(payments);
+        getBaseEditListener().updatePaymentsDataOnDrive(payments, new OnSuccessListener() {
+            @Override
+            public void onSuccess(Object o) {
+                returnToItemsList();
+            }
+        });
 
     }
 
@@ -153,7 +160,12 @@ public class EditPaymentFragment extends BaseEditFragment {
         payments.remove(payment);
 
         // Update payments data on drive
-        getBaseEditListener().updatePaymentsDataOnDrive(payments);
+        getBaseEditListener().updatePaymentsDataOnDrive(payments, new OnSuccessListener() {
+            @Override
+            public void onSuccess(Object o) {
+                returnToItemsList();
+            }
+        });
 
     }
 

@@ -11,6 +11,8 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.google.android.gms.tasks.OnSuccessListener;
+
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -224,7 +226,12 @@ public class EditTaskFragment extends BaseEditFragment {
             tasks.set(index, edit);
 
             // Update tasks_data.txt on Google Drive
-            getBaseEditListener().updateTasksDataOnDrive(tasks);
+            getBaseEditListener().updateTasksDataOnDrive(tasks, new OnSuccessListener() {
+                @Override
+                public void onSuccess(Object o) {
+                    returnToItemsList();
+                }
+            });
 
 
         }
@@ -236,7 +243,12 @@ public class EditTaskFragment extends BaseEditFragment {
         tasks.remove(task);
 
         // Update tasks data on drive
-        getBaseEditListener().updateTasksDataOnDrive(tasks);
+        getBaseEditListener().updateTasksDataOnDrive(tasks, new OnSuccessListener() {
+            @Override
+            public void onSuccess(Object o) {
+                returnToItemsList();
+            }
+        });
     }
 
     @Override

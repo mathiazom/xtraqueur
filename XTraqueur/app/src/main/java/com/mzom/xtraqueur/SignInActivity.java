@@ -1,10 +1,14 @@
 package com.mzom.xtraqueur;
 
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -33,7 +37,33 @@ public class SignInActivity extends AppCompatActivity implements WelcomeFragment
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_in);
 
+        if(!hasInternetConnection()){
+
+            Toast.makeText(this,"No internet connection",Toast.LENGTH_LONG).show();
+
+            loadWelcomeFragment();
+
+            return;
+        }
+
         handleSignIn();
+    }
+
+    private boolean hasInternetConnection(){
+
+        try{
+            ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
+            NetworkInfo networkInfo = null;
+            if (connectivityManager != null) {
+                networkInfo = connectivityManager.getActiveNetworkInfo();
+            }
+
+            return networkInfo != null && networkInfo.isAvailable() && networkInfo.isConnected();
+        }catch (Exception e){
+            Log.i(TAG,"Failed to verify internet connection", e);
+            return false;
+        }
     }
 
     // Handle Google account sign in on activity creation

@@ -6,6 +6,9 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.TypedArray;
 import android.graphics.Color;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -13,6 +16,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.drive.Drive;
@@ -65,6 +69,8 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
+
         // Retrieve all data saved before configuration changes (onSaveInstanceState)
         if (!restoreFromSavedInstanceState(savedInstanceState)) {
             // Get google sign in object and account photo from SignInActivity
@@ -74,24 +80,6 @@ public class MainActivity extends AppCompatActivity
         // Set listener for changes to the BackStack
         onBackStackChangedListener();
 
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        /*if (mTasksFragment != null && mTasksFragment.isAdded()) {
-            SharedPreferences sharedPreferences = getApplicationContext().getSharedPreferences("TASKS_DATA_ON_DEVICE", 0);
-            String json = sharedPreferences.getString("TASKS_DATA_" + mGoogleSignInAccount.getId(), null);
-
-            if (json != null) {
-                tasks = new Gson().fromJson(json, new TypeToken<ArrayList<XTask>>() {
-                }.getType());
-                reloadTasksFragment();
-            } else {
-                Log.e(TAG, "SharedPreferences: No tasks data on device");
-            }
-        }*/
     }
 
     // Save visible fragment and tasks data to restore after activity destruction
@@ -118,11 +106,11 @@ public class MainActivity extends AppCompatActivity
         }
 
         // Save currently used fragment
-        saveFragmentsToInstanceState(outState);
+        //saveFragmentsToInstanceState(outState);
 
     }
 
-    private void saveFragmentsToInstanceState(Bundle outState) {
+    /*private void saveFragmentsToInstanceState(Bundle outState) {
 
         Fragment[] fragments = new Fragment[]{
                 mTasksFragment,
@@ -142,7 +130,7 @@ public class MainActivity extends AppCompatActivity
             }
         }
     }
-
+*/
     // Restore tasks data and fragments that were saved before activity destruction
     private boolean restoreFromSavedInstanceState(Bundle savedInstanceState) {
 
@@ -350,6 +338,18 @@ public class MainActivity extends AppCompatActivity
         });
     }
 
+    @Override
+    public void updateTasksDataOnDrive(ArrayList<XTask> tasks, OnSuccessListener onSuccessListener) {
+        this.tasks = tasks;
+
+        DriveResourceClient driveResourceClient = Drive.getDriveResourceClient(this, mGoogleSignInAccount);
+
+        XTasksDataPackage dataPackage = new XTasksDataPackage(tasks, null);
+
+        XTasksDataUploader uploader = new XTasksDataUploader(mGoogleSignInAccount, driveResourceClient, getApplicationContext(), onSuccessListener);
+        uploader.execute(dataPackage);
+    }
+
     public void updatePaymentsDataOnDrive(ArrayList<XTaskPayment> payments, OnSuccessListener onSuccessListener) {
 
         this.payments = payments;
@@ -373,17 +373,7 @@ public class MainActivity extends AppCompatActivity
         });
     }
 
-    private void updateTasksDataOnDrive(ArrayList<XTask> tasks, OnSuccessListener<DriveFile> onSuccessListener) {
 
-        this.tasks = tasks;
-
-        DriveResourceClient driveResourceClient = Drive.getDriveResourceClient(this, mGoogleSignInAccount);
-
-        XTasksDataPackage dataPackage = new XTasksDataPackage(tasks, null);
-
-        XTasksDataUploader uploader = new XTasksDataUploader(mGoogleSignInAccount, driveResourceClient, getApplicationContext(), onSuccessListener);
-        uploader.execute(dataPackage);
-    }
 
     // Fragment listing all the tasks
     // Each task has buttons to add and subtract completions
@@ -392,11 +382,6 @@ public class MainActivity extends AppCompatActivity
     public void loadTasksFragment() {
         mTasksFragment = TasksFragment.newInstance(tasks);
         replaceMainFragment(mTasksFragment);
-    }
-
-    private void reloadTasksFragment(){
-        mTasksFragment = TasksFragment.newInstance(tasks);
-        replaceMainFragment(mTasksFragment,false);
     }
 
     // Fragment to create new tasks

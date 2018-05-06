@@ -3,7 +3,9 @@ package com.mzom.xtraqueur;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
+import android.os.ParcelFileDescriptor;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -11,7 +13,14 @@ import com.google.android.gms.drive.DriveContents;
 import com.google.android.gms.drive.DriveFile;
 import com.google.android.gms.drive.DriveFolder;
 import com.google.android.gms.drive.DriveResourceClient;
+import com.google.android.gms.drive.Metadata;
+import com.google.android.gms.drive.MetadataBuffer;
 import com.google.android.gms.drive.MetadataChangeSet;
+import com.google.android.gms.drive.query.Filters;
+import com.google.android.gms.drive.query.Query;
+import com.google.android.gms.drive.query.SearchableField;
+import com.google.android.gms.drive.query.SortOrder;
+import com.google.android.gms.drive.query.SortableField;
 import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -19,39 +28,46 @@ import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 import com.google.gson.Gson;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Date;
 
-class XTasksDataUploader extends AsyncTask<XTasksDataPackage,Void,Void> {
+class XTasksDataUploader extends AsyncTask<XTasksDataPackage, Void, Void> {
 
     private static final String TAG = "XTQ-XTasksDataUploader";
 
-    private final GoogleSignInAccount mGoogleSignInAccount;
+    private static final String TASKS_DATA_FILE_NAME = "tasks_data.txt";
+    private static final String TASKS_DATA_SHARED_PREFS_PREFIX = "TASKS_DATA_";
 
+    private static final String PAYMENTS_DATA_FILE_NAME = "payments_data.txt";
+    private static final String PAYMENTS_DATA_SHARED_PREFS_PREFIX = "PAYMENTS_DATA_";
+
+    private final GoogleSignInAccount mGoogleSignInAccount;
     private final DriveResourceClient mDriveResourceClient;
 
-    private final SharedPreferences sharedPreferencesTasks;
-    private final SharedPreferences sharedPreferencesPayments;
+    private final SharedPreferences sharedPreferences;
 
     private final OnSuccessListener<DriveFile> onSuccessListener;
 
-    // Google Drive tasks data file name
-    private static final String TASKS_DATA_FILE_NAME = "tasks_data.txt";
 
-    // Google Drive payments data file name
-    private static final String PAYMENTS_DATA_FILE_NAME = "payments_data.txt";
-
-    XTasksDataUploader(GoogleSignInAccount googleSignInAccount, DriveResourceClient driveResourceClient, Context context, OnSuccessListener<DriveFile> onSuccessListener){
+    XTasksDataUploader(@NonNull GoogleSignInAccount googleSignInAccount, @NonNull DriveResourceClient driveResourceClient, @NonNull Context context, @Nullable OnSuccessListener<DriveFile> onSuccessListener) {
         this.mGoogleSignInAccount = googleSignInAccount;
         this.mDriveResourceClient = driveResourceClient;
-        this.sharedPreferencesTasks = context.getSharedPreferences("TASKS_DATA_ON_DEVICE", 0);
-        this.sharedPreferencesPayments = context.getSharedPreferences("TASKS_DATA_ON_DEVICE", 0);
-        this.onSuccessListener = onSuccessListener;
+        this.sharedPreferences = context.getSharedPreferences("USER_DATA_ON_DEVICE", 0);
+        this.onSuccessListener = onSuccessListener != null ? onSuccessListener : new OnSuccessListener<DriveFile>() {
+            @Override
+            public void onSuccess(DriveFile driveFile) {
+
+            }
+        };
     }
 
-    XTasksDataUploader(GoogleSignInAccount googleSignInAccount, DriveResourceClient driveResourceClient, Context context){
+    XTasksDataUploader(GoogleSignInAccount googleSignInAccount, DriveResourceClient driveResourceClient, Context context) {
         this(googleSignInAccount, driveResourceClient, context, new OnSuccessListener<DriveFile>() {
             @Override
             public void onSuccess(DriveFile driveFile) {
@@ -64,98 +80,51 @@ class XTasksDataUploader extends AsyncTask<XTasksDataPackage,Void,Void> {
     protected Void doInBackground(XTasksDataPackage... xTasksDataPackages) {
 
         ArrayList<XTask> tasks = xTasksDataPackages[0].getTasks();
-
-        if(tasks != null){
-            updateTasksDataOnDrive(tasks,onSuccessListener);
+        if (tasks != null) {
+            updateTasksDataOnDrive(tasks);
         }
 
         ArrayList<XTaskPayment> payments = xTasksDataPackages[0].getPayments();
-
-        if(payments != null){
+        if (payments != null) {
             updatePaymentsDataOnDrive(payments);
         }
 
         return null;
     }
 
-    private void updateTasksDataOnDrive(ArrayList<XTask> tasks, OnSuccessListener<DriveFile> onSuccessListener) {
+    private void updateTasksDataOnDrive(@NonNull ArrayList<XTask> tasks) {
 
         Log.i(TAG, "Google Drive API: Tasks data update started");
 
-        if (tasks == null) {
-            Log.e(TAG, "Google Drive API: Tasks data was null, update terminated");
-            return;
-        }
-
-        // Update data locally
-        updateTasksDataOnDevice(tasks);
-
-        final Task<DriveFolder> appFolderTask = mDriveResourceClient.getAppFolder();
-        final Task<DriveContents> createContentsTask = mDriveResourceClient.createContents();
-
         final String tasks_data = new Gson().toJson(tasks);
 
-        // Save JSON of tasks data (XTask) to Google Drive when tasks (not XTask) have finished
-        Tasks.whenAll(appFolderTask, createContentsTask)
-                .continueWithTask(new Continuation<Void, Task<DriveFile>>() {
-                    @Override
-                    public Task<DriveFile> then(@NonNull Task<Void> task) throws Exception {
-                        DriveFolder parent = appFolderTask.getResult();
-                        DriveContents contents = createContentsTask.getResult();
-                        OutputStream outputStream = contents.getOutputStream();
-                        try (Writer writer = new OutputStreamWriter(outputStream)) {
-                            writer.write(tasks_data);
-                        }
+        // Update tasks data locally
+        updateDataFileOnDevice(tasks_data, TASKS_DATA_SHARED_PREFS_PREFIX);
 
-                        MetadataChangeSet changeSet = new MetadataChangeSet.Builder()
-                                .setTitle(TASKS_DATA_FILE_NAME)
-                                .setMimeType("text/plain")
-                                .setStarred(true)
-                                .build();
+        // Update tasks data on drive
+        updateDataFileOnDrive(tasks_data, TASKS_DATA_FILE_NAME);
 
-                        return mDriveResourceClient.createFile(parent, changeSet, contents);
-                    }
-                })
-                .addOnSuccessListener(new OnSuccessListener<DriveFile>() {
-                            @Override
-                            public void onSuccess(final DriveFile driveFile) {
-                                Log.i(TAG, "Google Drive API: Tasks data on drive updated successfully");
-                            }
-                        })
-                .addOnSuccessListener(onSuccessListener)
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.e(TAG, "Google Drive API: Unable to update task data on drive", e);
-                    }
-                });
     }
 
-    // Update tasks data in SharedPreferences (stored locally on the device)
-    private void updateTasksDataOnDevice(ArrayList<XTask> tasks) {
-        String json = new Gson().toJson(tasks);
-        String id = mGoogleSignInAccount.getId();
-        sharedPreferencesTasks.edit().putString("TASKS_DATA_" + id, json).apply();
-        Log.i(TAG, "SharedPreferences: Local tasks data updated for id " + id);
-        Log.i(TAG, json);
-    }
-
-
-    private void updatePaymentsDataOnDrive(ArrayList<XTaskPayment> payments){
-
-        if (payments == null) {
-            Log.e(TAG, "Google Drive API: Payments data was null, update terminated");
-            return;
-        }
-
-        // Update data locally
-        updatePaymentsDataOnDevice(payments);
-
-        final Task<DriveFolder> appFolderTask = mDriveResourceClient.getAppFolder();
-        final Task<DriveContents> createContentsTask = mDriveResourceClient.createContents();
+    private void updatePaymentsDataOnDrive(@NonNull ArrayList<XTaskPayment> payments) {
 
         final String payments_data = new Gson().toJson(payments);
 
+        // Update data locally
+        //updatePaymentsDataOnDevice(payments);
+        updateDataFileOnDevice(payments_data, PAYMENTS_DATA_SHARED_PREFS_PREFIX);
+
+        // Update data on Google Drive
+        updateDataFileOnDrive(payments_data, PAYMENTS_DATA_FILE_NAME);
+    }
+
+
+    // Update any json data to file with specified title
+    private void updateDataFileOnDrive(@NonNull final String data, @NonNull final String fileTitle) {
+
+        final Task<DriveFolder> appFolderTask = mDriveResourceClient.getAppFolder();
+        final Task<DriveContents> createContentsTask = mDriveResourceClient.createContents();
+
         // Save JSON of tasks data (XTask) to Google Drive when tasks (not XTask) have finished
         Tasks.whenAll(appFolderTask, createContentsTask)
                 .continueWithTask(new Continuation<Void, Task<DriveFile>>() {
@@ -165,11 +134,11 @@ class XTasksDataUploader extends AsyncTask<XTasksDataPackage,Void,Void> {
                         DriveContents contents = createContentsTask.getResult();
                         OutputStream outputStream = contents.getOutputStream();
                         try (Writer writer = new OutputStreamWriter(outputStream)) {
-                            writer.write(payments_data);
+                            writer.write(data);
                         }
 
                         MetadataChangeSet changeSet = new MetadataChangeSet.Builder()
-                                .setTitle(PAYMENTS_DATA_FILE_NAME)
+                                .setTitle(fileTitle)
                                 .setMimeType("text/plain")
                                 .setStarred(true)
                                 .build();
@@ -177,22 +146,102 @@ class XTasksDataUploader extends AsyncTask<XTasksDataPackage,Void,Void> {
                         return mDriveResourceClient.createFile(parent, changeSet, contents);
                     }
                 })
+
                 .addOnSuccessListener(onSuccessListener)
+
+                // Delete any outdated files on drive
+                .addOnSuccessListener(new OnSuccessListener<DriveFile>() {
+                    @Override
+                    public void onSuccess(DriveFile driveFile) {
+
+                        // Remove any existing versions of file from drive
+                        deleteOldestDriveFilesWithTitle(fileTitle);
+                    }
+                })
+
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                        Log.e(TAG, "Google Drive API: Unable to update payments data on drive", e);
+                        Log.e(TAG, "Google Drive API: Unable to upload " + fileTitle + " to drive", e);
                     }
                 });
+
     }
 
-    // Update payments data in SharedPreferences (stored locally on the device)
-    private void updatePaymentsDataOnDevice(ArrayList<XTaskPayment> payments) {
-        String json = new Gson().toJson(payments);
+    // Delete all files on drive with title equal to fileTitle parameter
+    private void deleteOldestDriveFilesWithTitle(final String fileTitle) {
+
+        final Task<DriveFolder> appFolderTask = mDriveResourceClient.getAppFolder();
+        appFolderTask.addOnSuccessListener(new OnSuccessListener<DriveFolder>() {
+            @Override
+            public void onSuccess(DriveFolder driveFolder) {
+
+                // Define search for files with title matching fileTitle parameter
+                SortOrder sortOrder = new SortOrder.Builder().addSortDescending(SortableField.CREATED_DATE).build();
+                Query query = new Query.Builder()
+                        .setSortOrder(sortOrder)
+                        .addFilter(Filters.eq(SearchableField.TITLE, fileTitle))
+                        .build();
+
+                // Start file search
+                Task<MetadataBuffer> queryTask = mDriveResourceClient.queryChildren(appFolderTask.getResult(), query);
+                queryTask.addOnSuccessListener(new OnSuccessListener<MetadataBuffer>() {
+                    @Override
+                    public void onSuccess(final MetadataBuffer metadata) {
+
+                        // Skip first result to avoid deleting most recent version
+                        for (int i = 1; i < metadata.getCount(); i++) {
+                            Metadata m = metadata.get(i);
+
+                            // Get drive file from metadata
+                            DriveFile driveFile;
+                            try {
+                                driveFile = m.getDriveId().asDriveFile();
+                            } catch (Exception e) {
+                                return;
+                            }
+
+                            // Permanently delete file from Google Drive
+                            mDriveResourceClient.delete(driveFile)
+                                    /*.addOnSuccessListener(new OnSuccessListener<Void>() {
+                                        @Override
+                                        public void onSuccess(Void aVoid) {
+                                            if (index == metadata.getCount() - 1) {
+                                                Query query = new Query.Builder()
+                                                        .addFilter(Filters.eq(SearchableField.TITLE, TASKS_DATA_FILE_NAME))
+                                                        .build();
+
+                                                Task<MetadataBuffer> queryTask = mDriveResourceClient.queryChildren(appFolderTask.getResult(), query);
+                                                queryTask.addOnSuccessListener(new OnSuccessListener<MetadataBuffer>() {
+                                                    @Override
+                                                    public void onSuccess(MetadataBuffer metadata) {
+                                                        Log.i(TAG, "Google Drive API: Number of data files: " + metadata.getCount());
+                                                    }
+                                                });
+                                            }
+                                        }
+                                    })*/
+                                    .addOnFailureListener(new OnFailureListener() {
+                                        @Override
+                                        public void onFailure(@NonNull Exception e) {
+                                            Log.e(TAG, "Google Drive API: Outdated tasks data could not be deleted", e);
+                                        }
+                                    });
+                        }
+                    }
+                });
+            }
+        });
+
+
+    }
+
+
+    private void updateDataFileOnDevice(@NonNull String data, @NonNull String sharedPrefsKeyPrefix) {
         String id = mGoogleSignInAccount.getId();
-        sharedPreferencesPayments.edit().putString("PAYMENTS_DATA_" + id, json).apply();
-        Log.i(TAG, "SharedPreferences: Local payments data updated for id " + id);
-        Log.i(TAG, json);
+        String key = sharedPrefsKeyPrefix + id;
+        sharedPreferences.edit().putString(key, data).apply();
+        Log.i(TAG, "SharedPreferences: " + key + " updated");
     }
 
 }

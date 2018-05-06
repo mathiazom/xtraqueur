@@ -6,6 +6,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
+import com.google.android.gms.tasks.OnSuccessListener;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -106,7 +108,12 @@ public class EditCompletionFragment extends BaseEditFragment {
         tasks.get(tasks.indexOf(completion.getTask())).setCompletionsList(completions);
 
         // Update tasks data with change
-        getBaseEditListener().updateTasksDataOnDrive(tasks);
+        getBaseEditListener().updateTasksDataOnDrive(tasks, new OnSuccessListener() {
+            @Override
+            public void onSuccess(Object o) {
+                returnToItemsList();
+            }
+        });
     }
 
     @Override
@@ -119,7 +126,12 @@ public class EditCompletionFragment extends BaseEditFragment {
         task.removeCompletion(completion.getDate());
 
         // Update tasks data with change
-        getBaseEditListener().updateTasksDataOnDrive(tasks);
+        getBaseEditListener().updateTasksDataOnDrive(tasks, new OnSuccessListener() {
+            @Override
+            public void onSuccess(Object o) {
+                returnToItemsList();
+            }
+        });
     }
 
     @Override

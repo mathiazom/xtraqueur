@@ -12,6 +12,8 @@ import com.google.android.gms.drive.MetadataBuffer;
 import com.google.android.gms.drive.query.Filters;
 import com.google.android.gms.drive.query.Query;
 import com.google.android.gms.drive.query.SearchableField;
+import com.google.android.gms.drive.query.SortOrder;
+import com.google.android.gms.drive.query.SortableField;
 import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -66,44 +68,61 @@ class XTasksDataRetriever extends AsyncTask<DriveResourceClient, Void, XTasksDat
         mDriveResourceClient = driveResourceClients[0];
 
         if (dataToRetrieve == RETRIEVE_TASKS_ONLY) {
-            getLatestTasksDataFromDrive();
-        } else if (dataToRetrieve == RETRIEVE_PAYMENTS_ONLY) {
-            getLatestPaymentsDataFromDrive();
-        } else if (dataToRetrieve == RETRIEVE_ALL_DATA) {
-            getLatestTasksDataFromDrive();
-            getLatestPaymentsDataFromDrive();
+            getLatestDataFromDrive(TASKS_DATA_FILE_NAME);
+        }
+
+        else if (dataToRetrieve == RETRIEVE_PAYMENTS_ONLY) {
+            getLatestDataFromDrive(PAYMENTS_DATA_FILE_NAME);
+        }
+
+        else if (dataToRetrieve == RETRIEVE_ALL_DATA) {
+            getLatestDataFromDrive(TASKS_DATA_FILE_NAME);
+            getLatestDataFromDrive(PAYMENTS_DATA_FILE_NAME);
         }
 
         return dataPackage;
     }
 
-    private void getLatestTasksDataFromDrive() {
+    private void getLatestDataFromDrive(@NonNull final String dataFileName){
 
         final Task<DriveFolder> appFolderTask = mDriveResourceClient.getAppFolder();
         appFolderTask.addOnSuccessListener(new OnSuccessListener<DriveFolder>() {
             @Override
             public void onSuccess(DriveFolder driveFolder) {
 
+                // Define search for files with title matching fileTitle parameter
+                // Sort result to make sure the most recent data is used
+                SortOrder sortOrder = new SortOrder.Builder().addSortDescending(SortableField.CREATED_DATE).build();
                 Query query = new Query.Builder()
-                        .addFilter(Filters.eq(SearchableField.TITLE, TASKS_DATA_FILE_NAME))
+                        .setSortOrder(sortOrder)
+                        .addFilter(Filters.eq(SearchableField.TITLE, dataFileName))
                         .build();
 
 
+                // Start drive file search
                 Task<MetadataBuffer> queryTask = mDriveResourceClient.queryChildren(appFolderTask.getResult(), query);
-
                 queryTask
                         .addOnSuccessListener(new OnSuccessListener<MetadataBuffer>() {
                             @Override
                             public void onSuccess(MetadataBuffer metadata) {
+
+                                // Get drive file from best suited result (most recent data)
                                 DriveFile driveFile;
                                 try {
                                     driveFile = metadata.get(0).getDriveId().asDriveFile();
-                                    Log.i(TAG, "Google Drive API: tasks_data.txt acquired");
                                 } catch (Exception e) {
-                                    mXTasksDataRetrieverListener.onNoTasksDataFound();
+                                    switch (dataFileName){
+                                        case TASKS_DATA_FILE_NAME:
+                                            mXTasksDataRetrieverListener.onNoTasksDataFound();
+                                            break;
+                                        case PAYMENTS_DATA_FILE_NAME:
+                                            mXTasksDataRetrieverListener.onNoPaymentsDataFound();
+                                            break;
+                                    }
                                     return;
                                 }
 
+                                // Read and store file contents
                                 Task<DriveContents> openFileTask = mDriveResourceClient.openFile(driveFile, DriveFile.MODE_READ_ONLY);
                                 openFileTask.continueWithTask(new Continuation<DriveContents, Task<Void>>() {
                                     @Override
@@ -118,12 +137,7 @@ class XTasksDataRetriever extends AsyncTask<DriveResourceClient, Void, XTasksDat
                                                 builder.append(line).append("\n");
                                             }
 
-                                            ArrayList<XTask> tasks = new Gson().fromJson(builder.toString(), new TypeToken<ArrayList<XTask>>() {
-                                            }.getType());
-                                            dataPackage.setTasks(tasks);
-
-                                            if (dataToRetrieve == RETRIEVE_TASKS_ONLY)
-                                                mXTasksDataRetrieverListener.onDataRetrieved(dataPackage);
+                                            onJSONRetrieved(builder.toString(),dataFileName);
                                         }
 
                                         return mDriveResourceClient.discardContents(contents);
@@ -132,6 +146,7 @@ class XTasksDataRetriever extends AsyncTask<DriveResourceClient, Void, XTasksDat
                                         .addOnFailureListener(new OnFailureListener() {
                                             @Override
                                             public void onFailure(@NonNull Exception e) {
+                                                Log.e(TAG, "Google Drive API: Unable to retrieve task data", e);
                                             }
                                         });
                                 metadata.release();
@@ -147,80 +162,36 @@ class XTasksDataRetriever extends AsyncTask<DriveResourceClient, Void, XTasksDat
                         });
             }
         });
+
+
     }
 
-    private void getLatestPaymentsDataFromDrive() {
+    private void onJSONRetrieved(String json, String fileName){
 
-        final Task<DriveFolder> appFolderTask = mDriveResourceClient.getAppFolder();
-        appFolderTask.addOnSuccessListener(new OnSuccessListener<DriveFolder>() {
-            @Override
-            public void onSuccess(DriveFolder driveFolder) {
+        switch (fileName){
+            case TASKS_DATA_FILE_NAME:
 
-                Query query = new Query.Builder()
-                        .addFilter(Filters.eq(SearchableField.TITLE, PAYMENTS_DATA_FILE_NAME))
-                        .build();
+                ArrayList<XTask> tasks = new Gson().fromJson(json, new TypeToken<ArrayList<XTask>>() {
+                }.getType());
+                dataPackage.setTasks(tasks);
 
+                if (dataToRetrieve == RETRIEVE_TASKS_ONLY)
+                    mXTasksDataRetrieverListener.onDataRetrieved(dataPackage);
 
-                Task<MetadataBuffer> queryTask = mDriveResourceClient.queryChildren(appFolderTask.getResult(), query);
+                break;
 
-                queryTask
-                        .addOnSuccessListener(new OnSuccessListener<MetadataBuffer>() {
-                            @Override
-                            public void onSuccess(MetadataBuffer metadata) {
-                                DriveFile driveFile;
-                                try {
-                                    driveFile = metadata.get(0).getDriveId().asDriveFile();
-                                } catch (Exception e) {
-                                    mXTasksDataRetrieverListener.onNoPaymentsDataFound();
-                                    return;
-                                }
+            case PAYMENTS_DATA_FILE_NAME:
 
-                                Task<DriveContents> openFileTask = mDriveResourceClient.openFile(driveFile, DriveFile.MODE_READ_ONLY);
-                                openFileTask.continueWithTask(new Continuation<DriveContents, Task<Void>>() {
-                                    @Override
-                                    public Task<Void> then(@NonNull Task<DriveContents> task) throws Exception {
-                                        DriveContents contents = task.getResult();
+                ArrayList<XTaskPayment> payments = new Gson().fromJson(json, new TypeToken<ArrayList<XTaskPayment>>() {
+                }.getType());
+                dataPackage.setPayments(payments);
 
-                                        try (BufferedReader reader = new BufferedReader(
-                                                new InputStreamReader(contents.getInputStream()))) {
-                                            StringBuilder builder = new StringBuilder();
-                                            String line;
-                                            while ((line = reader.readLine()) != null) {
-                                                builder.append(line).append("\n");
-                                            }
+                mXTasksDataRetrieverListener.onDataRetrieved(dataPackage);
 
-                                            ArrayList<XTaskPayment> payments = new Gson().fromJson(builder.toString(), new TypeToken<ArrayList<XTaskPayment>>() {
-                                            }.getType());
-                                            dataPackage.setPayments(payments);
+                break;
 
-                                            mXTasksDataRetrieverListener.onDataRetrieved(dataPackage);
+        }
 
-                                            //updatePaymentsDataOnDevice(payments);
-
-                                            //loadTasksFragment();
-                                        }
-
-                                        return mDriveResourceClient.discardContents(contents);
-                                    }
-                                })
-                                        .addOnFailureListener(new OnFailureListener() {
-                                            @Override
-                                            public void onFailure(@NonNull Exception e) {
-                                            }
-                                        });
-                                metadata.release();
-                            }
-                        })
-
-
-                        .addOnFailureListener(new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
-                                Log.e(TAG, "Google Drive API: Unable to retrieve payments data", e);
-                            }
-                        });
-            }
-        });
     }
 
 

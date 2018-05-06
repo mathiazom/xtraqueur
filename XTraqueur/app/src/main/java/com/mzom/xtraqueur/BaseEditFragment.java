@@ -24,6 +24,8 @@ import android.widget.DatePicker;
 import android.widget.ScrollView;
 import android.widget.TimePicker;
 
+import com.google.android.gms.tasks.OnSuccessListener;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -44,9 +46,9 @@ public abstract class BaseEditFragment extends XFragment {
     private BaseEditFragmentListener mBaseEditFragmentListener;
 
     interface BaseEditFragmentListener{
-        void updateTasksDataOnDrive(ArrayList<XTask> tasks);
+        void updateTasksDataOnDrive(ArrayList<XTask> tasks, OnSuccessListener onSuccessListener);
 
-        void updatePaymentsDataOnDrive(ArrayList<XTaskPayment> payments);
+        void updatePaymentsDataOnDrive(ArrayList<XTaskPayment> payments, OnSuccessListener onSuccessListener);
 
         void loadCompletionsFragment(ArrayList<XTask> tasks,XTask task);
 
@@ -115,7 +117,7 @@ public abstract class BaseEditFragment extends XFragment {
                     case R.id.base_edit_save_changes_text:
                         // Save any registered changes made to item
                         if(itemDataIsChanged()) saveChanges();
-                        returnToItemsList();
+                        //returnToItemsList();
                 }
                 return false;
             }
@@ -294,7 +296,7 @@ public abstract class BaseEditFragment extends XFragment {
         applyItemColor();
     }
 
-    private void returnToItemsList(){
+    void returnToItemsList(){
         mBaseEditFragmentListener.onBackPressed();
     }
 
