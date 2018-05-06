@@ -468,7 +468,7 @@ public class CompletionsFragment extends XFragment {
     // Animate launch of EditTaskFragment with the selected task
     private void editCompletion(final int pos, float y) {
 
-        // View that acts as a drawable with task color expanding and covering the whole screen
+        /*// View that acts as a drawable with task color expanding and covering the whole screen
         final View scaleView = new View(getContext());
 
         // Add elevation to make scaleView appear over all other views and cover the whole screen
@@ -505,7 +505,9 @@ public class CompletionsFragment extends XFragment {
             public void onAnimationRepeat(Animation animation) {
             }
         });
-        scaleView.startAnimation(expand_animation);
+        scaleView.startAnimation(expand_animation);*/
+
+        mCompletionsFragmentListener.loadEditCompletionFragment(completions.get(pos));
     }
 
     // Calculate how many completions have been selected

@@ -63,7 +63,7 @@ public class EditCompletionFragment extends BaseEditFragment {
         completionDateEdit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                newDatePicker(date);
+                newDatePicker(new Date(tempCompletionDate));
             }
         });
 
@@ -73,7 +73,7 @@ public class EditCompletionFragment extends BaseEditFragment {
         completionTimeEdit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                newTimePicker(date);
+                newTimePicker(new Date(tempCompletionDate));
             }
         });
 

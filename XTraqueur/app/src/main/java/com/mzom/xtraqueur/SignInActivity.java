@@ -23,9 +23,6 @@ public class SignInActivity extends AppCompatActivity implements WelcomeFragment
 
     private static final String TAG = "XTQ-SignInActivity";
 
-
-    private static final String WELCOME_FRAGMENT_NAME = "WelcomeFragment";
-
     // Google Drive SignIn request code
     private static final int REQUEST_CODE_SIGN_IN = 1337;
 

@@ -1,5 +1,7 @@
 package com.mzom.xtraqueur;
 
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.TypedArray;
@@ -7,6 +9,7 @@ import android.graphics.Color;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -77,7 +80,7 @@ public class MainActivity extends AppCompatActivity
     protected void onResume() {
         super.onResume();
 
-        if (mTasksFragment != null && mTasksFragment.isAdded()) {
+        /*if (mTasksFragment != null && mTasksFragment.isAdded()) {
             SharedPreferences sharedPreferences = getApplicationContext().getSharedPreferences("TASKS_DATA_ON_DEVICE", 0);
             String json = sharedPreferences.getString("TASKS_DATA_" + mGoogleSignInAccount.getId(), null);
 
@@ -88,7 +91,7 @@ public class MainActivity extends AppCompatActivity
             } else {
                 Log.e(TAG, "SharedPreferences: No tasks data on device");
             }
-        }
+        }*/
     }
 
     // Save visible fragment and tasks data to restore after activity destruction
@@ -249,6 +252,8 @@ public class MainActivity extends AppCompatActivity
             return;
         }
 
+        final Context context = this;
+
         XTasksDataRetriever dataRetriever = new XTasksDataRetriever(XTasksDataRetriever.RETRIEVE_ALL_DATA, new XTasksDataRetriever.XTasksDataRetrieverListener() {
 
             @Override
@@ -273,6 +278,53 @@ public class MainActivity extends AppCompatActivity
                 XTasksDataPackage dataPackage = new XTasksDataPackage(null, payments);
                 dataUploader.execute(dataPackage);
 
+            }
+
+            @Override
+            public void onNoTasksDataFound() {
+                new AlertDialog.Builder(context).setTitle("No tasks data found on drive").setMessage("Do you wish to continue and start fresh?").setPositiveButton("Continue", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Log.e(TAG, "Google Drive API: Could not find tasks_data.txt, creating new");
+
+                        tasks = new ArrayList<>();
+
+                        // Create new file on drive
+                        updateTasksDataOnDrive(tasks, new OnSuccessListener<DriveFile>() {
+                            @Override
+                            public void onSuccess(DriveFile driveFile) {
+                                Log.i(TAG,"Getting new tasks data");
+                                getLatestTasksDataFromDrive();
+                            }
+                        });
+
+                    }
+                }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                    }
+                }).create().show();
+            }
+
+            @Override
+            public void onNoPaymentsDataFound() {
+                new AlertDialog.Builder(context).setTitle("No payments data found on drive").setMessage("Do you wish to continue and start fresh?").setPositiveButton("Continue", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Log.e(TAG, "Google Drive API: Could not find payments_data.txt, creating new");
+
+                        payments = new ArrayList<>();
+
+                        // Create new file on drive
+                        updatePaymentsDataOnDrive(payments);
+                    }
+                }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                    }
+                }).create().show();
             }
         });
 
@@ -335,7 +387,7 @@ public class MainActivity extends AppCompatActivity
 
     // Fragment listing all the tasks
     // Each task has buttons to add and subtract completions
-    // Clicking on a task item will open a EditTaskFragment with the task as an argument
+    // Clicking on a task item will open a EditTaskFragment for this task
     @Override
     public void loadTasksFragment() {
         mTasksFragment = TasksFragment.newInstance(tasks);
@@ -402,7 +454,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void loadEditCompletionFragment(XTaskCompletion completion) {
         mEditCompletionFragment = EditCompletionFragment.newInstance(tasks, completion);
-        replaceMainFragment(mEditCompletionFragment, R.anim.fade_in,R.anim.fade_out,R.anim.fade_out,R.anim.fade_in, true);
+        replaceMainFragment(mEditCompletionFragment, 0,0,0,0,true);
     }
 
     @Override

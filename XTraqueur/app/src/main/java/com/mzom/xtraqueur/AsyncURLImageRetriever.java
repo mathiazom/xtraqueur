@@ -14,20 +14,22 @@ import java.net.URL;
 
 // AsyncTask that retrieves image bitmap from url string
 // Uses an interface to return the result
-class AsyncImageFromURL extends AsyncTask<String,Void,File> {
+class AsyncURLImageRetriever extends AsyncTask<String,Void,File> {
 
     private final static String TAG = "Xtraqueur-ImageFromUrl";
 
+    // Where to store downloaded image file
     private final String path;
 
-    private final AsyncImageFromURLListener mAsyncImageFromURLListener;
+    private final AsyncURLImageRetrieverListener mAsyncURLImageRetrieverListener;
 
-    interface AsyncImageFromURLListener{
+    // Interface to return result file
+    interface AsyncURLImageRetrieverListener{
         void onTaskFinished(File file);
     }
 
-    AsyncImageFromURL(AsyncImageFromURLListener asyncImageFromURLListener,String path){
-        this.mAsyncImageFromURLListener = asyncImageFromURLListener;
+    AsyncURLImageRetriever(AsyncURLImageRetrieverListener asyncURLImageRetrieverListener,String path){
+        this.mAsyncURLImageRetrieverListener = asyncURLImageRetrieverListener;
         this.path = path;
     }
 
@@ -48,12 +50,14 @@ class AsyncImageFromURL extends AsyncTask<String,Void,File> {
             return null;
         }
 
+        // Get bitmap byte array to store on device
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         imageBitmap.compress(Bitmap.CompressFormat.PNG,0,bos);
         byte[] bitmapdata = bos.toByteArray();
 
         File file = new File(path);
 
+        // Store bitmap data inside file on device
         try {
             FileOutputStream fileOutputStream = new FileOutputStream(file);
             fileOutputStream.write(bitmapdata);
@@ -63,6 +67,7 @@ class AsyncImageFromURL extends AsyncTask<String,Void,File> {
             e.printStackTrace();
         }
 
+        // Return reference to downloaded image file
         return file;
 
     }
@@ -72,6 +77,6 @@ class AsyncImageFromURL extends AsyncTask<String,Void,File> {
     protected void onPostExecute(File file) {
         super.onPostExecute(file);
 
-        mAsyncImageFromURLListener.onTaskFinished(file);
+        mAsyncURLImageRetrieverListener.onTaskFinished(file);
     }
 }

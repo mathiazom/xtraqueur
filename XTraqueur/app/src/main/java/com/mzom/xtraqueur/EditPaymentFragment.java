@@ -5,29 +5,36 @@ import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.TextInputEditText;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
-import org.w3c.dom.Text;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 
+
+/*
+
+ * Fragment used to show tasks(with completions count) of a payment,
+   as well as editing the payments data.
+
+ * At the moment only date and time of payment can be changed
+
+*/
+
 public class EditPaymentFragment extends BaseEditFragment {
 
     private ArrayList<XTaskPayment> payments;
 
-    private TextInputEditText paymentDateEdit;
-    private TextInputEditText paymentTimeEdit;
+    private XTaskPayment payment;
 
     private long tempPaymentDate;
 
-    private XTaskPayment payment;
+    private TextInputEditText paymentDateEdit;
+    private TextInputEditText paymentTimeEdit;
 
     public static EditPaymentFragment newInstance(XTaskPayment payment, ArrayList<XTaskPayment> payments) {
         EditPaymentFragment fragment = new EditPaymentFragment();
@@ -37,47 +44,7 @@ public class EditPaymentFragment extends BaseEditFragment {
         return fragment;
     }
 
-    private int totalCompletionsFromTask(XTaskPayment payment, XTask task){
-
-        int total = 0;
-
-        for(XTaskCompletion completion : payment.getCompletions()){
-
-            if(completion.getTask().getName().equals(task.getName())){
-                total += 1;
-            }
-
-        }
-
-        return total;
-
-    }
-
-    private ArrayList<XTask> tasksFromPayment(XTaskPayment payment){
-
-        ArrayList<XTask> tasks = new ArrayList<>();
-
-        for(XTaskCompletion completion : payment.getCompletions()){
-
-            boolean notAdded = true;
-
-            for(XTask task : tasks){
-                if(task.getName().equals(completion.getTask().getName())){
-                    notAdded = false;
-                    break;
-                }
-            }
-
-            if(notAdded){
-                tasks.add(completion.getTask());
-            }
-
-        }
-
-        return tasks;
-
-    }
-
+    // Return layout to use inside edit fragment to make changes to payment
     @NonNull
     @Override
     ConstraintLayout getEditLayout(ConstraintLayout baseEditContainer) {
@@ -85,35 +52,41 @@ public class EditPaymentFragment extends BaseEditFragment {
         // Fragment view
         final ConstraintLayout fragmentView = (ConstraintLayout) getLayoutInflater().inflate(R.layout.fragment_edit_payment,baseEditContainer,false);
 
-        final LinearLayout paymentCompletionsContainer = fragmentView.findViewById(R.id.payment_completions_container);
+        // Container view to hold all tasks that is part of this payment
+        final LinearLayout paymentTasksContainer = fragmentView.findViewById(R.id.payment_tasks_container);
 
-        for(XTask task : tasksFromPayment(payment)){
+        // Represent each task from payment with task completions count, color and name
+        for(XTask task : payment.getTasks()){
 
+            // Item layout for this task
             final ConstraintLayout taskLayout = (ConstraintLayout) getLayoutInflater().inflate(R.layout.template_payment_task_item,fragmentView,false);
             Drawable layoutBackround = taskLayout.getBackground();
             layoutBackround.setColorFilter(task.getColor(), PorterDuff.Mode.SRC_ATOP);
             layoutBackround.setAlpha(150);
             taskLayout.setBackground(layoutBackround);
 
-            TextView completionTitle = taskLayout.findViewById(R.id.payment_task_title);
-            completionTitle.setText(task.getName());
+            // Task name
+            TextView taskTitle = taskLayout.findViewById(R.id.payment_task_title);
+            taskTitle.setText(task.getName());
 
+            // Circle with task color as container for tasks completions count
             ConstraintLayout colorMarker = taskLayout.findViewById(R.id.payment_task_color_marker);
             Drawable markerBackground = colorMarker.getBackground();
             markerBackground.setColorFilter(getResources().getColor(R.color.colorWhite), PorterDuff.Mode.SRC_ATOP);
             colorMarker.setBackground(markerBackground);
 
+            // Number of completions for this task
             TextView taskCount = taskLayout.findViewById(R.id.payment_task_completions_total);
-            taskCount.setText(String.valueOf(totalCompletionsFromTask(payment,task)));
+            taskCount.setText(String.valueOf(payment.completionsOfTask(task)));
             taskCount.setTextColor(task.getColor());
             taskCount.setAlpha(0.80f);
 
-            paymentCompletionsContainer.addView(taskLayout);
+            // Add to tasks container/overview
+            paymentTasksContainer.addView(taskLayout);
 
         }
 
-
-
+        // Current date and time of payment
         final Date paymentDate = new Date(tempPaymentDate);
 
         // Payment date editing
@@ -138,10 +111,9 @@ public class EditPaymentFragment extends BaseEditFragment {
             }
         });
 
-        // Tell base fragment that this fragment uses a item delete button
+        // Mark delete button for base edit fragment (automatically adds delete listeners etc.)
         Button deleteButton = fragmentView.findViewById(R.id.button_delete_payment);
         setItemDeleteButton(deleteButton,getString(R.string.delete_payment_confirmation_title),getString(R.string.delete_payment_confirmation_message));
-
 
         // Returning will attach fragment view to base view (BaseEditFragment)
         return fragmentView;
@@ -155,7 +127,7 @@ public class EditPaymentFragment extends BaseEditFragment {
     @Override
     boolean itemDataIsChanged() {
 
-        // Check if payment date long has been changed
+        // Check if payment data has changed (only time of payment can be changed atm)
         return tempPaymentDate != payment.getPaymentDate();
 
     }
@@ -163,7 +135,7 @@ public class EditPaymentFragment extends BaseEditFragment {
     @Override
     void saveChanges() {
 
-        // Apply changes to payment
+        // Apply changes to payment (only time of payment atm)
         payment.setPaymentDate(tempPaymentDate);
 
         // Add to payments array
@@ -187,11 +159,18 @@ public class EditPaymentFragment extends BaseEditFragment {
 
     @Override
     void onDatePicked(Date newDate) {
+
+        // Temporarily save selected date and time (not yet permanently saved)
         tempPaymentDate = newDate.getTime();
 
+
+        // Update layout to display selected date
+
+        // Display date
         final SimpleDateFormat dateFormat = new SimpleDateFormat("EEEE d MMM yyyy", Locale.getDefault());
         paymentDateEdit.setText(dateFormat.format(newDate));
 
+        // Display time (hour and minute)
         final SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
         paymentTimeEdit.setText(timeFormat.format(newDate));
     }

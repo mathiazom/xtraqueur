@@ -30,16 +30,14 @@ import java.util.Date;
 
 public abstract class BaseEditFragment extends XFragment {
 
-    // Fragment main views
+    // Fragment base views
     private View baseView;
-
     private Toolbar baseToolbar;
-
     private Button baseDeleteButton;
+
+    // Dialog string resources
     private String deleteConfirmationTitle;
     private String deleteConfirmationMessage;
-
-    private int itemColor;
 
     private boolean discardChanges;
 
@@ -79,9 +77,6 @@ public abstract class BaseEditFragment extends XFragment {
 
         // Init base toolbar
         initToolbar();
-
-        // Item base data (index and color)
-        getItemBaseData();
 
         // Load custom layout for editing
         loadEditLayout(baseEditContainer);
@@ -136,10 +131,14 @@ public abstract class BaseEditFragment extends XFragment {
                 @Override
                 public void onClick(View view) {
 
+                    // Display an alertDialog to let user confirm deletion
                     AlertDialog alertDialog = new AlertDialog.Builder(getContext(),R.style.AlertDialogTheme)
+                            .setTitle(deleteConfirmationTitle)
+                            .setMessage(deleteConfirmationMessage)
                             .setPositiveButton(R.string.delete_button, new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialogInterface, int i) {
+                                    // Call abstract methods for deletion
                                     deleteItem();
                                     returnToItemsList();
                                 }
@@ -147,29 +146,25 @@ public abstract class BaseEditFragment extends XFragment {
                             .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialogInterface, int i) {
-
+                                    // User had second thoughts, no further actions required
                                 }
                             })
                             .create();
-
-                    alertDialog.setTitle(deleteConfirmationTitle);
-                    alertDialog.setMessage(deleteConfirmationMessage);
                     alertDialog.show();
                 }
             });
         }
     }
 
+    // Get layout from class extending this
     private void loadEditLayout(ConstraintLayout baseEditContainer){
         baseEditContainer.addView(getEditLayout(baseEditContainer));
     }
 
-    private void getItemBaseData(){
-        itemColor = getItemColor();
-    }
-
-    // Fill input and color field with current task values
+    // Fill input and color field with current item values
     private void applyItemColor() {
+
+        int itemColor = getItemColor();
 
         // Toolbar background
         baseToolbar.setBackground(new ColorDrawable(itemColor));
@@ -294,15 +289,34 @@ public abstract class BaseEditFragment extends XFragment {
     }
 
 
-    // Change and apply item color
-    void notifyItemColorChange(final int color) {
-        itemColor = color;
+    // Re-paint layout with updated return color of getItemColor()
+    void notifyItemColorChange() {
         applyItemColor();
     }
 
     private void returnToItemsList(){
         mBaseEditFragmentListener.onBackPressed();
     }
+
+    // Used by activity to forward back presses
+    // Return value signalizes if back press has been handled
+    boolean onBackPressed(){
+
+        if(discardChanges) return false;
+
+        // Checks if any changes have been made to item data
+        if(itemDataIsChanged()){
+
+            // If so, prompt user to confirm discard of these changes
+            confirmDiscardChanges();
+
+            return true;
+        }
+
+        return false;
+
+    }
+
 
     // Get a darker shade of the original task color
     @ColorInt
@@ -313,18 +327,6 @@ public abstract class BaseEditFragment extends XFragment {
         return Color.HSVToColor(hsv);
     }
 
-    boolean onBackPressed(){
-
-        if(discardChanges) return false;
-
-        if(itemDataIsChanged()){
-            confirmDiscardChanges();
-            return true;
-        }
-
-        return false;
-
-    }
 
 
 

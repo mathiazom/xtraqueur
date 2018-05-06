@@ -110,7 +110,7 @@ public class SettingsActivity extends AppCompatActivity implements SettingsFragm
         }
 
         // Download bitmap with AsyncTask (from url) to store account photo on device
-        new AsyncImageFromURL(new AsyncImageFromURL.AsyncImageFromURLListener() {
+        new AsyncURLImageRetriever(new AsyncURLImageRetriever.AsyncURLImageRetrieverListener() {
             @Override
             public void onTaskFinished(File file) {
                 if (file == null) {

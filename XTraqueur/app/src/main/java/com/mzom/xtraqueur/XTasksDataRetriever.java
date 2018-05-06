@@ -49,6 +49,8 @@ class XTasksDataRetriever extends AsyncTask<DriveResourceClient, Void, XTasksDat
     interface XTasksDataRetrieverListener {
         void onDataRetrieved(XTasksDataPackage dataPackage);
         void updatePaymentsDataOnDrive(ArrayList<XTaskPayment> payments);
+        void onNoTasksDataFound();
+        void onNoPaymentsDataFound();
     }
 
     XTasksDataRetriever(int dataToRetrieve, XTasksDataRetrieverListener xTasksDataRetrieverListener) {
@@ -98,14 +100,7 @@ class XTasksDataRetriever extends AsyncTask<DriveResourceClient, Void, XTasksDat
                                     driveFile = metadata.get(0).getDriveId().asDriveFile();
                                     Log.i(TAG, "Google Drive API: tasks_data.txt acquired");
                                 } catch (Exception e) {
-                                    /*Log.e(TAG, "Google Drive API: Could not find tasks_data.txt, creating new");
-
-                                    if (tasks == null) {
-                                        tasks = new ArrayList<>();
-                                    }
-
-                                    updateTasksDataOnDrive(tasks);
-                                    getLatestTasksDataFromDrive();*/
+                                    mXTasksDataRetrieverListener.onNoTasksDataFound();
                                     return;
                                 }
 
@@ -176,18 +171,7 @@ class XTasksDataRetriever extends AsyncTask<DriveResourceClient, Void, XTasksDat
                                 try {
                                     driveFile = metadata.get(0).getDriveId().asDriveFile();
                                 } catch (Exception e) {
-                                    Log.e(TAG, "Google Drive API: Could not find payments_data.txt, creating new");
-
-                                    if (dataPackage.getPayments() == null) {
-                                        // Create blank array to use in new drive file
-                                        dataPackage.setPayments(new ArrayList<XTaskPayment>());
-                                    }
-
-                                    // Create new file on drive
-                                    mXTasksDataRetrieverListener.updatePaymentsDataOnDrive(dataPackage.getPayments());
-
-                                    // Return latest data
-                                    mXTasksDataRetrieverListener.onDataRetrieved(dataPackage);
+                                    mXTasksDataRetrieverListener.onNoPaymentsDataFound();
                                     return;
                                 }
 

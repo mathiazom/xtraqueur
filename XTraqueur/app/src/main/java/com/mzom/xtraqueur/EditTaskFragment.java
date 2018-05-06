@@ -80,9 +80,9 @@ public class EditTaskFragment extends BaseEditFragment {
     // Triggered when user picks a color in the color picker
     private void onColorChanged(final int color) {
 
-        notifyItemColorChange(color);
-
         temp_color = color;
+
+        notifyItemColorChange();
 
         // Manage button
         Drawable manage_drawable = mManageButton.getBackground();
