@@ -18,12 +18,18 @@ class XTask implements Serializable {
     // Task completions
     private ArrayList<Long> completionsList;
 
+    private boolean instantCompletion = false;
 
     XTask(String name, double fee, int color) {
         this.name = name;
         this.fee = fee;
         this.color = color;
         this.completionsList = new ArrayList<>();
+    }
+
+    XTask(String name, double fee, int color, boolean instantCompletion){
+        this(name, fee, color);
+        this.instantCompletion = instantCompletion;
     }
 
 
@@ -49,6 +55,10 @@ class XTask implements Serializable {
 
     double getValue() {
         return this.fee * this.getCompletionsCount();
+    }
+
+    boolean isInstantCompletion(){
+        return this.instantCompletion;
     }
 
     void setName(String name) {

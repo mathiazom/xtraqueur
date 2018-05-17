@@ -38,7 +38,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/settings_section_google_account"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent"/>
 
             <android.support.constraint.ConstraintLayout
                 android:id="@+id/settings_section_google_account"

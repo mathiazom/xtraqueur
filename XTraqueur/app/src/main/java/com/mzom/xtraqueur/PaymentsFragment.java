@@ -141,8 +141,7 @@ public class PaymentsFragment extends XFragment {
 
     static class PaymentViewHolder extends TimelineAdapter.ViewHolder {
 
-        final TextView paymentValueText;
-        final String paymentValueString = "";
+        //final TextView paymentValueText;
 
         PaymentViewHolder(ConstraintLayout itemBase) {
             super(itemBase,
@@ -151,7 +150,7 @@ public class PaymentsFragment extends XFragment {
                     (TextView) itemBase.findViewById(R.id.timeline_item_date),
                     (ImageView) itemBase.findViewById(R.id.timeline_item_selected_mark));
 
-            this.paymentValueText = itemBase.findViewById(R.id.payment_value_text);
+            //this.paymentValueText = itemBase.findViewById(R.id.payment_value_text);
         }
     }
 
@@ -168,7 +167,6 @@ public class PaymentsFragment extends XFragment {
             }
         });
 
-        Log.i(TAG,"Regular timelineAdapter");
         mAdapter = new TimelineAdapter(false, new TimelineAdapter.TimelineAdapterListener() {
 
             @Override
@@ -208,32 +206,10 @@ public class PaymentsFragment extends XFragment {
 
                 String title = "";
                 if (payments != null && payments.get(pos) != null && payments.get(pos).getCompletions() != null) {
-                    //title = String.valueOf(payments.get(pos).getCompletions().size()) + " completions";
                     // Get currency format
-                    title =  payments.get(pos).getCompletions().size() + " " + getString(R.string.completions);
-
+                    NumberFormat nf = NumberFormat.getCurrencyInstance(Locale.getDefault());
+                    title = nf.format(payments.get(pos).getPaymentValue());
                 }
-
-                /*int redTotal = 0;
-                int greenTotal = 0;
-                int blueTotal = 0;
-
-                ArrayList<XTaskCompletion> completions = payments.get(pos).getCompletions();
-
-                for (XTaskCompletion completion : completions) {
-
-                    int color = completion.getTask().getColor();
-
-                    redTotal += Color.red(color);
-                    greenTotal += Color.green(color);
-                    blueTotal += Color.blue(color);
-                }
-
-                int redMean = redTotal / completions.size();
-                int greenMean = greenTotal / completions.size();
-                int blueMean = blueTotal / completions.size();
-
-                int color = Color.rgb(redMean, greenMean, blueMean);*/
 
                 long date = payments.get(pos).getPaymentDate();
 
@@ -303,8 +279,8 @@ public class PaymentsFragment extends XFragment {
 
                 //((PaymentViewHolder) holder).tasksDiagramLayout.setBackground(new ColorDrawable(topColor));
 
-                NumberFormat nf = NumberFormat.getCurrencyInstance(Locale.getDefault());
-                ((PaymentViewHolder)holder).paymentValueText.setText(nf.format(payments.get(holder.getAdapterPosition()).getPaymentValue()));
+                /*NumberFormat nf = NumberFormat.getCurrencyInstance(Locale.getDefault());
+                ((PaymentViewHolder)holder).paymentValueText.setText(nf.format(payments.get(holder.getAdapterPosition()).getPaymentValue()));*/
             }
 
             @Override

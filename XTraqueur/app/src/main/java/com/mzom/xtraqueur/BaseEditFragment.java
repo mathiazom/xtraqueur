@@ -24,6 +24,7 @@ import android.widget.DatePicker;
 import android.widget.ScrollView;
 import android.widget.TimePicker;
 
+import com.google.android.gms.drive.DriveFile;
 import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.util.ArrayList;
@@ -46,9 +47,9 @@ public abstract class BaseEditFragment extends XFragment {
     private BaseEditFragmentListener mBaseEditFragmentListener;
 
     interface BaseEditFragmentListener{
-        void updateTasksDataOnDrive(ArrayList<XTask> tasks, OnSuccessListener onSuccessListener);
+        void updateTasksDataOnDrive(ArrayList<XTask> tasks, OnSuccessListener<DriveFile> onSuccessListener);
 
-        void updatePaymentsDataOnDrive(ArrayList<XTaskPayment> payments, OnSuccessListener onSuccessListener);
+        void updatePaymentsDataOnDrive(ArrayList<XTaskPayment> payments, OnSuccessListener<DriveFile> onSuccessListener);
 
         void loadCompletionsFragment(ArrayList<XTask> tasks,XTask task);
 

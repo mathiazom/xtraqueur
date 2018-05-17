@@ -6,6 +6,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
+import com.google.android.gms.drive.DriveFile;
 import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.text.SimpleDateFormat;
@@ -108,9 +109,9 @@ public class EditCompletionFragment extends BaseEditFragment {
         tasks.get(tasks.indexOf(completion.getTask())).setCompletionsList(completions);
 
         // Update tasks data with change
-        getBaseEditListener().updateTasksDataOnDrive(tasks, new OnSuccessListener() {
+        getBaseEditListener().updateTasksDataOnDrive(tasks, new OnSuccessListener<DriveFile>() {
             @Override
-            public void onSuccess(Object o) {
+            public void onSuccess(DriveFile driveFile) {
                 returnToItemsList();
             }
         });
@@ -126,9 +127,9 @@ public class EditCompletionFragment extends BaseEditFragment {
         task.removeCompletion(completion.getDate());
 
         // Update tasks data with change
-        getBaseEditListener().updateTasksDataOnDrive(tasks, new OnSuccessListener() {
+        getBaseEditListener().updateTasksDataOnDrive(tasks, new OnSuccessListener<DriveFile>() {
             @Override
-            public void onSuccess(Object o) {
+            public void onSuccess(DriveFile driveFile) {
                 returnToItemsList();
             }
         });

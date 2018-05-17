@@ -13,6 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import java.util.ArrayList;
 
@@ -70,8 +71,11 @@ class XTaskListAdapter extends ArrayAdapter<XTask> {
 
         // Task view inflation
         if (convertView == null) {
-            convertView = mLayoutInflater.inflate(R.layout.template_xtask, parent, false);
+            convertView = mLayoutInflater.inflate(R.layout.template_task, parent, false);
         }
+
+
+        convertView.setVisibility(task.isInstantCompletion() ? View.GONE : View.VISIBLE);
 
         final ViewHolder holder = new ViewHolder((ConstraintLayout) convertView);
 
@@ -80,7 +84,7 @@ class XTaskListAdapter extends ArrayAdapter<XTask> {
 
         // Task name
         TextView tv_name = holder.mTaskName;
-        tv_name.setText(task.getName());
+        tv_name.setText(task.getName() + (task.isInstantCompletion() ? " (IC)" : ""));
         tv_name.setTextColor(textColor);
 
         // Task completions count

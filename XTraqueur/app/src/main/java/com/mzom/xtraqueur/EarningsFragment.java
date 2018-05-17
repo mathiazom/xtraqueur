@@ -6,6 +6,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
 import android.support.v7.widget.Toolbar;
+import android.util.SparseIntArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -149,6 +150,10 @@ public class EarningsFragment extends XFragment {
 
         Button button_payments_timeline = view.findViewById(R.id.button_total_earnings_payments_timeline);
         button_payments_timeline.setEnabled(payments.size() > 0);
+
+
+        /*final PieView pieView = new PieView(getContext(),colorArray);
+        ((ConstraintLayout)view.findViewById(R.id.total_earnings_value_container)).addView(pieView);*/
 
     }
 }

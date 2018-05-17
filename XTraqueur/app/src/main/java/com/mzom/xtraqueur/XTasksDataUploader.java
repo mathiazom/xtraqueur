@@ -3,7 +3,6 @@ package com.mzom.xtraqueur;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
-import android.os.ParcelFileDescriptor;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -28,14 +27,10 @@ import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 import com.google.gson.Gson;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.ArrayList;
-import java.util.Date;
 
 class XTasksDataUploader extends AsyncTask<XTasksDataPackage, Void, Void> {
 
@@ -67,7 +62,7 @@ class XTasksDataUploader extends AsyncTask<XTasksDataPackage, Void, Void> {
         };
     }
 
-    XTasksDataUploader(GoogleSignInAccount googleSignInAccount, DriveResourceClient driveResourceClient, Context context) {
+    XTasksDataUploader(@NonNull GoogleSignInAccount googleSignInAccount, @NonNull DriveResourceClient driveResourceClient, @NonNull Context context) {
         this(googleSignInAccount, driveResourceClient, context, new OnSuccessListener<DriveFile>() {
             @Override
             public void onSuccess(DriveFile driveFile) {
@@ -79,12 +74,14 @@ class XTasksDataUploader extends AsyncTask<XTasksDataPackage, Void, Void> {
     @Override
     protected Void doInBackground(XTasksDataPackage... xTasksDataPackages) {
 
-        ArrayList<XTask> tasks = xTasksDataPackages[0].getTasks();
+        final XTasksDataPackage xTasksDataPackage = xTasksDataPackages[0];
+
+        ArrayList<XTask> tasks = xTasksDataPackage.getTasks();
         if (tasks != null) {
             updateTasksDataOnDrive(tasks);
         }
 
-        ArrayList<XTaskPayment> payments = xTasksDataPackages[0].getPayments();
+        ArrayList<XTaskPayment> payments = xTasksDataPackage.getPayments();
         if (payments != null) {
             updatePaymentsDataOnDrive(payments);
         }
@@ -111,7 +108,6 @@ class XTasksDataUploader extends AsyncTask<XTasksDataPackage, Void, Void> {
         final String payments_data = new Gson().toJson(payments);
 
         // Update data locally
-        //updatePaymentsDataOnDevice(payments);
         updateDataFileOnDevice(payments_data, PAYMENTS_DATA_SHARED_PREFS_PREFIX);
 
         // Update data on Google Drive
@@ -203,24 +199,6 @@ class XTasksDataUploader extends AsyncTask<XTasksDataPackage, Void, Void> {
 
                             // Permanently delete file from Google Drive
                             mDriveResourceClient.delete(driveFile)
-                                    /*.addOnSuccessListener(new OnSuccessListener<Void>() {
-                                        @Override
-                                        public void onSuccess(Void aVoid) {
-                                            if (index == metadata.getCount() - 1) {
-                                                Query query = new Query.Builder()
-                                                        .addFilter(Filters.eq(SearchableField.TITLE, TASKS_DATA_FILE_NAME))
-                                                        .build();
-
-                                                Task<MetadataBuffer> queryTask = mDriveResourceClient.queryChildren(appFolderTask.getResult(), query);
-                                                queryTask.addOnSuccessListener(new OnSuccessListener<MetadataBuffer>() {
-                                                    @Override
-                                                    public void onSuccess(MetadataBuffer metadata) {
-                                                        Log.i(TAG, "Google Drive API: Number of data files: " + metadata.getCount());
-                                                    }
-                                                });
-                                            }
-                                        }
-                                    })*/
                                     .addOnFailureListener(new OnFailureListener() {
                                         @Override
                                         public void onFailure(@NonNull Exception e) {

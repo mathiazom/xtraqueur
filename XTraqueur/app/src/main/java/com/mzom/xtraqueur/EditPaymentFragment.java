@@ -10,6 +10,7 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.google.android.gms.drive.DriveFile;
 import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.text.SimpleDateFormat;
@@ -58,14 +59,14 @@ public class EditPaymentFragment extends BaseEditFragment {
         final LinearLayout paymentTasksContainer = fragmentView.findViewById(R.id.payment_tasks_container);
 
         // Represent each task from payment with task completions count, color and name
-        for(XTask task : payment.getTasks()){
+        /*for(XTask task : payment.getTasks()){
 
             // Item layout for this task
             final ConstraintLayout taskLayout = (ConstraintLayout) getLayoutInflater().inflate(R.layout.template_payment_task_item,fragmentView,false);
-            Drawable layoutBackround = taskLayout.getBackground();
-            layoutBackround.setColorFilter(task.getColor(), PorterDuff.Mode.SRC_ATOP);
-            layoutBackround.setAlpha(150);
-            taskLayout.setBackground(layoutBackround);
+            Drawable layoutBackground = taskLayout.getBackground();
+            layoutBackground.setColorFilter(task.getColor(), PorterDuff.Mode.SRC_ATOP);
+            layoutBackground.setAlpha(150);
+            taskLayout.setBackground(layoutBackground);
 
             // Task name
             TextView taskTitle = taskLayout.findViewById(R.id.payment_task_title);
@@ -82,6 +83,36 @@ public class EditPaymentFragment extends BaseEditFragment {
             taskCount.setText(String.valueOf(payment.completionsOfTask(task)));
             taskCount.setTextColor(task.getColor());
             taskCount.setAlpha(0.80f);
+
+            // Add to tasks container/overview
+            paymentTasksContainer.addView(taskLayout);
+
+        }*/
+
+        for(XTaskCompletion completion : payment.getCompletions()){
+
+            // Item layout for this task
+            final ConstraintLayout taskLayout = (ConstraintLayout) getLayoutInflater().inflate(R.layout.template_payment_task_item,fragmentView,false);
+            Drawable layoutBackground = taskLayout.getBackground();
+            layoutBackground.setColorFilter(completion.getTask().getColor(), PorterDuff.Mode.SRC_ATOP);
+            layoutBackground.setAlpha(150);
+            taskLayout.setBackground(layoutBackground);
+
+            // Task name
+            TextView taskTitle = taskLayout.findViewById(R.id.payment_task_title);
+            taskTitle.setText(completion.getTask().getName());
+
+            // Circle with task color as container for tasks completions count
+            ConstraintLayout colorMarker = taskLayout.findViewById(R.id.payment_task_color_marker);
+            Drawable markerBackground = colorMarker.getBackground();
+            markerBackground.setColorFilter(getResources().getColor(R.color.colorWhite), PorterDuff.Mode.SRC_ATOP);
+            colorMarker.setBackground(markerBackground);
+
+           /* // Number of completions for this task
+            TextView taskCount = taskLayout.findViewById(R.id.payment_task_completions_total);
+            taskCount.setText(String.valueOf(payment.completionsOfTask(task)));
+            taskCount.setTextColor(task.getColor());
+            taskCount.setAlpha(0.80f);*/
 
             // Add to tasks container/overview
             paymentTasksContainer.addView(taskLayout);
@@ -144,9 +175,9 @@ public class EditPaymentFragment extends BaseEditFragment {
         payments.set(payments.indexOf(payment),payment);
 
         // Update payments data on drive
-        getBaseEditListener().updatePaymentsDataOnDrive(payments, new OnSuccessListener() {
+        getBaseEditListener().updatePaymentsDataOnDrive(payments, new OnSuccessListener<DriveFile>() {
             @Override
-            public void onSuccess(Object o) {
+            public void onSuccess(DriveFile driveFile) {
                 returnToItemsList();
             }
         });
@@ -160,9 +191,9 @@ public class EditPaymentFragment extends BaseEditFragment {
         payments.remove(payment);
 
         // Update payments data on drive
-        getBaseEditListener().updatePaymentsDataOnDrive(payments, new OnSuccessListener() {
+        getBaseEditListener().updatePaymentsDataOnDrive(payments, new OnSuccessListener<DriveFile>() {
             @Override
-            public void onSuccess(Object o) {
+            public void onSuccess(DriveFile driveFile) {
                 returnToItemsList();
             }
         });

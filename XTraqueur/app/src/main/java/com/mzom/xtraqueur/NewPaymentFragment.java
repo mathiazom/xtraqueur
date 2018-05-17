@@ -15,6 +15,7 @@ import android.view.ViewGroup;
 import android.support.v7.widget.Toolbar;
 import android.widget.DatePicker;
 
+import com.google.android.gms.drive.DriveFile;
 import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.text.NumberFormat;
@@ -50,7 +51,7 @@ public class NewPaymentFragment extends XFragment {
     interface NewPaymentFragmentListener {
         void onBackPressed();
 
-        void updatePaymentsDataOnDrive(XTaskPayment payment, OnSuccessListener onSuccessListener);
+        void updatePaymentsDataOnDrive(XTaskPayment payment, OnSuccessListener<DriveFile> onSuccessListener);
 
         void updateTasksDataOnDrive(ArrayList<XTask> tasks);
 
@@ -404,9 +405,9 @@ public class NewPaymentFragment extends XFragment {
         XTaskPayment newPayment = new XTaskPayment(getSelectedCompletions(), paymentValue, paymentDate.getTime());
 
         // Save new payment to drive
-        mNewPaymentFragmentListener.updatePaymentsDataOnDrive(newPayment, new OnSuccessListener() {
+        mNewPaymentFragmentListener.updatePaymentsDataOnDrive(newPayment, new OnSuccessListener<DriveFile>() {
             @Override
-            public void onSuccess(Object o) {
+            public void onSuccess(DriveFile driveFile) {
                 // Show the new payment on the timeline
                 mNewPaymentFragmentListener.loadPaymentsFragment(false);
             }

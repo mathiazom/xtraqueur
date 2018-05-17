@@ -51,6 +51,8 @@ public class TasksFragment extends XFragment {
 
         void loadNewTaskFragment();
 
+        void loadNewTaskFragment(boolean instantCompletion);
+
         void loadEditTaskFragment(XTask task, int index);
 
         void loadSettingsActivity();
@@ -159,6 +161,12 @@ public class TasksFragment extends XFragment {
                 tasksFragmentListener.loadEarningsFragment();
             }
         });
+        view.findViewById(R.id.new_instant_completion_button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                tasksFragmentListener.loadNewTaskFragment(true);
+            }
+        });
     }
 
     // Update dataset before loading tasks
@@ -199,6 +207,9 @@ public class TasksFragment extends XFragment {
             timeline_icon.getIcon().setAlpha(30);
         }
 
+
+        // Update TextView displaying the tasks total value
+        updateTotalValue();
 
         // DragSortListView to host the task items
         // Enables drag and sort functionality to the list
@@ -264,8 +275,7 @@ public class TasksFragment extends XFragment {
         xtask_list.setOnTouchListener(controller);
         xtask_list.setDragEnabled(true);
 
-        // Update TextView displaying the tasks total value
-        updateTotalValue();
+
     }
 
     // Animate launch of EditTaskFragment with the selected task
@@ -351,13 +361,5 @@ public class TasksFragment extends XFragment {
 
         // Update total value TextView
         ((TextView) view.findViewById(R.id.tasks_total_value)).setText(Html.fromHtml(totalString));
-    }
-
-    @ColorInt
-    private int darkenColor(@ColorInt int color) {
-        float[] hsv = new float[3];
-        Color.colorToHSV(color, hsv);
-        hsv[2] *= 0.8f;
-        return Color.HSVToColor(hsv);
     }
 }

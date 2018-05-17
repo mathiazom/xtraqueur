@@ -26,7 +26,11 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.File;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 
 public class SettingsActivity extends AppCompatActivity implements SettingsFragment.SettingsFragmentListener {
@@ -55,7 +59,7 @@ public class SettingsActivity extends AppCompatActivity implements SettingsFragm
 
     private void loadData(){
 
-        SharedPreferences sharedPreferences = getApplicationContext().getSharedPreferences("TASKS_DATA_ON_DEVICE", 0);
+       /* SharedPreferences sharedPreferences = getApplicationContext().getSharedPreferences("TASKS_DATA_ON_DEVICE", 0);
         String json = sharedPreferences.getString("TASKS_DATA_" + mGoogleSignInAccount.getId(), null);
 
         if (json != null) {
@@ -64,7 +68,13 @@ public class SettingsActivity extends AppCompatActivity implements SettingsFragm
             loadSettingsFragment();
         } else {
             Log.e(TAG, "SharedPreferences: No tasks data on device");
-        }
+        }*/
+
+       ArrayList<XTask> intentTasks = (ArrayList<XTask>) getIntent().getSerializableExtra("TASKS_DATA");
+       if(intentTasks == null) return;
+
+       tasks = intentTasks;
+       loadSettingsFragment();
 
     }
 

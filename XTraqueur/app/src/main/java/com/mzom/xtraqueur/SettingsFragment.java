@@ -11,6 +11,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.util.SparseIntArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -38,7 +39,7 @@ public class SettingsFragment extends android.support.v4.app.Fragment {
     private SettingsFragmentListener settingsFragmentListener;
 
     // Log tag for debugging
-    private static final String TAG = "Xtraqueur-Settings";
+    private static final String TAG = "XTQ-SettingsFrag";
 
     interface SettingsFragmentListener {
 
@@ -231,7 +232,6 @@ public class SettingsFragment extends android.support.v4.app.Fragment {
         //Account photo
         final CircleImageView accountPhotoView = view.findViewById(R.id.settings_google_account_photo);
         if(mAccountPhoto != null) accountPhotoView.setImageBitmap(mAccountPhoto);
-
 
     }
 

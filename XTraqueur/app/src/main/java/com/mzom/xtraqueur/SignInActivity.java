@@ -8,7 +8,6 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -18,6 +17,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.drive.Drive;
 import com.google.android.gms.drive.DriveClient;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -26,6 +26,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 public class SignInActivity extends AppCompatActivity implements WelcomeFragment.WelcomeFragmentListener {
 
     private static final String TAG = "XTQ-SignInActivity";
+
 
     // Google Drive SignIn request code
     private static final int REQUEST_CODE_SIGN_IN = 1337;
@@ -81,7 +82,7 @@ public class SignInActivity extends AppCompatActivity implements WelcomeFragment
         }
     }
 
-    // Start Google Drive sign in
+    @Override
     public void signIn() {
         GoogleSignInClient mGoogleSignInClient = buildGoogleSignInClient();
         startActivityForResult(mGoogleSignInClient.getSignInIntent(), REQUEST_CODE_SIGN_IN);
@@ -105,55 +106,60 @@ public class SignInActivity extends AppCompatActivity implements WelcomeFragment
         switch (requestCode) {
             case REQUEST_CODE_SIGN_IN:
 
-                // Start ProgressBar loading
-                showActivityProgressBar();
+                startSignIn(resultCode);
 
-                // Called after user is signed in
-                if (resultCode == RESULT_OK) {
-
-                    // Use the last signed in account
-                    mGoogleSignInAccount = GoogleSignIn.getLastSignedInAccount(this);
-                    if (mGoogleSignInAccount == null) {
-                        return;
-                    }
-
-                    Log.i(TAG, "Google Drive API: Account: " + mGoogleSignInAccount.getDisplayName() + ", " + mGoogleSignInAccount.getEmail());
-
-                    DriveClient mDriveClient = Drive.getDriveClient(this, mGoogleSignInAccount);
-
-                    // Sync required after app reinstalling
-                    mDriveClient.requestSync()
-                            .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                @Override
-                                public void onSuccess(Void aVoid) {
-
-                                    hideActivityProgressBar();
-
-                                    launchMainActivity();
-                                }
-                            })
-                            .addOnFailureListener(new OnFailureListener() {
-                                @Override
-                                public void onFailure(@NonNull Exception e) {
-
-                                    Log.e(TAG, "Google Drive API: Sync failed", e);
-                                    Toast.makeText(SignInActivity.this, "Sync quota reached", Toast.LENGTH_LONG).show();
-
-                                    hideActivityProgressBar();
-
-                                    launchMainActivity();
-                                }
-                            });
-                } else {
-                    Log.e(TAG, "Google Drive API: Sign in failed. Result code: " + resultCode);
-
-                    // Stop ProgressBar loading
-                    hideActivityProgressBar();
-
-                    // Go back to log in to let user try again
-                    loadWelcomeFragment();
-                }
                 break;
+        }
+    }
+
+    private void startSignIn(int resultCode){
+        // Start ProgressBar loading
+        showActivityProgressBar();
+
+        // Called after user is signed in
+        if (resultCode == RESULT_OK) {
+
+            // Use the last signed in account
+            mGoogleSignInAccount = GoogleSignIn.getLastSignedInAccount(this);
+            if (mGoogleSignInAccount == null) {
+                return;
+            }
+
+            Log.i(TAG, "Google Drive API: Account: " + mGoogleSignInAccount.getDisplayName() + ", " + mGoogleSignInAccount.getEmail());
+
+            DriveClient mDriveClient = Drive.getDriveClient(this, mGoogleSignInAccount);
+
+            mDriveClient.requestSync()
+                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+
+                            hideActivityProgressBar();
+
+                            launchMainActivity();
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+
+                            Log.e(TAG, "Google Drive API: Sync failed", e);
+                            Toast.makeText(SignInActivity.this, e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+
+                            hideActivityProgressBar();
+
+                            launchMainActivity();
+                        }
+                    });
+        } else {
+            
+            Log.e(TAG, "Google Drive API: Sign in failed. Result code: " + resultCode);
+
+            // Stop ProgressBar loading
+            hideActivityProgressBar();
+
+            // Go back to log in to let user try again
+            loadWelcomeFragment();
         }
     }
 

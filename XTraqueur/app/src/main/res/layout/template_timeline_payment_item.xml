@@ -8,7 +8,7 @@
     android:background="@drawable/dark_rounded_2dp"
     app:layout_constraintStart_toStartOf="parent">
 
-    <TextView
+   <!-- <TextView
         android:id="@+id/payment_value_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -21,15 +21,16 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
-
+-->
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:paddingBottom="10dp"
         android:paddingTop="10dp"
+        android:layout_marginStart="20dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@id/payment_value_text">
+        app:layout_constraintStart_toStartOf="parent">
 
         <TextView
             android:id="@+id/timeline_item_title"
@@ -37,7 +38,8 @@
             android:layout_height="wrap_content"
             android:text="@string/TEMPLATE_item_title"
             android:textColor="@color/colorWhite"
-            android:textSize="17sp" />
+            android:textStyle="bold"
+            android:textSize="25sp" />
 
         <TextView
             android:id="@+id/timeline_item_date"

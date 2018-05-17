@@ -18,7 +18,6 @@
     </android.support.v7.widget.Toolbar>
 
 
-
     <android.support.constraint.ConstraintLayout
         android:id="@+id/total_earnings_container"
         android:layout_width="match_parent"

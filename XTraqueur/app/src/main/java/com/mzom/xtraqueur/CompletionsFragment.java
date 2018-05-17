@@ -57,6 +57,8 @@ public class CompletionsFragment extends XFragment {
         void loadEditCompletionFragment(XTaskCompletion completion);
 
         void updateTasksDataOnDrive(ArrayList<XTask> tasks);
+
+        void loadCompletionsPieFragment();
     }
 
     public static CompletionsFragment newInstance(ArrayList<XTask> tasks) {
@@ -107,7 +109,7 @@ public class CompletionsFragment extends XFragment {
         mToolbar = view.findViewById(R.id.toolbar);
 
         // Add action buttons to toolbar from menu resource
-        mToolbar.inflateMenu(R.menu.menu_timeline_fragment);
+        mToolbar.inflateMenu(R.menu.menu_completions_fragment);
 
         // Menu items
         mToolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
@@ -117,6 +119,10 @@ public class CompletionsFragment extends XFragment {
                     case R.id.timeline_icon_task_filter:
                         // Display dialog for filtering
                         filterTaskDialog();
+                        break;
+                    case R.id.completions_icon_pie_chart:
+                        mCompletionsFragmentListener.loadCompletionsPieFragment();
+                        break;
 
                 }
                 return false;

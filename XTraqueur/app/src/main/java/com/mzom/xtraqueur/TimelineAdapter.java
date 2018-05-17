@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -202,7 +203,6 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.ViewHo
 
         if(customViewHolderListener == null) return;
 
-        Log.i(TAG,"hasCustomViewHolder");
         this.hasCustomViewHolder = true;
         this.customViewHolderListener = customViewHolderListener;
 
@@ -224,6 +224,7 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.ViewHo
         Drawable itemBackground = holder.itemLayout.getBackground();
         itemBackground.setColorFilter(timelineItem.getColor(), PorterDuff.Mode.SRC_ATOP);
         holder.itemLayout.setBackground(itemBackground);
+
     }
 
     private void setItemDateHeader(@NonNull final ViewHolder holder, final Date itemDate) {
@@ -256,8 +257,6 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.ViewHo
             // Date formatting pattern
             final SimpleDateFormat newDateFormat = new SimpleDateFormat("d MMM yyyy", Locale.getDefault());
 
-            Log.i(TAG,"NeedsDateHeader " + newDateFormat.format(itemDate));
-
             // Set date header text
             holder.itemDateHeader.setText(newDateFormat.format(itemDate));
 
@@ -277,8 +276,6 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.ViewHo
             @Override
             public void onClick(View v) {
 
-                Log.i(TAG, "OnClick");
-
                 // Fire long click listener if selection mode is enabled
                 if (selectionMode) {
                     toggleItemSelection(holder);
@@ -294,8 +291,6 @@ public class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.ViewHo
         holder.itemLayout.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-
-                Log.i(TAG, "OnLong");
 
                 toggleItemSelection(holder);
 
