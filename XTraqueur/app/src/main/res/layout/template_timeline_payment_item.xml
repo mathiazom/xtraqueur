@@ -2,61 +2,41 @@
 
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/item_custom_view"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/dark_rounded_2dp"
     app:layout_constraintStart_toStartOf="parent">
 
-   <!-- <TextView
-        android:id="@+id/payment_value_text"
-        android:layout_width="wrap_content"
+    <android.support.constraint.ConstraintLayout
+        android:id="@+id/payment_item_view"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:paddingStart="20dp"
-        android:paddingEnd="20dp"
-        android:text="@string/TEMPLATE_payment_value"
-        android:textSize="25sp"
-        android:textStyle="bold"
-        android:textColor="@color/colorWhite"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
--->
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:paddingBottom="10dp"
-        android:paddingTop="10dp"
-        android:layout_marginStart="20dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/payment_item_selected_mark"
         app:layout_constraintStart_toStartOf="parent">
 
         <TextView
-            android:id="@+id/timeline_item_title"
-            android:layout_width="wrap_content"
+            android:id="@+id/payment_item_title"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="@string/TEMPLATE_item_title"
+            android:paddingBottom="17dp"
+            android:paddingEnd="25dp"
+            android:paddingStart="25dp"
+            android:paddingTop="17dp"
+            android:text="500 kr"
             android:textColor="@color/colorWhite"
+            android:textSize="25sp"
             android:textStyle="bold"
-            android:textSize="25sp" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"/>
 
-        <TextView
-            android:id="@+id/timeline_item_date"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:fontFamily="sans-serif-light"
-            android:text="@string/TEMPLATE_item_date"
-            android:textColor="@color/colorWhite" />
-
-    </LinearLayout>
+    </android.support.constraint.ConstraintLayout>
 
     <ImageView
-        android:id="@+id/timeline_item_selected_mark"
+        android:id="@+id/payment_item_selected_mark"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
-        android:layout_marginEnd="20dp"
+        android:paddingStart="10dp"
         android:layout_marginTop="8dp"
         android:contentDescription="@string/selected_item"
         android:src="@drawable/ic_check"
@@ -64,13 +44,12 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <LinearLayout
-        android:id="@+id/tasks_percents_container"
+    <com.mzom.xtraqueur.HorizontalDiagramView
+        android:id="@+id/payment_horizontal_diagram_view"
         android:layout_width="match_parent"
         android:layout_height="5dp"
         android:orientation="horizontal"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"/>
 
 </android.support.constraint.ConstraintLayout>

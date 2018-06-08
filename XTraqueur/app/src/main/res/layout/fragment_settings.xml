@@ -44,20 +44,22 @@
                 android:id="@+id/settings_section_google_account"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="18dp"
                 android:background="@drawable/white_rounded"
-                android:paddingBottom="12dp"
-                android:paddingEnd="16dp"
+                android:paddingBottom="22dp"
+                android:paddingEnd="20dp"
                 android:paddingStart="20dp"
-                android:paddingTop="18dp"
+                android:paddingTop="22dp"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/settings_section_title_google_account">
 
                 <de.hdodenhof.circleimageview.CircleImageView
                     android:id="@+id/settings_google_account_photo"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
                     android:src="@drawable/ic_account_dark"
+                    app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
 
@@ -66,6 +68,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
                     android:orientation="vertical"
+                    app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toEndOf="@id/settings_google_account_photo"
                     app:layout_constraintTop_toTopOf="parent">
 
@@ -75,7 +78,7 @@
                         android:layout_height="wrap_content"
                         android:fontFamily="sans-serif-light"
                         android:textColor="@color/colorPrimary"
-                        android:textSize="17sp"
+                        android:textSize="16sp"
                         android:textStyle="bold" />
 
                     <TextView
@@ -84,34 +87,19 @@
                         android:layout_height="wrap_content"
                         android:fontFamily="sans-serif-light"
                         android:textColor="@color/colorPrimary"
-                        android:textSize="13sp" />
+                        android:textSize="12sp" />
 
                 </LinearLayout>
 
-                <Button
+                <ImageButton
                     android:id="@+id/button_account_sign_out"
                     android:layout_width="wrap_content"
-                    android:layout_height="32dp"
-                    android:layout_marginTop="15dp"
+                    android:layout_height="wrap_content"
                     android:background="@android:color/transparent"
-                    android:text="@string/sign_out"
-                    android:textAlignment="viewStart"
-                    android:textColor="@color/colorAccent"
+                    android:src="@drawable/ic_sign_out_dark"
                     app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/settings_google_account_photo" />
-
-                <Button
-                    android:layout_width="wrap_content"
-                    android:layout_height="32dp"
-                    android:layout_marginTop="15dp"
-                    android:background="@android:color/transparent"
-                    android:text="@string/sign_in"
-                    android:textColor="@color/colorAccent"
-                    android:visibility="gone"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/settings_google_account_photo" />
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
 
             </android.support.constraint.ConstraintLayout>
 
@@ -120,14 +108,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="40dp"
-                android:text="@string/settings_section_danger_zone"
+                android:text="@string/settings_section_resetting"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/settings_section_google_account" />
 
             <android.support.constraint.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="18dp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/settings_section_title_danger_zone">
 
@@ -136,8 +124,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="36dp"
                     android:layout_marginBottom="6dp"
-                    android:layout_marginTop="6dp"
-                    android:background="@drawable/accent_rounded_2dp"
+                    android:background="@drawable/red_rounded"
                     android:paddingEnd="16dp"
                     android:paddingStart="16dp"
                     android:text="@string/delete_all_completions"
@@ -152,7 +139,7 @@
                     android:layout_height="36dp"
                     android:layout_marginBottom="6dp"
                     android:layout_marginTop="11dp"
-                    android:background="@drawable/accent_rounded_2dp"
+                    android:background="@drawable/red_rounded"
                     android:paddingEnd="16dp"
                     android:paddingStart="16dp"
                     android:text="@string/delete_all_tasks"

@@ -1,95 +1,68 @@
 package com.mzom.xtraqueur;
 
+import android.support.annotation.NonNull;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 
 class XTask implements Serializable {
 
-    // Task display name
-    private String name;
+    // Object storing all task attributes (e.g. name, fee and color)
+    private final XTaskFields taskFields;
 
-    // Task fee for every completion
-    private double fee;
+    // Task payments
+    private ArrayList<XTaskCompletion> completions;
 
-    // Task color used in the app UI
-    private int color;
 
-    // Task completions
-    private ArrayList<Long> completionsList;
-
-    private boolean instantCompletion = false;
-
-    XTask(String name, double fee, int color) {
-        this.name = name;
-        this.fee = fee;
-        this.color = color;
-        this.completionsList = new ArrayList<>();
-    }
-
-    XTask(String name, double fee, int color, boolean instantCompletion){
-        this(name, fee, color);
-        this.instantCompletion = instantCompletion;
+    XTask(@NonNull XTaskFields taskFields) {
+        this.taskFields = taskFields;
+        this.completions = new ArrayList<>();
     }
 
 
-    String getName() {
-        return this.name;
+    XTaskFields getTaskFields(){
+        return this.taskFields;
     }
 
-    double getFee() {
-        return this.fee;
-    }
+    ArrayList<XTaskCompletion> getCompletions() {
 
-    int getColor() {
-        return this.color;
-    }
-
-    ArrayList<Long> getCompletions() {
-        return this.completionsList;
+        return this.completions;
     }
 
     int getCompletionsCount() {
-        return this.completionsList.size();
+
+        if(completions == null) return 0;
+
+        return this.completions.size();
     }
 
     double getValue() {
-        return this.fee * this.getCompletionsCount();
+        return this.taskFields.getFee() * this.getCompletionsCount();
     }
 
-    boolean isInstantCompletion(){
-        return this.instantCompletion;
+
+    void setCompletions(@NonNull ArrayList<XTaskCompletion> completions){
+
+        this.completions = completions;
     }
 
-    void setName(String name) {
-        this.name = name;
-    }
 
-    void setFee(double fee) {
-        this.fee = fee;
-    }
+    // Register new completion of this task
+    void newCompletion() {
 
-    void setColor(int color) {
-        this.color = color;
-    }
-
-    void setCompletionsList(ArrayList<Long> completionsList) {
-        this.completionsList = completionsList;
-    }
-
-    void addToCompletions() {
-
-        // Create tasks completions list if it doesn't exist
-        if (this.completionsList == null) {
-            this.completionsList = new ArrayList<>();
+        // Create tasks payments list if it doesn't exist
+        if (this.completions == null) {
+            this.completions = new ArrayList<>();
         }
 
         // Add new completion to list
-        Long date = new Date().getTime();
-        this.completionsList.add(date);
+        XTaskCompletion completion = new XTaskCompletion(new Date().getTime(), taskFields);
+        this.completions.add(completion);
     }
 
-    void removeCompletion(Long completion){
-        this.completionsList.remove(completion);
+    // Remove a registered completion from this task
+    void removeCompletion(@NonNull XTaskCompletion completion){
+        completions.remove(completion);
     }
 }

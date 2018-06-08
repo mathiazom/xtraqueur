@@ -1,11 +1,12 @@
 package com.mzom.xtraqueur;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.res.TypedArray;
 import android.graphics.Color;
-import android.os.Parcelable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -25,6 +26,9 @@ import com.google.gson.reflect.TypeToken;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.mzom.xtraqueur.XTasksDataRetriever.PAYMENTS_DATA_FILE_NAME;
+import static com.mzom.xtraqueur.XTasksDataRetriever.TASKS_DATA_FILE_NAME;
+
 public class MainActivity extends AppCompatActivity
         implements
         TasksFragment.TasksFragmentListener,
@@ -33,8 +37,7 @@ public class MainActivity extends AppCompatActivity
         EarningsFragment.EarningsFragmentListener,
         NewPaymentFragment.NewPaymentFragmentListener,
         PaymentsFragment.PaymentsFragmentListener,
-        BaseEditFragment.BaseEditFragmentListener,
-        CompletionsPieFragment.CompletionsPieFragmentListener{
+        BaseEditFragment.BaseEditFragmentListener {
 
     // Tag used for debugging
     private static final String TAG = "XTQ-MainActivity";
@@ -49,7 +52,7 @@ public class MainActivity extends AppCompatActivity
 
     // Data set storing all user tasks
     private ArrayList<XTask> tasks;
-    private ArrayList<XTaskPayment> payments;
+    private ArrayList<XPayment> payments;
 
     // Activity creation
     @Override
@@ -66,13 +69,6 @@ public class MainActivity extends AppCompatActivity
         // Set listener for changes to the BackStack
         onBackStackChangedListener();
 
-    }
-
-    @Override
-    protected void onRestart() {
-        super.onRestart();
-
-        getLatestTasksDataFromDrive();
     }
 
     // Save visible fragment and tasks data to restore after activity destruction
@@ -115,16 +111,16 @@ public class MainActivity extends AppCompatActivity
         if (temp_tasks_data != null) {
             tasks = new Gson().fromJson(temp_tasks_data, new TypeToken<ArrayList<XTask>>() {
             }.getType());
-        }else{
+        } else {
             return false;
         }
 
         // Restore payments data
         String temp_payments_data = savedInstanceState.getString("payments_data", null);
         if (temp_payments_data != null) {
-            payments = new Gson().fromJson(temp_payments_data, new TypeToken<ArrayList<XTaskPayment>>() {
+            payments = new Gson().fromJson(temp_payments_data, new TypeToken<ArrayList<XPayment>>() {
             }.getType());
-        }else{
+        } else {
             return false;
         }
 
@@ -135,10 +131,10 @@ public class MainActivity extends AppCompatActivity
 
             if (mGoogleSignInAccount != null) {
                 mDriveResourceClient = Drive.getDriveResourceClient(this, mGoogleSignInAccount);
-            }else{
+            } else {
                 return false;
             }
-        }else{
+        } else {
             return false;
         }
 
@@ -161,14 +157,14 @@ public class MainActivity extends AppCompatActivity
 
                 mDriveResourceClient = Drive.getDriveResourceClient(this, googleSignInAccount);
 
-                getLatestTasksDataFromDrive();
+                getLatestTasksDataFromDrive(true);
             }
         }
 
     }
 
     // Use XTasksDataRetriever to get latest tasks and payments data
-    private void getLatestTasksDataFromDrive() {
+    private void getLatestTasksDataFromDrive(final boolean showTasksFragment) {
 
         if (mGoogleSignInAccount == null) {
             return;
@@ -184,17 +180,17 @@ public class MainActivity extends AppCompatActivity
                 if (retrievedTasks != null) {
                     tasks = retrievedTasks;
 
-                    loadTasksFragment();
+                    if (showTasksFragment) loadTasksFragment();
                 }
 
-                ArrayList<XTaskPayment> retrievedPayments = dataPackage.getPayments();
+                ArrayList<XPayment> retrievedPayments = dataPackage.getPayments();
                 if (retrievedPayments != null) {
                     payments = retrievedPayments;
                 }
             }
 
             @Override
-            public void updatePaymentsDataOnDrive(ArrayList<XTaskPayment> payments) {
+            public void updatePaymentsDataOnDrive(ArrayList<XPayment> payments) {
 
                 XTasksDataUploader dataUploader = new XTasksDataUploader(mGoogleSignInAccount, mDriveResourceClient, getApplicationContext());
                 XTasksDataPackage dataPackage = new XTasksDataPackage(null, payments);
@@ -203,49 +199,54 @@ public class MainActivity extends AppCompatActivity
             }
 
             @Override
-            public void onNoTasksDataFound() {
-                new AlertDialog.Builder(context).setTitle("No tasks data found on drive").setMessage("Do you wish to continue and start fresh?").setPositiveButton("Continue", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        Log.e(TAG, "Google Drive API: Could not find tasks_data.txt, creating blank file");
+            public void onDataNotFound(String fileName) {
 
-                        tasks = new ArrayList<>();
-
-                        // Create new file on drive
-                        updateTasksDataOnDrive(tasks, new OnSuccessListener<DriveFile>() {
+                switch (fileName) {
+                    case TASKS_DATA_FILE_NAME:
+                        new AlertDialog.Builder(context).setTitle("No tasks data found on drive").setMessage("Do you wish to continue and start fresh?").setPositiveButton("Continue", new DialogInterface.OnClickListener() {
                             @Override
-                            public void onSuccess(DriveFile driveFile) {
-                                getLatestTasksDataFromDrive();
+                            public void onClick(DialogInterface dialog, int which) {
+                                Log.e(TAG, "Google Drive API: Could not find tasks_data.txt, creating blank file");
+
+                                tasks = new ArrayList<>();
+
+                                // Create new file on drive
+                                updateTasksDataOnDrive(tasks, new OnSuccessListener<DriveFile>() {
+                                    @Override
+                                    public void onSuccess(DriveFile driveFile) {
+                                        getLatestTasksDataFromDrive(true);
+                                    }
+                                });
+
                             }
-                        });
+                        }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
 
-                    }
-                }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
+                            }
+                        }).create().show();
+                        break;
+                    case PAYMENTS_DATA_FILE_NAME:
+                        new AlertDialog.Builder(context).setTitle("No payments data found on drive").setMessage("Do you wish to continue and start fresh?").setPositiveButton("Continue", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                Log.e(TAG, "Google Drive API: Could not find payments_data.txt, creating new");
 
-                    }
-                }).create().show();
-            }
+                                payments = new ArrayList<>();
 
-            @Override
-            public void onNoPaymentsDataFound() {
-                new AlertDialog.Builder(context).setTitle("No payments data found on drive").setMessage("Do you wish to continue and start fresh?").setPositiveButton("Continue", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        Log.e(TAG, "Google Drive API: Could not find payments_data.txt, creating new");
+                                // Create new file on drive
+                                updatePaymentsDataOnDrive(payments);
+                            }
+                        }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
 
-                        payments = new ArrayList<>();
+                            }
+                        }).create().show();
+                        break;
+                }
 
-                        // Create new file on drive
-                        updatePaymentsDataOnDrive(payments);
-                    }
-                }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
 
-                    }
-                }).create().show();
             }
         });
 
@@ -254,7 +255,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void updatePaymentsDataOnDrive(XTaskPayment payment, OnSuccessListener<DriveFile> onSuccessListener) {
+    public void updatePaymentsDataOnDrive(XPayment payment, OnSuccessListener<DriveFile> onSuccessListener) {
 
         payments.add(payment);
         updatePaymentsDataOnDrive(payments, onSuccessListener);
@@ -262,7 +263,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void updatePaymentsDataOnDrive(ArrayList<XTaskPayment> payments){
+    public void updatePaymentsDataOnDrive(ArrayList<XPayment> payments) {
         updatePaymentsDataOnDrive(payments, new OnSuccessListener<DriveFile>() {
             @Override
             public void onSuccess(DriveFile driveFile) {
@@ -283,7 +284,7 @@ public class MainActivity extends AppCompatActivity
         uploader.execute(dataPackage);
     }
 
-    public void updatePaymentsDataOnDrive(ArrayList<XTaskPayment> payments, OnSuccessListener<DriveFile> onSuccessListener) {
+    public void updatePaymentsDataOnDrive(ArrayList<XPayment> payments, OnSuccessListener<DriveFile> onSuccessListener) {
 
         this.payments = payments;
 
@@ -308,7 +309,7 @@ public class MainActivity extends AppCompatActivity
 
 
     // Fragment listing all the tasks
-    // Each task has buttons to add and subtract completions
+    // Each task has buttons to add and subtract payments
     // Clicking on a task item will open a EditTaskFragment for this task
     @Override
     public void loadTasksFragment() {
@@ -319,13 +320,8 @@ public class MainActivity extends AppCompatActivity
     // Fragment to create new tasks
     @Override
     public void loadNewTaskFragment() {
-        loadNewTaskFragment(false);
-    }
-
-    @Override
-    public void loadNewTaskFragment(boolean instantCompletion) {
-        NewTaskFragment mNewTaskFragment = NewTaskFragment.newInstance(tasks, getRandomMaterialColor(), instantCompletion);
-        replaceMainFragment(mNewTaskFragment,R.anim.enter_from_top, R.anim.exit_to_bottom, R.anim.enter_from_bottom, R.anim.exit_to_top,true);
+        NewTaskFragment mNewTaskFragment = NewTaskFragment.newInstance(tasks, getRandomMaterialColor());
+        replaceMainFragment(mNewTaskFragment, R.anim.enter_from_top, R.anim.exit_to_bottom, R.anim.enter_from_bottom, R.anim.exit_to_top, true);
     }
 
     // Fragment to edit the task passed in as an argument
@@ -335,10 +331,10 @@ public class MainActivity extends AppCompatActivity
         replaceMainFragment(mEditTaskFragment);
     }
 
-    // Fragment to show completions timeline
+    // Fragment to show payments timeline
     @Override
     public void loadCompletionsFragment() {
-        CompletionsFragment mCompletionsFragment = CompletionsFragment.newInstance(tasks);
+        CompletionsFragment mCompletionsFragment = CompletionsFragment.newInstanceFromTasks(tasks);
         getSupportFragmentManager()
                 .beginTransaction()
                 .setCustomAnimations(R.anim.enter_from_bottom, R.anim.exit_to_top, R.anim.enter_from_top, R.anim.exit_to_bottom)
@@ -348,58 +344,59 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void loadCompletionsFragment(ArrayList<XTask> tasks, XTask filterTask) {
-        CompletionsFragment mCompletionsFragment = CompletionsFragment.newInstance(tasks, filterTask);
-        replaceMainFragment(mCompletionsFragment,R.anim.enter_from_bottom, R.anim.exit_to_top, R.anim.enter_from_top, R.anim.exit_to_bottom,true);
+    public void loadCompletionsFragment(ArrayList<XTask> tasks, XTaskFields filterTaskFields) {
+        CompletionsFragment mCompletionsFragment = CompletionsFragment.newInstanceFromTasks(tasks, filterTaskFields);
+        replaceMainFragment(mCompletionsFragment, R.anim.enter_from_bottom, R.anim.exit_to_top, R.anim.enter_from_top, R.anim.exit_to_bottom, true);
     }
 
+
     @Override
-    public void loadCompletionsPieFragment() {
-        CompletionsPieFragment mCompletionsPieFragment = CompletionsPieFragment.newInstance(tasks);
-        replaceMainFragment(mCompletionsPieFragment,true);
+    public void loadCompletionsFragment(ArrayList<XTaskCompletion> completions) {
+        CompletionsFragment mCompletionsFragment = CompletionsFragment.newInstanceFromCompletions(completions);
+        replaceMainFragment(mCompletionsFragment, R.anim.enter_from_bottom, R.anim.exit_to_top, R.anim.enter_from_top, R.anim.exit_to_bottom, true);
     }
 
     // Fragment to see unpaid earnings and to launch NewPaymentFragment
     @Override
     public void loadEarningsFragment() {
         EarningsFragment mEarningsFragment = EarningsFragment.newInstance(tasks, payments);
-        replaceMainFragment(mEarningsFragment,R.anim.enter_from_bottom, R.anim.exit_to_top, R.anim.enter_from_top, R.anim.exit_to_bottom,true);
+        replaceMainFragment(mEarningsFragment, R.anim.enter_from_bottom, R.anim.exit_to_top, R.anim.enter_from_top, R.anim.exit_to_bottom, true);
     }
 
     // Fragment to register new payments
     @Override
     public void loadNewPaymentFragment() {
         NewPaymentFragment mNewPaymentFragment = NewPaymentFragment.newInstance(tasks);
-        replaceMainFragment(mNewPaymentFragment,R.anim.enter_from_right, R.anim.exit_to_left, R.anim.enter_from_left, R.anim.exit_to_right,true);
+        replaceMainFragment(mNewPaymentFragment, R.anim.enter_from_right, R.anim.exit_to_left, R.anim.enter_from_left, R.anim.exit_to_right, true);
     }
 
     @Override
     public void loadNewPaymentFragment(ArrayList<Boolean> selectionArray) {
         NewPaymentFragment mNewPaymentFragment = NewPaymentFragment.newInstance(tasks, selectionArray);
-        replaceMainFragment(mNewPaymentFragment,R.anim.enter_from_right, R.anim.exit_to_left, R.anim.enter_from_left, R.anim.exit_to_right,true);
+        replaceMainFragment(mNewPaymentFragment, R.anim.enter_from_right, R.anim.exit_to_left, R.anim.enter_from_left, R.anim.exit_to_right, true);
     }
 
     @Override
     public void loadEditCompletionFragment(XTaskCompletion completion) {
         EditCompletionFragment mEditCompletionFragment = EditCompletionFragment.newInstance(tasks, completion);
-        replaceMainFragment(mEditCompletionFragment, 0,0,0,0,true);
+        replaceMainFragment(mEditCompletionFragment, 0, 0, 0, 0, true);
     }
 
     @Override
     public void loadPaymentsFragment(boolean addToBackStack) {
         PaymentsFragment mPaymentsFragment = PaymentsFragment.newInstance(payments);
-        replaceMainFragment(mPaymentsFragment,R.anim.enter_from_right, R.anim.exit_to_left, R.anim.enter_from_left, R.anim.exit_to_right,addToBackStack);
+        replaceMainFragment(mPaymentsFragment, R.anim.enter_from_right, R.anim.exit_to_left, R.anim.enter_from_left, R.anim.exit_to_right, addToBackStack);
     }
 
     @Override
-    public void loadEditPaymentFragment(XTaskPayment payment) {
+    public void loadEditPaymentFragment(XPayment payment) {
         EditPaymentFragment mEditPaymentFragment = EditPaymentFragment.newInstance(payment, payments);
         replaceMainFragment(mEditPaymentFragment);
     }
 
 
-    private void replaceMainFragment(Fragment fragment){
-        replaceMainFragment(fragment,true);
+    private void replaceMainFragment(Fragment fragment) {
+        replaceMainFragment(fragment, true);
     }
 
     // Fragment transaction without animation
@@ -409,7 +406,7 @@ public class MainActivity extends AppCompatActivity
                 .beginTransaction()
                 .replace(R.id.main_frame_layout, newFragment);
 
-        if(addToBackStack){
+        if (addToBackStack) {
             transaction.addToBackStack(newFragment.getClass().getSimpleName());
         }
 
@@ -417,14 +414,14 @@ public class MainActivity extends AppCompatActivity
     }
 
     // Fragment transaction with animation
-    private void replaceMainFragment(Fragment newFragment, int enter, int exit, int popEnter, int popExit, boolean addToBackStack){
+    private void replaceMainFragment(Fragment newFragment, int enter, int exit, int popEnter, int popExit, boolean addToBackStack) {
 
         FragmentTransaction transaction = getSupportFragmentManager()
                 .beginTransaction()
                 .setCustomAnimations(enter, exit, popEnter, popExit)
                 .replace(R.id.main_frame_layout, newFragment);
 
-        if(addToBackStack){
+        if (addToBackStack) {
             transaction.addToBackStack(newFragment.getClass().getSimpleName());
         }
 
@@ -432,15 +429,36 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-
     @Override
     public void loadSettingsActivity() {
+
+        // Show settings activity
         Intent intent = new Intent(this, SettingsActivity.class);
         intent.putExtra("GOOGLE_SIGN_IN_ACCOUNT", mGoogleSignInAccount);
-        intent.putExtra("TASKS_DATA",tasks);
+        intent.putExtra("TASKS_DATA", tasks);
         startActivity(intent);
-    }
 
+        // Use receiver to notify MainActivity if tasks changes have been made in SettingsActivity
+        final BroadcastReceiver br = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                Log.i(TAG, "Received tasks modifications from settings activity");
+
+                ArrayList<XTask> intentTasks = (ArrayList<XTask>) intent.getSerializableExtra("TASKS_DATA");
+                if (intentTasks != null) {
+                    tasks = intentTasks;
+                    if (mTasksFragment != null && mTasksFragment.isAdded())
+                        mTasksFragment.loadTasks(tasks);
+                }
+
+                unregisterReceiver(this);
+            }
+        };
+
+        // Use filter to let SettingsActivity direct broadcasts to this receiver
+        IntentFilter intentFilter = new IntentFilter("TASKS_DATA_CHANGED_IN_SETTINGS");
+        registerReceiver(br, intentFilter);
+    }
 
     // Listen to BackStack changes to update TaskFragment
     private void onBackStackChangedListener() {

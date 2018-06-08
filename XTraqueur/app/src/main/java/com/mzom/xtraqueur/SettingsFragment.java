@@ -11,11 +11,11 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.util.SparseIntArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -115,7 +115,7 @@ public class SettingsFragment extends android.support.v4.app.Fragment {
     private void initListeners(){
 
         // Google account sign out button
-        Button sign_out_button = view.findViewById(R.id.button_account_sign_out);
+        ImageButton sign_out_button = view.findViewById(R.id.button_account_sign_out);
         sign_out_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -123,7 +123,7 @@ public class SettingsFragment extends android.support.v4.app.Fragment {
             }
         });
 
-        // Delete all completions button
+        // Delete all payments button
         Button delete_completions_button = view.findViewById(R.id.button_delete_all_completions);
 
         int completions = 0;
@@ -131,7 +131,7 @@ public class SettingsFragment extends android.support.v4.app.Fragment {
             completions += t.getCompletionsCount();
         }
 
-        // Disable button if user doesn't have any task completions
+        // Disable button if user doesn't have any task payments
         if(completions == 0){
             disableButton(delete_completions_button);
         }else{

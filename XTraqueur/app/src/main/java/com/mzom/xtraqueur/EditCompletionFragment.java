@@ -18,6 +18,8 @@ public class EditCompletionFragment extends BaseEditFragment {
 
     private ArrayList<XTask> tasks;
 
+    private XTask task;
+
     private XTaskCompletion completion;
 
     private int completionColor;
@@ -30,9 +32,10 @@ public class EditCompletionFragment extends BaseEditFragment {
     public static EditCompletionFragment newInstance(ArrayList<XTask> tasks, XTaskCompletion completion) {
 
         EditCompletionFragment fragment = new EditCompletionFragment();
+        fragment.task = XTaskFieldsUtilities.getTaskFromCompletion(completion,tasks);
         fragment.tasks = tasks;
         fragment.completion = completion;
-        fragment.completionColor = fragment.completion.getTask().getColor();
+        fragment.completionColor = fragment.task.getTaskFields().getColor();
         fragment.tempCompletionDate = completion.getDate();
         return fragment;
     }
@@ -99,14 +102,16 @@ public class EditCompletionFragment extends BaseEditFragment {
 
         if(!itemDataIsChanged()) return;
 
+        XTaskCompletion oldCompletion = completion;
+
         completion.setDate(tempCompletionDate);
 
         // Update completionsList
-        ArrayList<Long> completions = completion.getTask().getCompletions();
-        completions.set(completion.getIndex(),completion.getDate());
+        ArrayList<XTaskCompletion> completions = task.getCompletions();
+        completions.set(completions.indexOf(oldCompletion),completion);
 
         // Update tasks data
-        tasks.get(tasks.indexOf(completion.getTask())).setCompletionsList(completions);
+        tasks.get(tasks.indexOf(task)).setCompletions(completions);
 
         // Update tasks data with change
         getBaseEditListener().updateTasksDataOnDrive(tasks, new OnSuccessListener<DriveFile>() {
@@ -120,11 +125,8 @@ public class EditCompletionFragment extends BaseEditFragment {
     @Override
     void deleteItem() {
 
-        // Get completion task
-        XTask task = tasks.get(tasks.indexOf(completion.getTask()));
-
         // Remove completion from task
-        task.removeCompletion(completion.getDate());
+        tasks = XTaskFieldsUtilities.removeCompletion(completion,tasks);
 
         // Update tasks data with change
         getBaseEditListener().updateTasksDataOnDrive(tasks, new OnSuccessListener<DriveFile>() {

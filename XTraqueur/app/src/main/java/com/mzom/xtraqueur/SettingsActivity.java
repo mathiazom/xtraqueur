@@ -2,7 +2,6 @@ package com.mzom.xtraqueur;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -22,15 +21,9 @@ import com.google.android.gms.drive.DriveResourceClient;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 
 import java.io.File;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 
 
 public class SettingsActivity extends AppCompatActivity implements SettingsFragment.SettingsFragmentListener {
@@ -198,11 +191,13 @@ public class SettingsActivity extends AppCompatActivity implements SettingsFragm
 
         // Delete all completions from tasks data
         for (XTask t : tasks) {
-            t.setCompletionsList(new ArrayList<Long>());
+            t.setCompletions(new ArrayList<XTaskCompletion>());
         }
 
         // Upload updated tasks data
         updateTasksDataOnDrive();
+
+        notifyTasksDataChanged();
     }
 
     // Danger zone: Delete all tasks
@@ -212,6 +207,15 @@ public class SettingsActivity extends AppCompatActivity implements SettingsFragm
 
         // Upload updated tasks data
         updateTasksDataOnDrive();
+
+        notifyTasksDataChanged();
+    }
+
+    private void notifyTasksDataChanged(){
+        Intent intent = new Intent();
+        intent.setAction("TASKS_DATA_CHANGED_IN_SETTINGS");
+        intent.putExtra("TASKS_DATA",tasks);
+        sendBroadcast(intent);
     }
 
 

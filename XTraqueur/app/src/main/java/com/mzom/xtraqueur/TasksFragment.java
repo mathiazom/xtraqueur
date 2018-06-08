@@ -1,12 +1,9 @@
 package com.mzom.xtraqueur;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
-import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
@@ -38,10 +35,10 @@ public class TasksFragment extends XFragment {
     // Tasks dataset
     private ArrayList<XTask> tasks;
 
-    private XTaskListAdapter mListAdapter;
+    private TasksListAdapter mListAdapter;
 
     // Log tag for debugging
-    private final static String TAG = "Xtraqueur-TasksFrag";
+    private final static String TAG = "XTQ-TasksFrag";
 
     // Interface instance to communicate with MainActivity
     private TasksFragmentListener tasksFragmentListener;
@@ -50,8 +47,6 @@ public class TasksFragment extends XFragment {
     interface TasksFragmentListener {
 
         void loadNewTaskFragment();
-
-        void loadNewTaskFragment(boolean instantCompletion);
 
         void loadEditTaskFragment(XTask task, int index);
 
@@ -62,9 +57,6 @@ public class TasksFragment extends XFragment {
         void loadEarningsFragment();
 
         void updateTasksDataOnDrive(ArrayList<XTask> tasks);
-
-        // Show task completions in timeline
-        void loadCompletionsFragment(ArrayList<XTask> tasks,XTask filterTask);
     }
 
     // Custom constructor to pass required fragment variables
@@ -161,12 +153,6 @@ public class TasksFragment extends XFragment {
                 tasksFragmentListener.loadEarningsFragment();
             }
         });
-        view.findViewById(R.id.new_instant_completion_button).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                tasksFragmentListener.loadNewTaskFragment(true);
-            }
-        });
     }
 
     // Update dataset before loading tasks
@@ -176,7 +162,6 @@ public class TasksFragment extends XFragment {
     }
 
     // Fill ListView with items representing the tasks
-    @SuppressLint("ClickableViewAccessibility")
     private void loadTasks() {
 
         // Create empty ArrayList if data set is null
@@ -185,64 +170,41 @@ public class TasksFragment extends XFragment {
         }
 
         // Display message to user if there are no tasks to load
-        int vis = tasks.size() != 0 ? View.VISIBLE : View.GONE;
-        int aVis = vis == View.VISIBLE ? View.GONE : View.VISIBLE;
+        handleTaskAbsence();
 
-        view.findViewById(R.id.xtask_container).setVisibility(vis);
-        view.findViewById(R.id.no_tasks_background_container).setVisibility(aVis);
-        view.findViewById(R.id.no_tasks_text_container).setVisibility(aVis);
-
-        // Timeline action button enable/disable
-        int total_completions = 0;
-        for(XTask t:tasks){
-            if(t.getCompletions() != null)
-                total_completions += t.getCompletions().size();
-        }
-
-        MenuItem timeline_icon = mToolbar.getMenu().findItem(R.id.tasks_timeline_icon);
-        timeline_icon.setEnabled(total_completions > 0);
-        if(total_completions > 0){
-            timeline_icon.getIcon().setAlpha(255);
-        }else{
-            timeline_icon.getIcon().setAlpha(30);
-        }
-
+        // Timeline action button enable/disable based on total completions count
+        handleTimelineActionButton();
 
         // Update TextView displaying the tasks total value
         updateTotalValue();
 
         // DragSortListView to host the task items
         // Enables drag and sort functionality to the list
-        final DragSortListView xtask_list = view.findViewById(R.id.xtask_container);
+        final DragSortListView tasksListView = view.findViewById(R.id.xtask_container);
 
         // ListView ArrayAdapter
-        mListAdapter = new XTaskListAdapter(getContext(), tasks, new XTaskListAdapter.XTaskListAdapterListener() {
+        mListAdapter = new TasksListAdapter(getContext(), tasks, new TasksListAdapter.XTaskListAdapterListener() {
             @Override
             public void onUpdateTasks(ArrayList<XTask> tasks) {
 
                 // Save the scroll position before refresh
-                int index = xtask_list.getFirstVisiblePosition();
-                View v = xtask_list.getChildAt(0);
-                int top = (v == null) ? 0 : (v.getTop() - xtask_list.getPaddingTop());
+                int index = tasksListView.getFirstVisiblePosition();
+                View v = tasksListView.getChildAt(0);
+                int top = (v == null) ? 0 : (v.getTop() - tasksListView.getPaddingTop());
 
                 // Refresh ListView
                 updateTasks(tasks);
 
                 // Restore the scroll position after refresh
-                xtask_list.setSelectionFromTop(index, top);
-            }
-
-            @Override
-            public void loadTimeline(ArrayList<XTask> tasks, XTask filterTask) {
-                tasksFragmentListener.loadCompletionsFragment(tasks,filterTask);
+                tasksListView.setSelectionFromTop(index, top);
             }
         });
 
         // Set ArrayAdapter to DragSortListView
-        xtask_list.setAdapter(mListAdapter);
+        tasksListView.setAdapter(mListAdapter);
 
         // Listener for task drop
-        xtask_list.setDropListener(new DragSortListView.DropListener() {
+        tasksListView.setDropListener(new DragSortListView.DropListener() {
             @Override
             public void drop(int i, int i1) {
                 if (i != i1) {
@@ -259,7 +221,7 @@ public class TasksFragment extends XFragment {
 
         // Controller used to handle touch events and calculate which ListView items to drag
         // Uses custom class to handle both normal click and long click
-        final DragSortController controller = new XTaskDragSortController(xtask_list, new XTaskDragSortController.XTaskDragSortControllerListener() {
+        final DragSortController controller = new XTaskDragSortController(tasksListView, new XTaskDragSortController.XTaskDragSortControllerListener() {
             @Override
             public void onEditTask(int index, float y) {
                 editTask(index, y);
@@ -271,17 +233,18 @@ public class TasksFragment extends XFragment {
         controller.setSortEnabled(true);
         controller.setDragInitMode(DragSortController.ON_LONG_PRESS);
 
-        xtask_list.setFloatViewManager(controller);
-        xtask_list.setOnTouchListener(controller);
-        xtask_list.setDragEnabled(true);
-
+        tasksListView.setFloatViewManager(controller);
+        tasksListView.setOnTouchListener(controller);
+        tasksListView.setDragEnabled(true);
 
     }
 
     // Animate launch of EditTaskFragment with the selected task
     private void editTask(final int index, float y) {
 
-        startScaleAnimation(tasks.get(index).getColor(), y, new Animation.AnimationListener() {
+        final XTask task = tasks.get(index);
+
+        startScaleAnimation(task.getTaskFields().getColor(), y, new Animation.AnimationListener() {
             @Override
             public void onAnimationStart(Animation animation) {
 
@@ -289,7 +252,7 @@ public class TasksFragment extends XFragment {
 
             @Override
             public void onAnimationEnd(Animation animation) {
-                tasksFragmentListener.loadEditTaskFragment(tasks.get(index),index);
+                tasksFragmentListener.loadEditTaskFragment(task,index);
             }
 
             @Override
@@ -361,5 +324,35 @@ public class TasksFragment extends XFragment {
 
         // Update total value TextView
         ((TextView) view.findViewById(R.id.tasks_total_value)).setText(Html.fromHtml(totalString));
+    }
+
+    // Display message to user if there are no tasks to load
+    private void handleTaskAbsence(){
+
+        int vis = tasks.size() != 0 ? View.VISIBLE : View.GONE;
+        int aVis = vis == View.VISIBLE ? View.GONE : View.VISIBLE;
+
+        view.findViewById(R.id.xtask_container).setVisibility(vis);
+        view.findViewById(R.id.no_tasks_background_container).setVisibility(aVis);
+        view.findViewById(R.id.no_tasks_text_container).setVisibility(aVis);
+
+    }
+
+    // Timeline action button enable/disable based on total completions count
+    private void handleTimelineActionButton(){
+
+        int totalCompletions = 0;
+        for(XTask t:tasks){
+            totalCompletions += t.getCompletionsCount();
+        }
+
+        MenuItem timeline_icon = mToolbar.getMenu().findItem(R.id.tasks_timeline_icon);
+        timeline_icon.setEnabled(totalCompletions > 0);
+        if(totalCompletions > 0){
+            timeline_icon.getIcon().setAlpha(255);
+        }else{
+            timeline_icon.getIcon().setAlpha(30);
+        }
+
     }
 }

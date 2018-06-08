@@ -49,7 +49,7 @@ public class EditTaskFragment extends BaseEditFragment {
         fragment.index = index;
         fragment.task = task;
         fragment.tasks = tasks;
-        fragment.temp_color = task.getColor();
+        fragment.temp_color = task.getTaskFields().getColor();
         return fragment;
     }
 
@@ -122,8 +122,8 @@ public class EditTaskFragment extends BaseEditFragment {
         mManageButton = fragmentView.findViewById(R.id.button_manage_completions);
 
         // Load task values to EditTexts
-        mNameEditText.setText(task.getName());
-        mFeeEditText.setText(String.valueOf(task.getFee()));
+        mNameEditText.setText(task.getTaskFields().getName());
+        mFeeEditText.setText(String.valueOf(task.getTaskFields().getFee()));
 
         // Manage button background
         Drawable manage_drawable = mManageButton.getBackground();
@@ -152,7 +152,7 @@ public class EditTaskFragment extends BaseEditFragment {
                     return;
                 }
 
-                getBaseEditListener().loadCompletionsFragment(tasks,task);
+                getBaseEditListener().loadCompletionsFragment(tasks,task.getTaskFields());
             }
         });
 
@@ -181,7 +181,7 @@ public class EditTaskFragment extends BaseEditFragment {
         // Get edited task name
         String name = String.valueOf(mNameEditText.getEditableText());
 
-        return !(task.getName().equals(name) && task.getFee() == fee && temp_color == task.getColor());
+        return !(task.getTaskFields().getName().equals(name) && task.getTaskFields().getFee() == fee && temp_color == task.getTaskFields().getColor());
     }
 
     @Override
@@ -197,7 +197,7 @@ public class EditTaskFragment extends BaseEditFragment {
 
         // Check if name is already in use
         for (XTask t : tasks) {
-            if (t.getName().equals(name) && tasks.indexOf(t) != index) {
+            if (t.getTaskFields().getName().equals(name) && tasks.indexOf(t) != index) {
                 // Notify user that this name is already in use by another task
                 mNameLayout.setError(getString(R.string.already_in_use));
                 return;
@@ -219,9 +219,9 @@ public class EditTaskFragment extends BaseEditFragment {
 
             // Create duplicate of task and set properties according to input
             XTask edit = task;
-            edit.setName(name);
-            edit.setFee(fee);
-            edit.setColor(temp_color);
+            edit.getTaskFields().setName(name);
+            edit.getTaskFields().setFee(fee);
+            edit.getTaskFields().setColor(temp_color);
 
             // Commit changes
             tasks.set(index, edit);

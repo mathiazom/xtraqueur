@@ -81,7 +81,7 @@ class XTasksDataUploader extends AsyncTask<XTasksDataPackage, Void, Void> {
             updateTasksDataOnDrive(tasks);
         }
 
-        ArrayList<XTaskPayment> payments = xTasksDataPackage.getPayments();
+        ArrayList<XPayment> payments = xTasksDataPackage.getPayments();
         if (payments != null) {
             updatePaymentsDataOnDrive(payments);
         }
@@ -103,7 +103,7 @@ class XTasksDataUploader extends AsyncTask<XTasksDataPackage, Void, Void> {
 
     }
 
-    private void updatePaymentsDataOnDrive(@NonNull ArrayList<XTaskPayment> payments) {
+    private void updatePaymentsDataOnDrive(@NonNull ArrayList<XPayment> payments) {
 
         final String payments_data = new Gson().toJson(payments);
 

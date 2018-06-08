@@ -49,9 +49,11 @@ public abstract class BaseEditFragment extends XFragment {
     interface BaseEditFragmentListener{
         void updateTasksDataOnDrive(ArrayList<XTask> tasks, OnSuccessListener<DriveFile> onSuccessListener);
 
-        void updatePaymentsDataOnDrive(ArrayList<XTaskPayment> payments, OnSuccessListener<DriveFile> onSuccessListener);
+        void updatePaymentsDataOnDrive(ArrayList<XPayment> payments, OnSuccessListener<DriveFile> onSuccessListener);
 
-        void loadCompletionsFragment(ArrayList<XTask> tasks,XTask task);
+        void loadCompletionsFragment(ArrayList<XTask> tasks,XTaskFields taskFields);
+
+        void loadCompletionsFragment(ArrayList<XTaskCompletion> completions);
 
         void onBackPressed();
     }

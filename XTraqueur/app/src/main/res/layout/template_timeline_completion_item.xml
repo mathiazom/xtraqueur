@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout android:id="@+id/item_default_view"
+
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/completion_item_container"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/dark_rounded_2dp"
-    app:layout_constraintStart_toStartOf="parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:android="http://schemas.android.com/apk/res/android">
+    app:layout_constraintTop_toBottomOf="@id/timeline_item_date_header">
 
     <LinearLayout
         android:layout_width="wrap_content"
@@ -23,17 +23,17 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
-        <TextView
-            android:id="@+id/timeline_item_title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="#eee"
-            android:textSize="17sp" />
+            <TextView
+                android:id="@+id/completion_item_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#eee"
+                android:textSize="17sp" />
 
         </LinearLayout>
 
         <TextView
-            android:id="@+id/timeline_item_date"
+            android:id="@+id/completion_item_date"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:fontFamily="sans-serif-light"
@@ -42,7 +42,7 @@
     </LinearLayout>
 
     <ImageView
-        android:id="@+id/timeline_item_selected_mark"
+        android:id="@+id/completion_item_selected_mark"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"

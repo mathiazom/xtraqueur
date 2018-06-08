@@ -70,6 +70,21 @@
     </android.support.design.widget.TextInputLayout>
 
     <Button
+        android:id="@+id/button_payment_completions"
+        android:layout_width="wrap_content"
+        android:layout_height="36dp"
+        android:layout_marginBottom="6dp"
+        android:layout_marginTop="36dp"
+        android:background="@drawable/accent_rounded_2dp"
+        android:paddingEnd="16dp"
+        android:paddingStart="16dp"
+        android:text="@string/show_completions"
+        android:textColor="@color/colorWhite"
+        android:textSize="14sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/edit_payment_layout_time" />
+
+    <Button
         android:id="@+id/button_delete_payment"
         android:layout_width="wrap_content"
         android:layout_height="36dp"
@@ -82,6 +97,6 @@
         android:textColor="@color/colorPrimary"
         android:textSize="14sp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/edit_payment_layout_time" />
+        app:layout_constraintTop_toBottomOf="@id/button_payment_completions" />
 
 </android.support.constraint.ConstraintLayout>

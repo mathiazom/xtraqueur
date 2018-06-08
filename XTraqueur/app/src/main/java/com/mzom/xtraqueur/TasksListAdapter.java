@@ -13,11 +13,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import java.util.ArrayList;
 
-class XTaskListAdapter extends ArrayAdapter<XTask> {
+class TasksListAdapter extends ArrayAdapter<XTask> {
 
     private final LayoutInflater mLayoutInflater;
 
@@ -31,13 +30,11 @@ class XTaskListAdapter extends ArrayAdapter<XTask> {
     private static final String TAG = "Xtraqueur-ListAdapter";
 
     public interface XTaskListAdapterListener {
-        void onUpdateTasks(ArrayList<XTask> tasks);
 
-        // Show task completions in timeline
-        void loadTimeline(ArrayList<XTask> tasks,XTask filterTask);
+        void onUpdateTasks(ArrayList<XTask> tasks);
     }
 
-    XTaskListAdapter(Context ctx, ArrayList<XTask> tasks, XTaskListAdapterListener xTaskListAdapterListener) {
+    TasksListAdapter(Context ctx, ArrayList<XTask> tasks, XTaskListAdapterListener xTaskListAdapterListener) {
         super(ctx, -1, tasks);
         this.mLayoutInflater = LayoutInflater.from(ctx);
         this.xTaskListAdapterListener = xTaskListAdapterListener;
@@ -45,17 +42,15 @@ class XTaskListAdapter extends ArrayAdapter<XTask> {
 
     }
 
-    static class ViewHolder{
+    static class TaskViewHolder {
         final TextView mTaskName;
         final TextView mTaskCompletions;
         final ImageButton mAddButton;
-        final ImageButton mSubtractButton;
 
-        ViewHolder(ConstraintLayout v){
+        TaskViewHolder(ConstraintLayout v){
             mTaskName = v.findViewById(R.id.xtask_name);
             mTaskCompletions = v.findViewById(R.id.xtask_completions);
             mAddButton = v.findViewById(R.id.xtask_button_add);
-            mSubtractButton = v.findViewById(R.id.xtask_button_subtract);
         }
     }
 
@@ -69,66 +64,47 @@ class XTaskListAdapter extends ArrayAdapter<XTask> {
         // Get task object from current position
         final XTask task = tasks.get(position);
 
+        // Get task's taskFields object from current position
+        final XTaskFields taskFields = task.getTaskFields();
+
         // Task view inflation
         if (convertView == null) {
             convertView = mLayoutInflater.inflate(R.layout.template_task, parent, false);
         }
 
-
-        convertView.setVisibility(task.isInstantCompletion() ? View.GONE : View.VISIBLE);
-
-        final ViewHolder holder = new ViewHolder((ConstraintLayout) convertView);
-
-        // Determine if task color fits dark or light text
-        int textColor = Color.parseColor("#eeeeee");
+        final TaskViewHolder holder = new TaskViewHolder((ConstraintLayout) convertView);
 
         // Task name
         TextView tv_name = holder.mTaskName;
-        tv_name.setText(task.getName() + (task.isInstantCompletion() ? " (IC)" : ""));
-        tv_name.setTextColor(textColor);
+        tv_name.setText(taskFields.getName());
+        tv_name.setTextColor(getContext().getResources().getColor(R.color.colorWhite));
 
-        // Task completions count
+        // Task payments count
         TextView tv_completions = holder.mTaskCompletions;
         tv_completions.setText(String.valueOf(task.getCompletionsCount()));
-        tv_completions.setTextColor(textColor);
+        tv_completions.setTextColor(getContext().getResources().getColor(R.color.colorWhite));
 
         // Addition button
         ImageButton button_add = holder.mAddButton;
 
-        // Subtraction button
-        ImageButton button_subtract = holder.mSubtractButton;
-
         // Subtraction button background
         Drawable button_drawable1 = button_add.getBackground();
         button_drawable1.setColorFilter(Color.argb(51, 255, 255, 255), PorterDuff.Mode.MULTIPLY);
-        button_subtract.setBackground(button_drawable1);
 
-        // Addition button background
-        Drawable button_drawable2 = button_subtract.getBackground();
-        button_drawable2.setColorFilter(Color.argb(51, 255, 255, 255), PorterDuff.Mode.MULTIPLY);
-        button_add.setBackground(button_drawable2);
+        //button_add.setColorFilter(task.getColor());
+        button_add.setColorFilter(getContext().getResources().getColor(R.color.colorWhite));
 
         // Addition button listener
         button_add.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                task.addToCompletions();
+                task.newCompletion();
                 xTaskListAdapterListener.onUpdateTasks(tasks);
             }
         });
 
-        // Subtraction listener
-        button_subtract.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (task.getCompletions().size() == 0) return;
-
-                xTaskListAdapterListener.loadTimeline(tasks,task);
-            }
-        });
-
         // Set task view background according to task color
-        convertView.setBackground(new ColorDrawable(task.getColor()));
+        convertView.setBackground(new ColorDrawable(taskFields.getColor()));
 
         return convertView;
     }

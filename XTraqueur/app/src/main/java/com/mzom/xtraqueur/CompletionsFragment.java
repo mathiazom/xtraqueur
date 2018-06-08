@@ -3,22 +3,18 @@ package com.mzom.xtraqueur;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.graphics.Color;
 import android.graphics.PorterDuff;
-import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.Animation;
-import android.view.animation.ScaleAnimation;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -34,15 +30,14 @@ public class CompletionsFragment extends XFragment {
     // Fragment main views
     private View view;
 
-    private ArrayList<XTask> tasks;
+    private ArrayList<XTask> allTasks;
+    private ArrayList<XTaskFields> allTasksFields;
     private ArrayList<XTaskCompletion> allCompletions;
-    private ArrayList<XTaskCompletion> completions;
+    private ArrayList<XTaskCompletion> filteredCompletions;
 
-    private TimelineAdapter mAdapter;
+    private CompletionsTimelineAdapter mAdapter;
 
-    private ArrayList<Boolean> selectionArray;
-
-    private XTask filterTask;
+    private XTaskFields filterTaskFields;
 
     private Toolbar mToolbar;
     private Toolbar mSelectionModeToolbar;
@@ -57,23 +52,79 @@ public class CompletionsFragment extends XFragment {
         void loadEditCompletionFragment(XTaskCompletion completion);
 
         void updateTasksDataOnDrive(ArrayList<XTask> tasks);
-
-        void loadCompletionsPieFragment();
     }
 
-    public static CompletionsFragment newInstance(ArrayList<XTask> tasks) {
+    public static CompletionsFragment newInstanceFromTasks(ArrayList<XTask> tasks) {
+        return newInstanceFromTasks(tasks, null);
+    }
+
+    public static CompletionsFragment newInstanceFromTasks(ArrayList<XTask> tasks, @Nullable XTaskFields filterTaskFields) {
 
         CompletionsFragment fragment = new CompletionsFragment();
-        fragment.tasks = tasks;
+        fragment.allTasks = tasks;
+        fragment.allTasksFields = fragment.getTasksFieldsFromTasks(tasks);
+        fragment.allCompletions = fragment.getCompletionsFromTasks(tasks);
+        fragment.filterTaskFields = filterTaskFields;
         return fragment;
     }
 
-    public static CompletionsFragment newInstance(ArrayList<XTask> tasks, XTask filterTask) {
+    static CompletionsFragment newInstanceFromCompletions(ArrayList<XTaskCompletion> completions) {
 
         CompletionsFragment fragment = new CompletionsFragment();
-        fragment.tasks = tasks;
-        fragment.filterTask = filterTask;
+        fragment.allCompletions = completions;
+        fragment.allTasksFields = fragment.getTasksFieldsFromCompletions(completions);
         return fragment;
+    }
+
+    // Iterate allTasks array to retrieve all filteredCompletions
+    private ArrayList<XTaskCompletion> getCompletionsFromTasks(ArrayList<XTask> tasks) {
+
+        ArrayList<XTaskCompletion> retrievedCompletions = new ArrayList<>();
+
+        for (XTask task : tasks) {
+            retrievedCompletions.addAll(task.getCompletions());
+        }
+
+        // Sort filteredCompletions based on recency
+        Collections.sort(retrievedCompletions, new Comparator<XTaskCompletion>() {
+            @Override
+            public int compare(XTaskCompletion c1, XTaskCompletion c2) {
+                return Long.compare(c2.getDate(), c1.getDate());
+            }
+        });
+
+        return retrievedCompletions;
+
+    }
+
+    private ArrayList<XTaskFields> getTasksFieldsFromTasks(ArrayList<XTask> tasks){
+
+        ArrayList<XTaskFields> tasksFields = new ArrayList<>();
+
+        for(XTask task : tasks){
+            tasksFields.add(task.getTaskFields());
+        }
+
+        return tasksFields;
+
+    }
+
+    private ArrayList<XTaskFields> getTasksFieldsFromCompletions(ArrayList<XTaskCompletion> completions){
+
+        ArrayList<XTaskFields> tasksFields = new ArrayList<>();
+
+        for(XTaskCompletion completion : completions){
+
+            XTaskFields taskFields = completion.getTaskFields();
+
+            if(tasksFields.indexOf(taskFields) == -1){
+                tasksFields.add(taskFields);
+            }
+
+        }
+
+        return tasksFields;
+
     }
 
     @Nullable
@@ -111,7 +162,26 @@ public class CompletionsFragment extends XFragment {
         // Add action buttons to toolbar from menu resource
         mToolbar.inflateMenu(R.menu.menu_completions_fragment);
 
-        // Menu items
+        // Completions task filter UI
+        final LinearLayout taskFilterContainer = mToolbar.findViewById(R.id.task_filter_field);
+        taskFilterContainer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                filterTaskDialog();
+            }
+        });
+        // Init filter UI
+        onTasksFiltered(filterTaskFields);
+
+        // Set back button as toolbar navigation icon
+        mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mCompletionsFragmentListener.onBackPressed();
+            }
+        });
+
+        /*// Menu items
         mToolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
@@ -129,13 +199,20 @@ public class CompletionsFragment extends XFragment {
             }
         });
 
-        // Set back button as toolbar navigation icon
-        mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mCompletionsFragmentListener.onBackPressed();
-            }
-        });
+        // Pie action button enable/disable
+        int total_completions = 0;
+        for(XTask t:allTasks){
+            if(t.getCompletions() != null)
+                total_completions += t.getCompletions().size();
+        }
+
+        MenuItem pie_icon = mToolbar.getMenu().findItem(R.id.completions_icon_pie_chart);
+        pie_icon.setEnabled(total_completions > 0);
+        if(total_completions > 0){
+            pie_icon.getIcon().setAlpha(255);
+        }else{
+            pie_icon.getIcon().setAlpha(30);
+        }*/
 
 
         // Selection mode toolbar
@@ -154,12 +231,12 @@ public class CompletionsFragment extends XFragment {
 
                 switch (item.getItemId()) {
                     case R.id.timeline_selection_mode_icon_register_payment:
-                        mCompletionsFragmentListener.loadNewPaymentFragment(getSelectionArrayForAllCompletions());
+                        mCompletionsFragmentListener.loadNewPaymentFragment(mAdapter.getSelectionArray());
                         hideSelectionUI();
                         break;
                     case R.id.timeline_selection_mode_icon_delete:
 
-                        AlertDialog alertDialog = new AlertDialog.Builder(getContext(),R.style.AlertDialogTheme)
+                        AlertDialog alertDialog = new AlertDialog.Builder(getContext(), R.style.AlertDialogTheme)
                                 .setPositiveButton(R.string.delete_button, new DialogInterface.OnClickListener() {
                                     @Override
                                     public void onClick(DialogInterface dialogInterface, int i) {
@@ -197,20 +274,18 @@ public class CompletionsFragment extends XFragment {
 
     private AlertDialog filterTaskDialog;
 
-    private void filterTaskDialog(){
+    private void filterTaskDialog() {
 
         ScrollView scrollView = new ScrollView(getContext());
-        LinearLayout tasksContainer = (LinearLayout) getLayoutInflater().inflate(R.layout.module_colors_dialog,scrollView,false);
+        LinearLayout tasksContainer = (LinearLayout) getLayoutInflater().inflate(R.layout.module_colors_dialog, scrollView, false);
         scrollView.addView(tasksContainer);
 
-        final ConstraintLayout taskLayoutAll = createTaskFilterAll(tasksContainer);
+        final ConstraintLayout taskLayoutAll = createTaskFilterItem(null, getString(R.string.all_completions), getResources().getColor(R.color.colorWhite), tasksContainer);
         tasksContainer.addView(taskLayoutAll);
 
-        for(final XTask task : tasks){
+        for (final XTaskFields taskFields : allTasksFields) {
 
-            if(task.getCompletionsCount() == 0) continue;
-
-            final ConstraintLayout taskLayout = createTaskFilterItem(task,tasksContainer);
+            final ConstraintLayout taskLayout = createTaskFilterItem(taskFields, taskFields.getName(), taskFields.getColor(), tasksContainer);
 
             tasksContainer.addView(taskLayout);
         }
@@ -223,91 +298,27 @@ public class CompletionsFragment extends XFragment {
 
     }
 
-    private ConstraintLayout createTaskFilterAll(final LinearLayout parent){
+    private ConstraintLayout createTaskFilterItem(@Nullable final XTaskFields taskFields, final String name, final int color, final LinearLayout parent) {
 
-        ConstraintLayout taskLayoutAll = (ConstraintLayout) getLayoutInflater().inflate(R.layout.template_dialog_color_all,parent,false);
-
-        TextView titleViewAll = taskLayoutAll.findViewById(R.id.dialog_color_title);
-        titleViewAll.setText(getString(R.string.all_completions));
-
-        /*LinearLayout markerAll = taskLayoutAll.findViewById(R.id.dialog_color_marker);
-        Drawable backgroundAll = markerAll.getBackground();
-        backgroundAll.setColorFilter(getResources().getColor(R.color.colorAccent), PorterDuff.Mode.SRC_ATOP);
-        markerAll.setBackground(backgroundAll);*/
-
-        ImageButton selectedAll = taskLayoutAll.findViewById(R.id.dialog_color_selected);
-
-        if(getContext() == null) return taskLayoutAll;
-
-        selectedAll.setColorFilter(getContext().getResources().getColor(R.color.colorAccent));
-
-        if(filterTask == null){
-            titleViewAll.setTextColor(getContext().getResources().getColor(R.color.colorAccent));
-            selectedAll.setVisibility(View.VISIBLE);
-        }else{
-            titleViewAll.setTextColor(Color.BLACK);
-            selectedAll.setVisibility(View.GONE);
-        }
-
-        taskLayoutAll.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                filterTaskDialog.dismiss();
-
-                // Remove old completions
-                completions = new ArrayList<>();
-                if(filterTask == null){
-                    mAdapter.deleteItemRange(0,allCompletions.size());
-                }
-                else{
-                    mAdapter.deleteItemRange(0,filterTask.getCompletionsCount());
-                }
-
-                // Remove task filter
-                filterTask = null;
-                completions = allCompletions;
-
-                // Sort completions based on recency
-                Collections.sort(completions, new Comparator<XTaskCompletion>() {
-                    @Override
-                    public int compare(XTaskCompletion xTaskCompletion, XTaskCompletion t1) {
-                        return Long.compare(t1.getDate(), xTaskCompletion.getDate());
-                    }
-                });
-
-                mAdapter.notifyItemRangeInserted(0,allCompletions.size());
-
-                // Change toolbar background according to task
-                mToolbar.setBackground(new ColorDrawable(getResources().getColor(R.color.colorPrimary)));
-            }
-        });
-
-        return taskLayoutAll;
-
-    }
-
-    private ConstraintLayout createTaskFilterItem(final XTask task, final LinearLayout parent){
-        ConstraintLayout taskLayout = (ConstraintLayout) getLayoutInflater().inflate(R.layout.template_dialog_color,parent,false);
+        ConstraintLayout taskLayout = (ConstraintLayout) getLayoutInflater().inflate(R.layout.template_dialog_color, parent, false);
 
         TextView titleView = taskLayout.findViewById(R.id.dialog_color_title);
-        titleView.setText(task.getName());
+        titleView.setText(name);
 
         LinearLayout marker = taskLayout.findViewById(R.id.dialog_color_marker);
-        Drawable background = marker.getBackground();
-        background.setColorFilter(task.getColor(), PorterDuff.Mode.SRC_ATOP);
-        marker.setBackground(background);
+        paintViewBackground(marker, color);
 
         final ImageButton selected = taskLayout.findViewById(R.id.dialog_color_selected);
 
-        if(getContext() == null) return taskLayout;
+        if (getContext() == null) return taskLayout;
 
         selected.setColorFilter(getContext().getResources().getColor(R.color.colorAccent));
 
-        if(task == filterTask){
+        if (taskFields == filterTaskFields) {
             titleView.setTextColor(getContext().getResources().getColor(R.color.colorAccent));
             selected.setVisibility(View.VISIBLE);
-        } else{
-            titleView.setTextColor(Color.BLACK);
+        } else {
+            titleView.setTextColor(getResources().getColor(R.color.colorWhite));
             selected.setVisibility(View.GONE);
         }
 
@@ -316,150 +327,141 @@ public class CompletionsFragment extends XFragment {
             public void onClick(View v) {
                 filterTaskDialog.dismiss();
 
-                // Remove old completions
-                completions = new ArrayList<>();
-                if(filterTask == null){
-                    mAdapter.deleteItemRange(0,allCompletions.size());
-                }
-                else{
-                    mAdapter.deleteItemRange(0,filterTask.getCompletionsCount());
+                // Remove old filteredCompletions
+                if (filterTaskFields == null) {
+                    mAdapter.deleteItemRange(0, allCompletions.size());
+                } else {
+                    mAdapter.deleteItemRange(0, filteredCompletions.size());
                 }
 
-                // Add new completions
-                filterTask = task;
-                for (XTaskCompletion completion : allCompletions) {
-                    if(completion.getTask() == filterTask) completions.add(completion);
+
+                // Set filter
+                filterTaskFields = taskFields;
+
+                // Update filteredCompletions array
+                filteredCompletions = new ArrayList<>();
+                if (filterTaskFields == null) {
+                    filteredCompletions = allCompletions;
+                } else {
+                    for (XTaskCompletion completion : allCompletions) {
+                        if (XTaskFieldsUtilities.areEqual(completion.getTaskFields(),filterTaskFields)){
+                            filteredCompletions.add(completion);
+                            Log.i("XTQ-Completions",completion.getTaskFields().getName());
+                        }
+                    }
                 }
 
-                // Sort completions based on recency
-                Collections.sort(completions, new Comparator<XTaskCompletion>() {
+                // Sort filteredCompletions based on recency
+                Collections.sort(filteredCompletions, new Comparator<XTaskCompletion>() {
                     @Override
                     public int compare(XTaskCompletion xTaskCompletion, XTaskCompletion t1) {
                         return Long.compare(t1.getDate(), xTaskCompletion.getDate());
                     }
                 });
 
-                mAdapter.timelineItemRangeInserted(0,filterTask.getCompletionsCount());
+                mAdapter.setCompletions(filteredCompletions);
 
+                // Add new filteredCompletions to adapter
+                mAdapter.timelineItemRangeInserted(0, filteredCompletions.size());
 
-                // Change toolbar background according to task
-                mToolbar.setBackground(new ColorDrawable(filterTask.getColor()));
+                // Reflect filter change
+                onTasksFiltered(filterTaskFields);
             }
         });
 
         return taskLayout;
     }
 
-    // Use SparseBooleanArray to get RecyclerView's currently selected completions
-    private ArrayList<XTaskCompletion> getSelectedCompletions() {
+    private void onTasksFiltered(@Nullable XTaskFields filterTaskFields) {
 
-        ArrayList<XTaskCompletion> selectedCompletions = new ArrayList<>();
+        // Completions task filter
+        final LinearLayout taskFilterContainer = mToolbar.findViewById(R.id.task_filter_field);
 
-        for (int c = 0; c < completions.size(); c++) {
-            if (selectionArray.get(c)) {
-                selectedCompletions.add(completions.get(c));
-            }
+        final LinearLayout taskFilterCircle = taskFilterContainer.findViewById(R.id.task_filter_circle);
+        final TextView taskFilterName = taskFilterContainer.findViewById(R.id.task_filter_name);
+
+        String name;
+        int color;
+
+        // If filtered task is null, no filter is applied (all filteredCompletions visible)
+        if (filterTaskFields == null) {
+            color = getResources().getColor(R.color.colorWhite);
+            name = getString(R.string.all_completions);
         }
-        return selectedCompletions;
+        // Get data from filtered task
+        else {
+            color = filterTaskFields.getColor();
+            name = filterTaskFields.getName();
+        }
+
+        // Task filter circle
+        paintViewBackground(taskFilterCircle, color);
+
+        // Task filter name
+        taskFilterName.setText(name);
     }
 
-    // Display all completions sorted from newest to oldest
+    // Display all filteredCompletions sorted from newest to oldest
     private void loadCompletions() {
 
         // Load recycler view
-        TimelineRecycler mRecyclerView = view.findViewById(R.id.completions_recycler);
-
-        allCompletions = new ArrayList<>();
-
-        for (XTask t : tasks) {
-            if (t.getCompletions() != null){
-                for(Long l:t.getCompletions()){
-                    allCompletions.add(new XTaskCompletion(l,t));
-                }
-            }
-        }
-
-        // Sort completions based on recency
-        Collections.sort(allCompletions, new Comparator<XTaskCompletion>() {
-            @Override
-            public int compare(XTaskCompletion c1, XTaskCompletion c2) {
-                return Long.compare(c2.getDate(), c1.getDate());
-            }
-        });
+        final TimelineRecycler mRecyclerView = view.findViewById(R.id.completions_recycler);
 
         // Filtered for single task (from EditTaskFragment)
-        if (filterTask != null) {
-            if (filterTask.getCompletions() != null) {
+        if (filterTaskFields != null) {
 
-                completions = new ArrayList<>();
+            filteredCompletions = getFilteredCompletions(filterTaskFields);
 
-                for (XTaskCompletion completion : allCompletions) {
-                    if(completion.getTask() == filterTask) completions.add(completion);
+            // Sort filteredCompletions based on recency
+            Collections.sort(filteredCompletions, new Comparator<XTaskCompletion>() {
+                @Override
+                public int compare(XTaskCompletion xTaskCompletion, XTaskCompletion t1) {
+                    return Long.compare(t1.getDate(), xTaskCompletion.getDate());
                 }
-
-                // Sort completions based on recency
-                Collections.sort(completions, new Comparator<XTaskCompletion>() {
-                    @Override
-                    public int compare(XTaskCompletion xTaskCompletion, XTaskCompletion t1) {
-                        return Long.compare(t1.getDate(), xTaskCompletion.getDate());
-                    }
-                });
-
-                mToolbar.setBackground(new ColorDrawable(filterTask.getColor()));
-
-            }
-        }else{
-            completions = allCompletions;
+            });
+        } else {
+            filteredCompletions = allCompletions;
         }
 
-        // Display completions in RecyclerView with Adapter
-        mAdapter = new TimelineAdapter(false, new TimelineAdapter.TimelineAdapterListener() {
-            @Override
-            public void onItemClick(int pos, float y) {
-                editCompletion(pos, y);
-            }
+        // Display filteredCompletions in RecyclerView with Adapter
+        mAdapter = new CompletionsTimelineAdapter(filteredCompletions, new CompletionsTimelineAdapter.CompletionsTimelineAdapterNoLockListener() {
 
             @Override
-            public void deleteItemData(int index) {
+            public void onSelectionChanged(int totalSelected, final boolean isSelecting) {
 
-                final XTaskCompletion completion = completions.get(index);
-
-                tasks.get(tasks.indexOf(completion.getTask())).removeCompletion(completion.getDate());
-
-                completions.remove(completion);
-            }
-
-            @Override
-            public void onDatasetChanged() {
-
-                mCompletionsFragmentListener.updateTasksDataOnDrive(tasks);
+                updateSelectionUI(totalSelected, isSelecting);
 
             }
 
             @Override
-            public int getItemCount() {
-                return completions.size();
+            public void deleteCompletionData(XTaskCompletion completion) {
+
+                XTask task = XTaskFieldsUtilities.getTaskFromCompletion(completion, allTasks);
+
+                if(task == null) return;
+
+                allTasks = XTaskFieldsUtilities.removeCompletion(completion,allTasks);
+
+                filteredCompletions.remove(completion);
+
+                if (filteredCompletions.size() == 0) {
+                    mCompletionsFragmentListener.onBackPressed();
+                }
+
             }
 
             @Override
-            public void onSelectionChanged(ArrayList<Boolean> updatedSelectionArray) {
-                // Update selection array
-                selectionArray = updatedSelectionArray;
+            public void onItemsDataChanged() {
+
+                mCompletionsFragmentListener.updateTasksDataOnDrive(allTasks);
+
             }
 
             @Override
-            public void onSelectionModeToggled(boolean isSelecting) {
-                updateSelectionUI(isSelecting);
-            }
+            public void onItemClicked(int position, int yPos) {
 
-            @Override
-            public TimelineItem getTimelineItem(int pos) {
+                mCompletionsFragmentListener.loadEditCompletionFragment(filteredCompletions.get(position));
 
-                String title = completions.get(pos).getTask().getName();
-                int color = completions.get(pos).getTask().getColor();
-                long date = completions.get(pos).getDate();
-
-                return new TimelineItem(title, color, date);
             }
         });
 
@@ -470,11 +472,28 @@ public class CompletionsFragment extends XFragment {
 
     }
 
+    private ArrayList<XTaskCompletion> getFilteredCompletions(XTaskFields taskFields){
+
+        ArrayList<XTaskCompletion> filteredCompletions = new ArrayList<>();
+
+        for(XTaskCompletion completion : allCompletions){
+
+            if(XTaskFieldsUtilities.areEqual(completion.getTaskFields(),taskFields)){
+                filteredCompletions.add(completion);
+            }
+
+        }
+
+        return filteredCompletions;
+
+    }
+
 
     // Animate launch of EditTaskFragment with the selected task
+    /*
     private void editCompletion(final int pos, float y) {
 
-        /*// View that acts as a drawable with task color expanding and covering the whole screen
+        // View that acts as a drawable with task color expanding and covering the whole screen
         final View scaleView = new View(getContext());
 
         // Add elevation to make scaleView appear over all other views and cover the whole screen
@@ -483,7 +502,7 @@ public class CompletionsFragment extends XFragment {
         }
 
         // Set drawable color to task color
-        scaleView.setBackground(new ColorDrawable(completions.get(pos).getTask().getColor()));
+        scaleView.setBackground(new ColorDrawable(filteredCompletions.get(pos).getTask().getColor()));
 
         // Add view to the fragment root view (get access to ViewGroup method addView() by casting to ConstraintLayout)
         ((ConstraintLayout) view).addView(scaleView);
@@ -504,32 +523,26 @@ public class CompletionsFragment extends XFragment {
             @Override
             public void onAnimationEnd(Animation animation) {
                 // Once the expand animation has finished, tell MainActivity to switch to an EditTaskFragment in the FrameLayout
-                mCompletionsFragmentListener.loadEditCompletionFragment(completions.get(pos));
+                mCompletionsFragmentListener.loadEditCompletionFragment(filteredCompletions.get(pos));
             }
 
             @Override
             public void onAnimationRepeat(Animation animation) {
             }
         });
-        scaleView.startAnimation(expand_animation);*/
+        scaleView.startAnimation(expand_animation);
 
-        mCompletionsFragmentListener.loadEditCompletionFragment(completions.get(pos));
-    }
+        mCompletionsFragmentListener.loadEditCompletionFragment(filteredCompletions.get(pos));
+    }*/
 
-    // Calculate how many completions have been selected
-    private int totalSelected() {
-        return mAdapter.getTotalSelected();
-    }
-
-    private void updateSelectionUI(boolean isSelecting) {
+    private void updateSelectionUI(int totalSelected, final boolean isSelecting) {
 
         // Update toolbar title based on number of selected
-        int total_selected = totalSelected();
         String toolbar_title;
-        if (!isSelecting) {
+        if (totalSelected == 0 && isSelecting) {
             toolbar_title = getString(R.string.select_completions);
         } else {
-            toolbar_title = String.valueOf(total_selected) + " " + getString(R.string.selected);
+            toolbar_title = String.valueOf(totalSelected) + " " + getString(R.string.selected);
         }
 
         mSelectionModeToolbar.setTitle(toolbar_title);
@@ -542,7 +555,7 @@ public class CompletionsFragment extends XFragment {
         hideSelectionUI();
     }
 
-    private void displaySelectionUI(){
+    private void displaySelectionUI() {
 
         // Hide regular toolbar
         mToolbar = view.findViewById(R.id.toolbar);
@@ -553,10 +566,7 @@ public class CompletionsFragment extends XFragment {
         mSelectionModeToolbar.setVisibility(View.VISIBLE);
     }
 
-    private void hideSelectionUI(){
-        // Selection array with none selected
-        selectionArray = new ArrayList<>(Arrays.asList(new Boolean[completions.size()]));
-        Collections.fill(selectionArray,false);
+    private void hideSelectionUI() {
 
         // Hide selection mode toolbar
         mSelectionModeToolbar = view.findViewById(R.id.toolbar_selection_mode);
@@ -568,17 +578,10 @@ public class CompletionsFragment extends XFragment {
     }
 
 
-
-    private ArrayList<Boolean> getSelectionArrayForAllCompletions(){
-
-        ArrayList<Boolean> selectionForAll = new ArrayList<>(Arrays.asList(new Boolean[allCompletions.size()]));
-        Collections.fill(selectionForAll, false);
-
-        for(int b = 0;b<selectionArray.size();b++){
-            selectionForAll.set(allCompletions.indexOf(completions.get(b)),selectionArray.get(b));
-        }
-
-        return selectionForAll;
+    private void paintViewBackground(@NonNull View view, int color) {
+        Drawable background = view.getBackground();
+        background.setColorFilter(color, PorterDuff.Mode.SRC_ATOP);
+        view.setBackground(background);
     }
 
 }

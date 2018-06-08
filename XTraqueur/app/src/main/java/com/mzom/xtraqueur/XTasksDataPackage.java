@@ -13,13 +13,13 @@ import java.util.ArrayList;
 public class XTasksDataPackage {
 
     private ArrayList<XTask> tasks;
-    private ArrayList<XTaskPayment> payments;
+    private ArrayList<XPayment> payments;
 
     XTasksDataPackage(){
 
     }
 
-    XTasksDataPackage(ArrayList<XTask> tasks, ArrayList<XTaskPayment> payments){
+    XTasksDataPackage(ArrayList<XTask> tasks, ArrayList<XPayment> payments){
         this.tasks = tasks;
         this.payments = payments;
     }
@@ -28,7 +28,7 @@ public class XTasksDataPackage {
         this.tasks = tasks;
     }
 
-    void setPayments(ArrayList<XTaskPayment> payments){
+    void setPayments(ArrayList<XPayment> payments){
         this.payments = payments;
     }
 
@@ -36,7 +36,7 @@ public class XTasksDataPackage {
         return this.tasks;
     }
 
-    ArrayList<XTaskPayment> getPayments(){
+    ArrayList<XPayment> getPayments(){
         return this.payments;
     }
 

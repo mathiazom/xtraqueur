@@ -6,7 +6,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
 import android.support.v7.widget.Toolbar;
-import android.util.SparseIntArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,7 +24,7 @@ public class EarningsFragment extends XFragment {
 
     private ArrayList<XTask> tasks;
 
-    private ArrayList<XTaskPayment> payments;
+    private ArrayList<XPayment> payments;
 
     private EarningsFragmentListener mEarningsFragmentListener;
 
@@ -56,7 +55,7 @@ public class EarningsFragment extends XFragment {
     }
 
 
-    public static EarningsFragment newInstance(ArrayList<XTask> tasks, ArrayList<XTaskPayment> payments) {
+    public static EarningsFragment newInstance(ArrayList<XTask> tasks, ArrayList<XPayment> payments) {
 
         EarningsFragment fragment = new EarningsFragment();
         fragment.tasks = tasks;

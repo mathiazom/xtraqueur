@@ -73,4 +73,7 @@
     <string name="completions">utførelser</string>
     <string name="TEMPLATE_item_title">Betalingstittel</string>
     <string name="TEMPLATE_item_date">fredag 4 mai 2018 18:57</string>
+    <string name="show_completions">Vis utførelser</string>
+    <string name="settings_section_resetting">Tilbakestilling</string>
+    <string name="select_payments">Velg betalinger</string>
 </resources>

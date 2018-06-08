@@ -1,31 +1,38 @@
 package com.mzom.xtraqueur;
 
+import android.support.annotation.NonNull;
+
 class XTaskCompletion {
 
+    // Time for when this completion was registered
     private long date;
-    private final XTask task;
-    private final int index;
 
-    XTaskCompletion(long date, XTask task) {
+    // Attributes of the completion's associated task
+    private XTaskFields taskFields;
+
+    XTaskCompletion(long date, final XTaskFields taskFields) {
         this.date = date;
-        this.task = task;
-        this.index = task.getCompletions().indexOf(date);
+        this.taskFields = taskFields;
     }
+
 
     long getDate() {
         return this.date;
     }
 
-    XTask getTask(){
-        return this.task;
+    XTaskFields getTaskFields(){
+        return this.taskFields;
     }
 
-    int getIndex() {
-        return this.index;
-    }
 
     void setDate(Long date){
         this.date = date;
+    }
+
+    void setTaskFields(@NonNull XTaskFields taskFields){
+
+        this.taskFields = taskFields;
+
     }
 
 }

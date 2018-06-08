@@ -1,46 +1,29 @@
 package com.mzom.xtraqueur;
 
 import android.content.Context;
-import android.graphics.Color;
-import android.graphics.PorterDuff;
 import android.graphics.drawable.ColorDrawable;
-import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
-import android.util.SparseIntArray;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.ScaleAnimation;
-import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 
-import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
-import java.util.Locale;
 
 public class PaymentsFragment extends XFragment {
 
     private static final String TAG = "XTQ-PaymentsFragment";
 
-    private ArrayList<XTaskPayment> payments;
-
-    private ArrayList<Boolean> selectionArray;
+    private ArrayList<XPayment> payments;
 
     private View view;
 
@@ -55,9 +38,11 @@ public class PaymentsFragment extends XFragment {
     interface PaymentsFragmentListener {
         void onBackPressed();
 
-        void loadEditPaymentFragment(XTaskPayment payment);
+        void loadEditPaymentFragment(XPayment payment);
 
-        void updatePaymentsDataOnDrive(ArrayList<XTaskPayment> payments);
+        void loadCompletionsFragment(ArrayList<XTaskCompletion> completions);
+
+        void updatePaymentsDataOnDrive(ArrayList<XPayment> payments);
     }
 
     @Override
@@ -71,11 +56,10 @@ public class PaymentsFragment extends XFragment {
         }
     }
 
-    public static PaymentsFragment newInstance(ArrayList<XTaskPayment> payments) {
+    public static PaymentsFragment newInstance(ArrayList<XPayment> payments) {
 
         PaymentsFragment fragment = new PaymentsFragment();
         fragment.payments = payments;
-        fragment.selectionArray = new ArrayList<>(payments.size());
         return fragment;
     }
 
@@ -139,152 +123,47 @@ public class PaymentsFragment extends XFragment {
 
     }
 
-    static class PaymentViewHolder extends TimelineAdapter.ViewHolder {
-
-        //final TextView paymentValueText;
-
-        PaymentViewHolder(ConstraintLayout itemBase) {
-            super(itemBase,
-                    (ConstraintLayout) itemBase.findViewById(R.id.item_custom_view),
-                    (TextView) itemBase.findViewById(R.id.timeline_item_title),
-                    (TextView) itemBase.findViewById(R.id.timeline_item_date),
-                    (ImageView) itemBase.findViewById(R.id.timeline_item_selected_mark));
-
-            //this.paymentValueText = itemBase.findViewById(R.id.payment_value_text);
-        }
-    }
-
     private void loadPayments() {
 
         // Load recycler view
         TimelineRecycler mRecyclerView = view.findViewById(R.id.timeline_recycler);
 
-        // Sort completions based on recency
-        Collections.sort(payments, new Comparator<XTaskPayment>() {
+        // Sort payments based on recency
+        Collections.sort(payments, new Comparator<XPayment>() {
             @Override
-            public int compare(XTaskPayment p1, XTaskPayment p2) {
-                return Long.compare(p2.getPaymentDate(), p1.getPaymentDate());
+            public int compare(XPayment p1, XPayment p2) {
+                return Long.compare(p2.getDate(), p1.getDate());
             }
         });
 
-        mAdapter = new TimelineAdapter(false, new TimelineAdapter.TimelineAdapterListener() {
-
+        mAdapter = new PaymentsTimelineAdapter(getContext(), payments,new PaymentsTimelineAdapter.PaymentsTimelineAdapterListener() {
             @Override
-            public void onItemClick(int pos, float y) {
-                editPayment(pos, y, getTimelineItem(pos));
+            public void onSelectionChanged(int totalSelected, final boolean isSelecting) {
+
+                updateSelectionUI(totalSelected, isSelecting);
+
             }
 
             @Override
-            public void deleteItemData(int index) {
-                payments.remove(index);
+            public void deletePaymentData(XPayment payment) {
+
+                payments.remove(payment);
+
             }
 
             @Override
-            public void onDatasetChanged() {
+            public void onItemsDataChanged() {
+
                 mPaymentsFragmentListener.updatePaymentsDataOnDrive(payments);
+
             }
 
             @Override
-            public void onSelectionModeToggled(boolean isSelecting) {
-                updateSelectionUI(isSelecting);
-            }
+            public void onItemClicked(int position, int yPos) {
 
-            @Override
-            public int getItemCount() {
-                return getTotalPayments();
-            }
+                ArrayList<XTaskCompletion> completions = payments.get(position).getCompletions();
 
-            @Override
-            public void onSelectionChanged(ArrayList<Boolean> updatedSelectionArray) {
-
-                // Update selection array
-                selectionArray = updatedSelectionArray;
-            }
-
-            @Override
-            public TimelineItem getTimelineItem(int pos) {
-
-                String title = "";
-                if (payments != null && payments.get(pos) != null && payments.get(pos).getCompletions() != null) {
-                    // Get currency format
-                    NumberFormat nf = NumberFormat.getCurrencyInstance(Locale.getDefault());
-                    title = nf.format(payments.get(pos).getPaymentValue());
-                }
-
-                long date = payments.get(pos).getPaymentDate();
-
-                int color = getResources().getColor(R.color.colorGrey);
-
-                return new TimelineItem(title, color, date);
-            }
-        });
-
-        mAdapter.setCustomViewHolder(new TimelineAdapter.TimelineCustomViewListener() {
-
-            @Override
-            public TimelineAdapter.ViewHolder getCustomViewHolder(ConstraintLayout itemBase) {
-
-                // Base item layout (both for custom and default layout)
-                final ConstraintLayout layoutContainer = itemBase.findViewById(R.id.item_container);
-
-                // Use custom layout
-                final ConstraintLayout customLayout = (ConstraintLayout) LayoutInflater.from(itemBase.getContext()).inflate(R.layout.template_timeline_payment_item, itemBase, false);
-                layoutContainer.addView(customLayout);
-
-                return new PaymentViewHolder(itemBase);
-            }
-
-            @Override
-            public void displayItemData(@NonNull TimelineAdapter.ViewHolder holder, TimelineItem timelineItem) {
-
-                ArrayList<XTaskCompletion> completions = payments.get(holder.getAdapterPosition()).getCompletions();
-
-                SparseIntArray colorsCount = new SparseIntArray();
-
-                for (int c = 0; c < completions.size(); c++) {
-
-                    int color = completions.get(c).getTask().getColor();
-
-                    if (colorsCount.indexOfKey(color) == -1) {
-                        colorsCount.put(color, 1);
-                    } else {
-                        colorsCount.put(color, colorsCount.get(color) + 1);
-                    }
-
-                }
-
-                float paymentLayoutWidth = holder.itemBaseLayout.getWidth();
-
-                int topColor = 0;
-
-                for (int i = 0; i < colorsCount.size(); i++) {
-
-                    if(colorsCount.valueAt(i) > colorsCount.get(topColor)){
-                        topColor = colorsCount.keyAt(i);
-                    }
-
-                    /*LinearLayout taskBar = new LinearLayout(getContext());
-
-                    float percent = (float) colorsCount.valueAt(i) / colorsCount.size();
-
-                    LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams((int) (paymentLayoutWidth * percent),
-                            100);
-
-                    taskBar.setLayoutParams(lp);
-
-                    taskBar.setBackground(new ColorDrawable(colorsCount.keyAt(i)));
-
-                    ((PaymentViewHolder) holder).tasksDiagramLayout.addView(taskBar);*/
-                }
-
-                //((PaymentViewHolder) holder).tasksDiagramLayout.setBackground(new ColorDrawable(topColor));
-
-                /*NumberFormat nf = NumberFormat.getCurrencyInstance(Locale.getDefault());
-                ((PaymentViewHolder)holder).paymentValueText.setText(nf.format(payments.get(holder.getAdapterPosition()).getPaymentValue()));*/
-            }
-
-            @Override
-            public void markSelection(TimelineAdapter.ViewHolder holder, TimelineItem timelineItem, int position, boolean isSelected) {
+                mPaymentsFragmentListener.loadCompletionsFragment(completions);
 
             }
         });
@@ -338,15 +217,14 @@ public class PaymentsFragment extends XFragment {
         scaleView.startAnimation(expand_animation);
     }
 
-    private void updateSelectionUI(boolean isSelecting) {
+    private void updateSelectionUI(final int totalSelected, final boolean isSelecting) {
 
         // Update toolbar title based on number of selected
-        int total_selected = mAdapter.getTotalSelected();
         String toolbar_title;
-        if (!isSelecting) {
-            toolbar_title = getString(R.string.select_completions);
+        if (totalSelected == 0 && isSelecting) {
+            toolbar_title = getString(R.string.select_payments);
         } else {
-            toolbar_title = String.valueOf(total_selected) + " " + getString(R.string.selected);
+            toolbar_title = String.valueOf(totalSelected) + " " + getString(R.string.selected);
         }
 
         mSelectionModeToolbar.setTitle(toolbar_title);
@@ -372,10 +250,6 @@ public class PaymentsFragment extends XFragment {
 
     private void hideSelectionUI() {
 
-        // Selection array with none selected
-        selectionArray = new ArrayList<>(Arrays.asList(new Boolean[payments.size()]));
-        Collections.fill(selectionArray, false);
-
         // Hide selection mode toolbar
         mSelectionModeToolbar = view.findViewById(R.id.toolbar_selection_mode);
         mSelectionModeToolbar.setVisibility(View.GONE);
@@ -383,17 +257,5 @@ public class PaymentsFragment extends XFragment {
         // Make regular toolbar visible
         mToolbar = view.findViewById(R.id.toolbar);
         mToolbar.setVisibility(View.VISIBLE);
-    }
-
-    private int getTotalPayments() {
-        return this.payments.size();
-    }
-
-    @ColorInt
-    private int darkenColor(@ColorInt int color) {
-        float[] hsv = new float[3];
-        Color.colorToHSV(color, hsv);
-        hsv[2] *= 0.8f;
-        return Color.HSVToColor(hsv);
     }
 }

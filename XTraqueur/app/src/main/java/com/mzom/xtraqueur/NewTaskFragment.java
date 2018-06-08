@@ -13,7 +13,6 @@ import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.TextInputEditText;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -47,11 +46,6 @@ public class NewTaskFragment extends XFragment {
     // Current unsaved task color value
     private int temp_color;
 
-
-    private boolean instantCompletion = false;
-
-
-
     // Log tag for debugging
     private final static String TAG = "Xtraqueur-NewTask";
 
@@ -83,12 +77,7 @@ public class NewTaskFragment extends XFragment {
 
     // Custom constructor to pass required fragment variables
     public static NewTaskFragment newInstance(ArrayList<XTask> tasks, int temp_color) {
-        return newInstance(tasks,temp_color,false);
-    }
-
-    public static NewTaskFragment newInstance(ArrayList<XTask> tasks, int temp_color, boolean instantCompletion) {
         NewTaskFragment fragment = new NewTaskFragment();
-        fragment.instantCompletion = instantCompletion;
         fragment.tasks = tasks;
         fragment.temp_color = temp_color;
         return fragment;
@@ -224,7 +213,7 @@ public class NewTaskFragment extends XFragment {
     // Chcek if name string is in use by another task
     private boolean isNameUsed(String name) {
         for (XTask t : tasks) {
-            if (t.getName().equals(name)) {
+            if (t.getTaskFields().getName().equals(name)) {
                 return true;
             }
         }
@@ -266,11 +255,7 @@ public class NewTaskFragment extends XFragment {
         }
 
         // Create new task according to inputs
-        XTask newTask = new XTask(name, fee, temp_color, instantCompletion);
-
-        if(instantCompletion){
-            newTask.addToCompletions();
-        }
+        XTask newTask = new XTask(new XTaskFields(name, fee, temp_color));
 
         // Add new task to tasks ArrayList
         tasks.add(newTask);

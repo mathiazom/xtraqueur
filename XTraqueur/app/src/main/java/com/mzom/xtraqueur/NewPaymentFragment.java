@@ -51,7 +51,7 @@ public class NewPaymentFragment extends XFragment {
     interface NewPaymentFragmentListener {
         void onBackPressed();
 
-        void updatePaymentsDataOnDrive(XTaskPayment payment, OnSuccessListener<DriveFile> onSuccessListener);
+        void updatePaymentsDataOnDrive(XPayment payment, OnSuccessListener<DriveFile> onSuccessListener);
 
         void updateTasksDataOnDrive(ArrayList<XTask> tasks);
 
@@ -246,13 +246,11 @@ public class NewPaymentFragment extends XFragment {
 
         for (XTask t : tasks) {
             if (t.getCompletions() != null){
-                for(Long l : t.getCompletions()){
-                    completions.add(new XTaskCompletion(l,t));
-                }
+                completions.addAll(t.getCompletions());
             }
         }
 
-        // Sort completions based on recency
+        // Sort payments based on recency
         Collections.sort(completions, new Comparator<XTaskCompletion>() {
             @Override
             public int compare(XTaskCompletion xTaskCompletion, XTaskCompletion t1) {
@@ -267,66 +265,28 @@ public class NewPaymentFragment extends XFragment {
 
         TimelineRecycler mRecyclerView = view.findViewById(R.id.register_payment_completions);
 
-        // Display completions in RecyclerView with TimelineAdapter
-        mAdapter = new TimelineAdapter(TimelineAdapter.ALWAYS_SELECTING, new TimelineAdapter.TimelineAdapterListener() {
-
+        mAdapter = new CompletionsTimelineAdapter(completions, TimelineAdapter.ALWAYS_SELECTING, new TimelineAdapter.TimelineAdapterLockListener() {
             @Override
-            public void onItemClick(int pos, float y) {
-            }
-
-            @Override
-            public void deleteItemData(int index) {
-
-            }
-
-            @Override
-            public void onDatasetChanged() {
-
-            }
-
-            @Override
-            public void onSelectionModeToggled(boolean isSelecting) {
-
-            }
-
-            @Override
-            public int getItemCount() {
-                return completions.size();
-            }
-
-            @Override
-            public void onSelectionChanged(ArrayList<Boolean> updatedSelectionArray) {
-
-                // Update selection array
-                selectionArray = updatedSelectionArray;
+            public void onSelectionChanged(int totalSelected, boolean isSelecting) {
 
                 // Check if all completions have been selected for registering
-                boolean allSelected = totalSelected() == completions.size();
+                boolean allSelected = totalSelected == completions.size();
 
-                // Make "SELECT ALL" action visible if not all completions have been selected
+                // Make "SELECT ALL" action visible if not all payments have been selected
                 MenuItem selectAll = mSelectionModeToolbar.getMenu().findItem(R.id.payment_selection_mode_icon_select_all);
                 selectAll.setVisible(!allSelected);
 
-                // Make "DESELECT ALL" action visible if all completions have been selected
+                // Make "DESELECT ALL" action visible if all payments have been selected
                 MenuItem deselectAll = mSelectionModeToolbar.getMenu().findItem(R.id.payment_selection_mode_icon_deselect_all);
                 deselectAll.setVisible(allSelected);
 
-                // Use toolbar to display number of completions selected and their total value
-                updateSelectionToolbar();
+                // Use toolbar to display number of payments selected and their total value
+                updateSelectionToolbar(totalSelected);
 
-                // Disable registering if no completions are selected, enable otherwise
-                setRegisterFieldEnabled(totalSelected() != 0);
+                // Disable registering if no payments are selected, enable otherwise
+                setRegisterFieldEnabled(totalSelected != 0);
+
             }
-
-            @Override
-            public TimelineItem getTimelineItem(int pos) {
-                String title = completions.get(pos).getTask().getName();
-                int color = completions.get(pos).getTask().getColor();
-                long date = completions.get(pos).getDate();
-
-                return new TimelineItem(title, color, date);
-            }
-
         });
 
         mAdapter.setSelectionArray(selectionArray);
@@ -343,11 +303,6 @@ public class NewPaymentFragment extends XFragment {
         Collections.fill(selectionArray, false);
     }
 
-    // Calculate how many completions have been selected
-    private int totalSelected() {
-        return mAdapter.getTotalSelected();
-    }
-
     private void setRegisterFieldEnabled(boolean enabled) {
 
         // Register button
@@ -360,26 +315,25 @@ public class NewPaymentFragment extends XFragment {
     }
 
     // Update toolbar title based on number of selected
-    private void updateSelectionToolbar() {
+    private void updateSelectionToolbar(final int totalSelected) {
 
-        int total_selected = totalSelected();
         String toolbar_title;
-        if (total_selected > 0) {
+        if (totalSelected > 0) {
 
             // Total value of all tasks
             double total = 0;
 
             // Loop trough data set and add task value to total value
             for (XTaskCompletion completion : getSelectedCompletions()) {
-                total += completion.getTask().getFee();
+                total += completion.getTaskFields().getFee();
             }
 
             // Get currency format
             NumberFormat nf = NumberFormat.getCurrencyInstance(Locale.getDefault());
             String totalString = nf.format(total);
 
-            // Display number of selected completions and their total value
-            toolbar_title = String.valueOf(total_selected) + " " + getString(R.string.selected) + " (" + totalString + ")";
+            // Display number of selected payments and their total value
+            toolbar_title = String.valueOf(totalSelected) + " " + getString(R.string.selected) + " (" + totalString + ")";
         } else {
             toolbar_title = getString(R.string.select_completions);
         }
@@ -387,22 +341,30 @@ public class NewPaymentFragment extends XFragment {
         mSelectionModeToolbar.setTitle(toolbar_title);
     }
 
-    // Register new payment for selected completions
+    // Register new payment for selected payments
     private void registerPayment() {
 
         double paymentValue = 0;
 
         // Completions will be archived, so remove them from regular completion list
         for (XTaskCompletion completion : getSelectedCompletions()) {
-            tasks.get(tasks.indexOf(completion.getTask())).removeCompletion(completion.getDate());
-            paymentValue += completion.getTask().getFee();
+
+            XTask task = XTaskFieldsUtilities.getTaskFromCompletion(completion, tasks);
+
+            if(task != null){
+
+                tasks = XTaskFieldsUtilities.removeCompletion(completion,tasks);
+
+                paymentValue += completion.getTaskFields().getFee();
+            }
+
         }
 
         // Save changes
         mNewPaymentFragmentListener.updateTasksDataOnDrive(tasks);
 
-        // Add completions to payment object
-        XTaskPayment newPayment = new XTaskPayment(getSelectedCompletions(), paymentValue, paymentDate.getTime());
+        // Add payments to payment object
+        XPayment newPayment = new XPayment(getSelectedCompletions(), paymentValue, paymentDate.getTime());
 
         // Save new payment to drive
         mNewPaymentFragmentListener.updatePaymentsDataOnDrive(newPayment, new OnSuccessListener<DriveFile>() {
@@ -415,7 +377,7 @@ public class NewPaymentFragment extends XFragment {
 
     }
 
-    // Use SparseBooleanArray to get RecyclerView's currently selected completions
+    // Use SparseBooleanArray to get RecyclerView's currently selected payments
     private ArrayList<XTaskCompletion> getSelectedCompletions() {
         ArrayList<XTaskCompletion> selectedCompletions = new ArrayList<>();
 

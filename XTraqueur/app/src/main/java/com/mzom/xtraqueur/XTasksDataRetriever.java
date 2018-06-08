@@ -35,10 +35,10 @@ class XTasksDataRetriever extends AsyncTask<DriveResourceClient, Void, XTasksDat
     private DriveResourceClient mDriveResourceClient;
 
     // Google Drive tasks data file name
-    private static final String TASKS_DATA_FILE_NAME = "tasks_data.txt";
+    static final String TASKS_DATA_FILE_NAME = "tasks_data.txt";
 
     // Google Drive payments data file name
-    private static final String PAYMENTS_DATA_FILE_NAME = "payments_data.txt";
+    static final String PAYMENTS_DATA_FILE_NAME = "payments_data.txt";
 
     private XTasksDataPackage dataPackage;
 
@@ -50,9 +50,8 @@ class XTasksDataRetriever extends AsyncTask<DriveResourceClient, Void, XTasksDat
 
     interface XTasksDataRetrieverListener {
         void onDataRetrieved(XTasksDataPackage dataPackage);
-        void updatePaymentsDataOnDrive(ArrayList<XTaskPayment> payments);
-        void onNoTasksDataFound();
-        void onNoPaymentsDataFound();
+        void updatePaymentsDataOnDrive(ArrayList<XPayment> payments);
+        void onDataNotFound(String fileName);
     }
 
     XTasksDataRetriever(int dataToRetrieve, XTasksDataRetrieverListener xTasksDataRetrieverListener) {
@@ -111,14 +110,7 @@ class XTasksDataRetriever extends AsyncTask<DriveResourceClient, Void, XTasksDat
                                 try {
                                     driveFile = metadata.get(0).getDriveId().asDriveFile();
                                 } catch (Exception e) {
-                                    switch (dataFileName){
-                                        case TASKS_DATA_FILE_NAME:
-                                            mXTasksDataRetrieverListener.onNoTasksDataFound();
-                                            break;
-                                        case PAYMENTS_DATA_FILE_NAME:
-                                            mXTasksDataRetrieverListener.onNoPaymentsDataFound();
-                                            break;
-                                    }
+                                    mXTasksDataRetrieverListener.onDataNotFound(dataFileName);
                                     return;
                                 }
 
@@ -182,7 +174,7 @@ class XTasksDataRetriever extends AsyncTask<DriveResourceClient, Void, XTasksDat
 
             case PAYMENTS_DATA_FILE_NAME:
 
-                ArrayList<XTaskPayment> payments = new Gson().fromJson(json, new TypeToken<ArrayList<XTaskPayment>>() {
+                ArrayList<XPayment> payments = new Gson().fromJson(json, new TypeToken<ArrayList<XPayment>>() {
                 }.getType());
                 dataPackage.setPayments(payments);
 

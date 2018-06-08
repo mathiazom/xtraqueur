@@ -79,4 +79,7 @@
     <string name="TEMPLATE_payment_value" translatable="false">250kr</string>
     <string name="TEMPLATE_item_title">Payment title</string>
     <string name="TEMPLATE_item_date">friday 4 may 2018 18:57</string>
+    <string name="show_completions">Show completions</string>
+    <string name="settings_section_resetting">Resetting</string>
+    <string name="select_payments">Select payments</string>
 </resources>
