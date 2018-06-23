@@ -1,19 +1,13 @@
 package com.mzom.xtraqueur;
 
-import android.content.Context;
-import android.graphics.drawable.ColorDrawable;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.constraint.ConstraintLayout;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.Animation;
-import android.view.animation.ScaleAnimation;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -32,29 +26,6 @@ public class PaymentsFragment extends XFragment {
     private Toolbar mSelectionModeToolbar;
 
     private TimelineAdapter mAdapter;
-
-    private PaymentsFragmentListener mPaymentsFragmentListener;
-
-    interface PaymentsFragmentListener {
-        void onBackPressed();
-
-        void loadEditPaymentFragment(XPayment payment);
-
-        void loadCompletionsFragment(ArrayList<XTaskCompletion> completions);
-
-        void updatePaymentsDataOnDrive(ArrayList<XPayment> payments);
-    }
-
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-
-        try {
-            mPaymentsFragmentListener = (PaymentsFragmentListener) context;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(context.toString() + " must implement PaymentsFragmentListener");
-        }
-    }
 
     public static PaymentsFragment newInstance(ArrayList<XPayment> payments) {
 
@@ -85,7 +56,7 @@ public class PaymentsFragment extends XFragment {
         mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mPaymentsFragmentListener.onBackPressed();
+                FragmentLoader.reverseLoading(getContext());
             }
         });
 
@@ -153,17 +124,15 @@ public class PaymentsFragment extends XFragment {
 
             @Override
             public void onItemsDataChanged() {
-
-                mPaymentsFragmentListener.updatePaymentsDataOnDrive(payments);
+                XDataUploader.uploadData(XDataConstants.PAYMENTS_DATA_FILE_NAME, payments, getContext());
 
             }
 
             @Override
-            public void onItemClicked(int position, int yPos) {
+            public void onItemClicked(final int position, int yPos) {
 
-                ArrayList<XTaskCompletion> completions = payments.get(position).getCompletions();
-
-                mPaymentsFragmentListener.loadCompletionsFragment(completions);
+                // Display these payment completions with the PaymentCompletionsFragment
+                FragmentLoader.loadFragment(PaymentCompletionsFragment.newInstance(position,payments),getContext());
 
             }
         });
@@ -172,49 +141,6 @@ public class PaymentsFragment extends XFragment {
 
         mRecyclerView.startLayoutAnimation();
 
-    }
-
-    // Animate launch of EditTaskFragment with the selected task
-    private void editPayment(final int pos, float y, TimelineItem timelineItem) {
-
-        // View that acts as a drawable with task color expanding and covering the whole screen
-        final View scaleView = new View(getContext());
-
-        // Add elevation to make scaleView appear over all other views and cover the whole screen
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            scaleView.setElevation(100);
-        }
-
-        // Set drawable color to task color
-        scaleView.setBackground(new ColorDrawable(timelineItem.getColor()));
-
-        // Add view to the fragment root view (get access to ViewGroup method addView() by casting to ConstraintLayout)
-        ((ConstraintLayout) view).addView(scaleView);
-
-        // Expand animation to fill the whole screen with task color
-        final ScaleAnimation expand_animation = new ScaleAnimation(1f, 1f, 0f, 1f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.ABSOLUTE, y);
-
-        expand_animation.setDuration(200);
-
-        // Keep the transformation after animation has finished
-        expand_animation.setFillAfter(true);
-
-        expand_animation.setAnimationListener(new Animation.AnimationListener() {
-            @Override
-            public void onAnimationStart(Animation animation) {
-            }
-
-            @Override
-            public void onAnimationEnd(Animation animation) {
-                // Once the expand animation has finished, tell MainActivity to switch to an EditTaskFragment in the FrameLayout
-                mPaymentsFragmentListener.loadEditPaymentFragment(payments.get(pos));
-            }
-
-            @Override
-            public void onAnimationRepeat(Animation animation) {
-            }
-        });
-        scaleView.startAnimation(expand_animation);
     }
 
     private void updateSelectionUI(final int totalSelected, final boolean isSelecting) {

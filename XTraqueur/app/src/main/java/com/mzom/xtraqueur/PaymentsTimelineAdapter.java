@@ -1,13 +1,10 @@
 package com.mzom.xtraqueur;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
-import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -22,6 +19,8 @@ class PaymentsTimelineAdapter extends TimelineAdapter {
     private final ArrayList<XPayment> payments;
 
     private final Context context;
+
+    private static final String TAG = "XTQ-PaymentsTimeline";
 
     PaymentsTimelineAdapter(Context context, ArrayList<XPayment> payments, PaymentsTimelineAdapterListener paymentsTimelineAdapterListener) {
         this(context,payments, false, paymentsTimelineAdapterListener);
@@ -45,7 +44,7 @@ class PaymentsTimelineAdapter extends TimelineAdapter {
     private class PaymentViewHolder extends ViewHolder {
 
         final TextView paymentTitle;
-        final HorizontalDiagramView completionsDiagram;
+        final PaymentDiagram completionsDiagram;
         //final TextView paymentDate;
         final ImageView selectedMark;
 
@@ -74,13 +73,9 @@ class PaymentsTimelineAdapter extends TimelineAdapter {
 
         PaymentViewHolder paymentViewHolder = (PaymentViewHolder) holder;
 
-        setItemBackgroundColor(holder, context.getResources().getColor(R.color.colorAccent));
-
         paymentViewHolder.paymentTitle.setText(CurrencyFormatter.formatValue(payment.getPaymentValue()));
 
         paymentViewHolder.completionsDiagram.setPayment(payment);
-
-        //paymentViewHolder.paymentDate.setText(DateFormatter.formatDate(payment.getDate()));
 
     }
 
@@ -94,7 +89,7 @@ class PaymentsTimelineAdapter extends TimelineAdapter {
         if (selected) {
             // Selected item background
             Drawable itemBackground = holder.itemDataLayout.getBackground();
-            itemBackground.setColorFilter(darkenColor(context.getResources().getColor(R.color.colorGrey)), PorterDuff.Mode.SRC_ATOP);
+            itemBackground.setColorFilter(ColorUtilities.getDarkerColor(context.getResources().getColor(R.color.colorGrey)), PorterDuff.Mode.SRC_ATOP);
             holder.itemDataLayout.setBackground(itemBackground);
 
             // Show selection check mark
@@ -144,12 +139,12 @@ class PaymentsTimelineAdapter extends TimelineAdapter {
     }
 
     @Override
-    String getItemDateString(int position) {
-        return DateFormatter.formatDate(payments.get(position).getDate());
+    int getItemColor(int position) {
+        return context.getResources().getColor(R.color.colorAccent);
     }
 
     @Override
-    int getItemsDataSize() {
+    public int getItemCount() {
         if(payments == null) return 0;
         return payments.size();
     }
@@ -157,13 +152,5 @@ class PaymentsTimelineAdapter extends TimelineAdapter {
     @Override
     ViewHolder onCreateViewHolder(ConstraintLayout itemBaseLayout) {
         return new PaymentViewHolder(itemBaseLayout);
-    }
-
-    @ColorInt
-    private int darkenColor(@ColorInt int color) {
-        float[] hsv = new float[3];
-        Color.colorToHSV(color, hsv);
-        hsv[2] *= 0.8f;
-        return Color.HSVToColor(hsv);
     }
 }

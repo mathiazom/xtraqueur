@@ -11,13 +11,13 @@ import android.view.ViewGroup;
 import com.google.android.gms.common.SignInButton;
 
 
-public class WelcomeFragment extends XFragment {
+public class SignInFragment extends XFragment {
 
     private View view;
 
-    private WelcomeFragmentListener mWelcomeFragmentListener;
+    private SignInFragmentListener mSignInFragmentListener;
 
-    interface WelcomeFragmentListener{
+    interface SignInFragmentListener {
         void signIn();
     }
 
@@ -26,7 +26,7 @@ public class WelcomeFragment extends XFragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         setRetainInstance(true);
 
-        this.view = inflater.inflate(R.layout.fragment_welcome,container,false);
+        this.view = inflater.inflate(R.layout.fragment_signin,container,false);
 
         initListeners();
 
@@ -38,19 +38,19 @@ public class WelcomeFragment extends XFragment {
         super.onAttach(context);
 
         try {
-            mWelcomeFragmentListener = (WelcomeFragmentListener) context;
+            mSignInFragmentListener = (SignInFragmentListener) context;
 
         } catch (ClassCastException e) {
-            throw new ClassCastException(context.toString() + " must implement WelcomeFragmentListener");
+            throw new ClassCastException(context.toString() + " must implement SignInFragmentListener");
         }
     }
 
     private void initListeners(){
-        SignInButton signInButton = view.findViewById(R.id.welcome_button_sign_in);
+        SignInButton signInButton = view.findViewById(R.id.signin_button);
         signInButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mWelcomeFragmentListener.signIn();
+                mSignInFragmentListener.signIn();
             }
         });
     }

@@ -2,7 +2,6 @@ package com.mzom.xtraqueur;
 
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -16,6 +15,7 @@ import android.support.v7.widget.Toolbar;
 import android.widget.DatePicker;
 
 import com.google.android.gms.drive.DriveFile;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.text.NumberFormat;
@@ -44,33 +44,25 @@ public class NewPaymentFragment extends XFragment {
 
     private ArrayList<XTask> tasks;
 
+    private ArrayList<XPayment> payments;
+
     private ArrayList<XTaskCompletion> completions;
 
-    private NewPaymentFragmentListener mNewPaymentFragmentListener;
-
-    interface NewPaymentFragmentListener {
-        void onBackPressed();
-
-        void updatePaymentsDataOnDrive(XPayment payment, OnSuccessListener<DriveFile> onSuccessListener);
-
-        void updateTasksDataOnDrive(ArrayList<XTask> tasks);
-
-        void loadPaymentsFragment(boolean addToBackStack);
-    }
-
-    public static NewPaymentFragment newInstance(ArrayList<XTask> tasks) {
+    public static NewPaymentFragment newInstance(ArrayList<XTask> tasks, ArrayList<XPayment> payments) {
 
         NewPaymentFragment fragment = new NewPaymentFragment();
         fragment.tasks = tasks;
+        fragment.payments = payments;
         fragment.completions = fragment.getCompletionsFromTasks(tasks);
         fragment.initSelectionArray();
         return fragment;
     }
 
-    public static NewPaymentFragment newInstance(ArrayList<XTask> tasks, ArrayList<Boolean> selectionArray) {
+    public static NewPaymentFragment newInstance(ArrayList<XTask> tasks, ArrayList<XPayment> payments, ArrayList<Boolean> selectionArray) {
 
         NewPaymentFragment fragment = new NewPaymentFragment();
         fragment.tasks = tasks;
+        fragment.payments = payments;
         fragment.completions = fragment.getCompletionsFromTasks(tasks);
         fragment.selectionArray = selectionArray;
         return fragment;
@@ -82,7 +74,7 @@ public class NewPaymentFragment extends XFragment {
 
         setRetainInstance(true);
 
-        this.view = inflater.inflate(R.layout.fragment_newpayment, container, false);
+        this.view = inflater.inflate(R.layout.fragment_new_payment, container, false);
 
         initToolbar();
 
@@ -95,17 +87,6 @@ public class NewPaymentFragment extends XFragment {
         return view;
     }
 
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-
-        try {
-            mNewPaymentFragmentListener = (NewPaymentFragmentListener) context;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(e.toString() + " must implement NewPaymentFragmentListener");
-        }
-    }
-
     private void initToolbar() {
 
         // Regular toolbar
@@ -115,7 +96,7 @@ public class NewPaymentFragment extends XFragment {
         mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mNewPaymentFragmentListener.onBackPressed();
+                FragmentLoader.reverseLoading(getContext());
             }
         });
 
@@ -152,7 +133,7 @@ public class NewPaymentFragment extends XFragment {
         mSelectionModeToolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mNewPaymentFragmentListener.onBackPressed();
+                FragmentLoader.reverseLoading(getContext());
             }
         });
 
@@ -265,7 +246,17 @@ public class NewPaymentFragment extends XFragment {
 
         TimelineRecycler mRecyclerView = view.findViewById(R.id.register_payment_completions);
 
-        mAdapter = new CompletionsTimelineAdapter(completions, TimelineAdapter.ALWAYS_SELECTING, new TimelineAdapter.TimelineAdapterLockListener() {
+        mAdapter = new CompletionsTimelineAdapter(completions, TimelineAdapter.ALWAYS_SELECTING, new TimelineAdapter.TimelineAdapterListener() {
+            @Override
+            public void onItemsDataChanged() {
+
+            }
+
+            @Override
+            public void onItemClicked(int position, int yPos) {
+
+            }
+
             @Override
             public void onSelectionChanged(int totalSelected, boolean isSelecting) {
 
@@ -284,7 +275,7 @@ public class NewPaymentFragment extends XFragment {
                 updateSelectionToolbar(totalSelected);
 
                 // Disable registering if no payments are selected, enable otherwise
-                setRegisterFieldEnabled(totalSelected != 0);
+                view.findViewById(R.id.newpayment_button_register).setEnabled(totalSelected != 0);
 
             }
         });
@@ -303,17 +294,6 @@ public class NewPaymentFragment extends XFragment {
         Collections.fill(selectionArray, false);
     }
 
-    private void setRegisterFieldEnabled(boolean enabled) {
-
-        // Register button
-        view.findViewById(R.id.newpayment_button_register).setEnabled(enabled);
-
-        /*// Register date field
-        TextInputEditText editDate = view.findViewById(R.id.newpayment_edit_date);
-        editDate.setEnabled(enabled);*/
-
-    }
-
     // Update toolbar title based on number of selected
     private void updateSelectionToolbar(final int totalSelected) {
 
@@ -325,7 +305,7 @@ public class NewPaymentFragment extends XFragment {
 
             // Loop trough data set and add task value to total value
             for (XTaskCompletion completion : getSelectedCompletions()) {
-                total += completion.getTaskFields().getFee();
+                total += completion.getTaskIdentity().getFee();
             }
 
             // Get currency format
@@ -349,29 +329,37 @@ public class NewPaymentFragment extends XFragment {
         // Completions will be archived, so remove them from regular completion list
         for (XTaskCompletion completion : getSelectedCompletions()) {
 
-            XTask task = XTaskFieldsUtilities.getTaskFromCompletion(completion, tasks);
+            XTask task = XTaskUtilities.getTaskFromCompletion(completion, tasks);
 
             if(task != null){
 
-                tasks = XTaskFieldsUtilities.removeCompletion(completion,tasks);
+                tasks = XTaskUtilities.removeCompletionFromTasks(completion,tasks);
 
-                paymentValue += completion.getTaskFields().getFee();
+                paymentValue += completion.getTaskIdentity().getFee();
             }
 
         }
 
         // Save changes
-        mNewPaymentFragmentListener.updateTasksDataOnDrive(tasks);
+        XDataUploader.uploadData(XDataConstants.TASKS_DATA_FILE_NAME, tasks,getContext());
 
-        // Add payments to payment object
-        XPayment newPayment = new XPayment(getSelectedCompletions(), paymentValue, paymentDate.getTime());
+        // Create payment with selected completions
+        XPayment newPayment = new XPayment(getSelectedCompletions(), paymentDate.getTime());
 
-        // Save new payment to drive
-        mNewPaymentFragmentListener.updatePaymentsDataOnDrive(newPayment, new OnSuccessListener<DriveFile>() {
+        // Add new payment to payments data set
+        payments.add(newPayment);
+
+        // Save payments data set changes
+        XDataUploader.uploadData(XDataConstants.PAYMENTS_DATA_FILE_NAME, payments, getContext(), new OnSuccessListener<DriveFile>() {
             @Override
             public void onSuccess(DriveFile driveFile) {
                 // Show the new payment on the timeline
-                mNewPaymentFragmentListener.loadPaymentsFragment(false);
+                FragmentLoader.loadFragment(PaymentsFragment.newInstance(payments),getContext(),R.anim.enter_from_right, R.anim.exit_to_left, R.anim.enter_from_left, R.anim.exit_to_right,false);
+            }
+        }, new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+
             }
         });
 

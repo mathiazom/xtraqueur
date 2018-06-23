@@ -36,6 +36,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
+        android:layout_marginEnd="20dp"
         android:paddingStart="10dp"
         android:layout_marginTop="8dp"
         android:contentDescription="@string/selected_item"
@@ -44,7 +45,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.mzom.xtraqueur.HorizontalDiagramView
+    <com.mzom.xtraqueur.PaymentDiagram
         android:id="@+id/payment_horizontal_diagram_view"
         android:layout_width="match_parent"
         android:layout_height="5dp"

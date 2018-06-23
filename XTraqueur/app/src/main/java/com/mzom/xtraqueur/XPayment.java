@@ -4,17 +4,14 @@ import java.util.ArrayList;
 
 class XPayment {
 
-    private final ArrayList<XTaskCompletion> completions;
-
-    private final double paymentValue;
+    private ArrayList<XTaskCompletion> completions;
 
     private long date;
 
 
-    XPayment(ArrayList<XTaskCompletion> completions, double paymentValue, long date){
+    XPayment(ArrayList<XTaskCompletion> completions, long date){
 
         this.completions = completions;
-        this.paymentValue = paymentValue;
         this.date = date;
     }
 
@@ -28,9 +25,31 @@ class XPayment {
     }
 
     double getPaymentValue(){
-        return this.paymentValue;
+
+        double value = 0;
+
+        for(XTaskCompletion completion : completions){
+
+            value += completion.getTaskIdentity().getFee();
+
+        }
+
+        return value;
     }
 
+    boolean deleteCompletion(XTaskCompletion completion) {
+
+        int index = completions.indexOf(completion);
+        if (index == -1) return false;
+
+        completions.remove(index);
+        return true;
+    }
+
+
+    void setCompletions(ArrayList<XTaskCompletion> completions){
+        this.completions = completions;
+    }
 
     void setDate(long date){
         this.date = date;

@@ -2,8 +2,8 @@ package com.mzom.xtraqueur;
 
 import java.io.Serializable;
 
-// TODO: Implement hashCode() since where are implementing equals()
-class XTaskFields implements Serializable {
+// TODO: Implement hashCode() since we are implementing equals()
+class XTaskIdentity implements Serializable {
 
     // Task display name
     private String name;
@@ -15,7 +15,7 @@ class XTaskFields implements Serializable {
     private int color;
 
 
-    XTaskFields(String name, double fee, int color) {
+    XTaskIdentity(String name, double fee, int color) {
 
         this.name = name;
         this.fee = fee;
@@ -58,7 +58,7 @@ class XTaskFields implements Serializable {
     @Override
     public boolean equals(Object obj) {
 
-        return obj.getClass() == getClass() && XTaskFieldsUtilities.areEqual(this, obj);
+        return obj.getClass() == getClass() && XTaskUtilities.areEqual(this, obj);
 
     }
 }

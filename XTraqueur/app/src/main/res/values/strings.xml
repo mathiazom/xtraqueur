@@ -82,4 +82,12 @@
     <string name="show_completions">Show completions</string>
     <string name="settings_section_resetting">Resetting</string>
     <string name="select_payments">Select payments</string>
+    <string name="error_could_not_save_changes">Error: Could not save changes</string>
+    <string name="error_could_not_delete_item">Error: Could not delete item</string>
+    <string name="error_could_not_setup_data_directory">Error: Could not setup new data directory</string>
+    <string name="error_could_not_create_new_task">Error: Could not create new task</string>
+    <string name="changes_have_been_saved">Changes have been saved</string>
+    <string name="other">Other</string>
+    <string name="hint_task">Task</string>
+    <string name="completion_of">Completion of</string>
 </resources>

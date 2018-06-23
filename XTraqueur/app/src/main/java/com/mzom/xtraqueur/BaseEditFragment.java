@@ -3,14 +3,12 @@ package com.mzom.xtraqueur;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
@@ -24,10 +22,6 @@ import android.widget.DatePicker;
 import android.widget.ScrollView;
 import android.widget.TimePicker;
 
-import com.google.android.gms.drive.DriveFile;
-import com.google.android.gms.tasks.OnSuccessListener;
-
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -43,31 +37,6 @@ public abstract class BaseEditFragment extends XFragment {
     private String deleteConfirmationMessage;
 
     private boolean discardChanges;
-
-    private BaseEditFragmentListener mBaseEditFragmentListener;
-
-    interface BaseEditFragmentListener{
-        void updateTasksDataOnDrive(ArrayList<XTask> tasks, OnSuccessListener<DriveFile> onSuccessListener);
-
-        void updatePaymentsDataOnDrive(ArrayList<XPayment> payments, OnSuccessListener<DriveFile> onSuccessListener);
-
-        void loadCompletionsFragment(ArrayList<XTask> tasks,XTaskFields taskFields);
-
-        void loadCompletionsFragment(ArrayList<XTaskCompletion> completions);
-
-        void onBackPressed();
-    }
-
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-
-        try{
-            mBaseEditFragmentListener = (BaseEditFragmentListener) context;
-        }catch (ClassCastException e){
-            throw new ClassCastException(context.toString() + " must implement BaseEditFragmentListener");
-        }
-    }
 
     @Nullable
     @Override
@@ -127,6 +96,10 @@ public abstract class BaseEditFragment extends XFragment {
         });
     }
 
+    final void setToolbarTitle(String toolbarTitle){
+        baseToolbar.setTitle(toolbarTitle);
+    }
+
     // Setup the listeners for the views in this fragment
     private void initListeners() {
 
@@ -145,7 +118,7 @@ public abstract class BaseEditFragment extends XFragment {
                                 public void onClick(DialogInterface dialogInterface, int i) {
                                     // Call abstract methods for deletion
                                     deleteItem();
-                                    returnToItemsList();
+                                    //returnToItemsList();
                                 }
                             })
                             .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
@@ -184,7 +157,7 @@ public abstract class BaseEditFragment extends XFragment {
 
         // ScrollView background
         ScrollView scrollView = baseView.findViewById(R.id.edittask_main_scroll);
-        Drawable scrollDrawable = new ColorDrawable(darkenColor(itemColor));
+        Drawable scrollDrawable = new ColorDrawable(ColorUtilities.getDarkerColor(itemColor));
         scrollView.setBackground(scrollDrawable);
     }
 
@@ -216,10 +189,6 @@ public abstract class BaseEditFragment extends XFragment {
         else {
             returnToItemsList();
         }
-    }
-
-    BaseEditFragmentListener getBaseEditListener(){
-        return mBaseEditFragmentListener;
     }
 
     void setItemDeleteButton(Button deleteButton, String deleteConfirmationTitle, String deleteConfirmationMessage){
@@ -295,17 +264,17 @@ public abstract class BaseEditFragment extends XFragment {
 
 
     // Re-paint layout with updated return color of getItemColor()
-    void notifyItemColorChange() {
+    final void notifyItemColorChange() {
         applyItemColor();
     }
 
-    void returnToItemsList(){
-        mBaseEditFragmentListener.onBackPressed();
+    final void returnToItemsList(){
+        FragmentLoader.reverseLoading(getContext());
     }
 
     // Used by activity to forward back presses
     // Return value signalizes if back press has been handled
-    boolean onBackPressed(){
+    final boolean onBackPressed(){
 
         if(discardChanges) return false;
 
@@ -321,19 +290,6 @@ public abstract class BaseEditFragment extends XFragment {
         return false;
 
     }
-
-
-    // Get a darker shade of the original task color
-    @ColorInt
-    private int darkenColor(@ColorInt int color) {
-        float[] hsv = new float[3];
-        Color.colorToHSV(color, hsv);
-        hsv[2] *= 0.8f;
-        return Color.HSVToColor(hsv);
-    }
-
-
-
 
     @NonNull
     abstract ConstraintLayout getEditLayout(ConstraintLayout baseEditContainer);

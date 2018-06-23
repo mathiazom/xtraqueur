@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
@@ -19,14 +20,21 @@ import com.google.android.gms.drive.Drive;
 import com.google.android.gms.drive.DriveFile;
 import com.google.android.gms.drive.DriveResourceClient;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 
-public class SettingsActivity extends AppCompatActivity implements SettingsFragment.SettingsFragmentListener {
+public class SettingsActivity extends AppCompatActivity
+        implements
+        SettingsFragment.SettingsFragmentListener,
+        XDataUploader.XDataUploaderable {
 
     // Tag used for debugging
     private static final String TAG = "XTQ-SettingsActivity";
@@ -47,43 +55,36 @@ public class SettingsActivity extends AppCompatActivity implements SettingsFragm
 
         getGoogleSignIn();
 
-        loadData();
+        loadData(getIntent());
     }
 
-    private void loadData(){
+    private void loadData(Intent intent) {
 
-       /* SharedPreferences sharedPreferences = getApplicationContext().getSharedPreferences("TASKS_DATA_ON_DEVICE", 0);
-        String json = sharedPreferences.getString("TASKS_DATA_" + mGoogleSignInAccount.getId(), null);
+        final String json = intent.getStringExtra("TASKS_DATA");
 
-        if (json != null) {
-            tasks = new Gson().fromJson(json, new TypeToken<ArrayList<XTask>>() {
-            }.getType());
-            loadSettingsFragment();
-        } else {
-            Log.e(TAG, "SharedPreferences: No tasks data on device");
-        }*/
+        ArrayList<XTask> intentTasks = new Gson().fromJson(json, new TypeToken<ArrayList<XTask>>() {
+        }.getType());
 
-       ArrayList<XTask> intentTasks = (ArrayList<XTask>) getIntent().getSerializableExtra("TASKS_DATA");
-       if(intentTasks == null) return;
+        if (intentTasks == null) return;
 
-       tasks = intentTasks;
-       loadSettingsFragment();
+        tasks = intentTasks;
+        loadSettingsFragment();
 
     }
 
-    private void getGoogleSignIn(){
+    private void getGoogleSignIn() {
 
         // Get intent from SignInActivity
         Intent signInIntent = getIntent();
 
-        if(signInIntent != null){
+        if (signInIntent != null) {
 
             // Sign in account
             GoogleSignInAccount googleSignInAccount = signInIntent.getParcelableExtra("GOOGLE_SIGN_IN_ACCOUNT");
-            if(googleSignInAccount != null){
+            if (googleSignInAccount != null) {
                 mGoogleSignInAccount = googleSignInAccount;
 
-                mDriveResourceClient = Drive.getDriveResourceClient(this,googleSignInAccount);
+                mDriveResourceClient = Drive.getDriveResourceClient(this, googleSignInAccount);
             }
 
             // Account photo
@@ -113,7 +114,7 @@ public class SettingsActivity extends AppCompatActivity implements SettingsFragm
         }
 
         // Download bitmap with AsyncTask (from url) to store account photo on device
-        new AsyncURLImageRetriever(new AsyncURLImageRetriever.AsyncURLImageRetrieverListener() {
+        new GAccountPhotoRetriever(new GAccountPhotoRetriever.AsyncURLImageRetrieverListener() {
             @Override
             public void onTaskFinished(File file) {
                 if (file == null) {
@@ -138,17 +139,21 @@ public class SettingsActivity extends AppCompatActivity implements SettingsFragm
         getSupportFragmentManager().beginTransaction().replace(R.id.settings_frame_layout, mSettingsFragment).commit();
     }
 
-    private void updateTasksDataOnDrive(){
-        XTasksDataUploader dataUploader = new XTasksDataUploader(mGoogleSignInAccount, mDriveResourceClient, getApplicationContext(), new OnSuccessListener<DriveFile>() {
+    private void updateTasksDataOnDrive() {
+
+        XDataUploader.uploadData(XDataConstants.TASKS_DATA_FILE_NAME,tasks, this, new OnSuccessListener<DriveFile>() {
             @Override
             public void onSuccess(DriveFile driveFile) {
                 loadSettingsFragment();
             }
-        });
-        XTasksDataPackage newDataPackage = new XTasksDataPackage(tasks,null);
-        dataUploader.execute(newDataPackage);
-    }
+        }, new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
 
+                Snackbar.make(findViewById(R.id.main_frame_layout), "Error: Could not update tasks data", Snackbar.LENGTH_LONG);
+            }
+        });
+    }
 
 
     @Override
@@ -165,7 +170,7 @@ public class SettingsActivity extends AppCompatActivity implements SettingsFragm
                     public void onComplete(@NonNull Task<Void> task) {
                         // Restart activity to complete Google account sign out
 
-                        Intent intent = new Intent(context,SignInActivity.class);
+                        Intent intent = new Intent(context, SignInActivity.class);
                         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
                         startActivity(intent);
                         finish();
@@ -211,13 +216,16 @@ public class SettingsActivity extends AppCompatActivity implements SettingsFragm
         notifyTasksDataChanged();
     }
 
-    private void notifyTasksDataChanged(){
+    private void notifyTasksDataChanged() {
+
         Intent intent = new Intent();
         intent.setAction("TASKS_DATA_CHANGED_IN_SETTINGS");
-        intent.putExtra("TASKS_DATA",tasks);
+
+        final String tasks_data = new Gson().toJson(tasks);
+        intent.putExtra("TASKS_DATA", tasks_data);
+
         sendBroadcast(intent);
     }
-
 
 
     @Override
@@ -225,4 +233,17 @@ public class SettingsActivity extends AppCompatActivity implements SettingsFragm
         super.onBackPressed();
     }
 
+    @Override
+    public DriveResourceClient getDriveResourceClient() {
+        return mDriveResourceClient;
+    }
+
+    @Override
+    public void dataUploading(HashMap<String, ArrayList<?>> dataMap) {
+
+        if(dataMap.get(XDataConstants.TASKS_DATA_FILE_NAME) != null){
+            tasks = (ArrayList<XTask>) dataMap.get(XDataConstants.TASKS_DATA_FILE_NAME);
+        }
+
+    }
 }

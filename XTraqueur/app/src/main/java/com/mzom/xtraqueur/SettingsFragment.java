@@ -123,7 +123,15 @@ public class SettingsFragment extends android.support.v4.app.Fragment {
             }
         });
 
-        // Delete all payments button
+        deleteAllCompletionsListener();
+
+        deleteAllTasksListener();
+
+    }
+
+    private void deleteAllCompletionsListener(){
+
+        // Delete all completions button
         Button delete_completions_button = view.findViewById(R.id.button_delete_all_completions);
 
         int completions = 0;
@@ -161,9 +169,9 @@ public class SettingsFragment extends android.support.v4.app.Fragment {
                 }
             });
         }
+    }
 
-
-
+    private void deleteAllTasksListener(){
 
         // Delete all tasks button
         Button delete_tasks_button = view.findViewById(R.id.button_delete_all_tasks);
@@ -196,7 +204,6 @@ public class SettingsFragment extends android.support.v4.app.Fragment {
                 }
             });
         }
-
     }
 
     private void disableButton(Button btn){

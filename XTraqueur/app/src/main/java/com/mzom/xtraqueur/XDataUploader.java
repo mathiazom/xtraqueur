@@ -1,13 +1,10 @@
 package com.mzom.xtraqueur;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.util.Log;
 
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.drive.DriveContents;
 import com.google.android.gms.drive.DriveFile;
 import com.google.android.gms.drive.DriveFolder;
@@ -31,87 +28,96 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
-class XTasksDataUploader extends AsyncTask<XTasksDataPackage, Void, Void> {
+class XDataUploader extends AsyncTask<HashMap<String,ArrayList<?>>, Void, Void> {
 
-    private static final String TAG = "XTQ-XTasksDataUploader";
+    private static final String TAG = "XTQ-XDataUploader";
 
-    private static final String TASKS_DATA_FILE_NAME = "tasks_data.txt";
-    private static final String TASKS_DATA_SHARED_PREFS_PREFIX = "TASKS_DATA_";
-
-    private static final String PAYMENTS_DATA_FILE_NAME = "payments_data.txt";
-    private static final String PAYMENTS_DATA_SHARED_PREFS_PREFIX = "PAYMENTS_DATA_";
-
-    private final GoogleSignInAccount mGoogleSignInAccount;
     private final DriveResourceClient mDriveResourceClient;
 
-    private final SharedPreferences sharedPreferences;
-
     private final OnSuccessListener<DriveFile> onSuccessListener;
+    private final OnFailureListener onFailureListener;
 
+    interface XDataUploaderable {
 
-    XTasksDataUploader(@NonNull GoogleSignInAccount googleSignInAccount, @NonNull DriveResourceClient driveResourceClient, @NonNull Context context, @Nullable OnSuccessListener<DriveFile> onSuccessListener) {
-        this.mGoogleSignInAccount = googleSignInAccount;
-        this.mDriveResourceClient = driveResourceClient;
-        this.sharedPreferences = context.getSharedPreferences("USER_DATA_ON_DEVICE", 0);
-        this.onSuccessListener = onSuccessListener != null ? onSuccessListener : new OnSuccessListener<DriveFile>() {
+        DriveResourceClient getDriveResourceClient();
+
+        void dataUploading(HashMap<String,ArrayList<?>> dataMap);
+    }
+
+    static void uploadData(@NonNull String fileName,@NonNull ArrayList<?> data, Context context){
+        uploadData(fileName,data, context, new OnSuccessListener<DriveFile>() {
             @Override
             public void onSuccess(DriveFile driveFile) {
 
             }
-        };
-    }
-
-    XTasksDataUploader(@NonNull GoogleSignInAccount googleSignInAccount, @NonNull DriveResourceClient driveResourceClient, @NonNull Context context) {
-        this(googleSignInAccount, driveResourceClient, context, new OnSuccessListener<DriveFile>() {
+        }, new OnFailureListener() {
             @Override
-            public void onSuccess(DriveFile driveFile) {
+            public void onFailure(@NonNull Exception e) {
 
             }
         });
     }
 
-    @Override
-    protected Void doInBackground(XTasksDataPackage... xTasksDataPackages) {
+    static void uploadData(@NonNull String fileName,@NonNull ArrayList<?> data, Context context, @NonNull OnSuccessListener<DriveFile> onSuccessListener, @NonNull OnFailureListener onFailureListener){
 
-        final XTasksDataPackage xTasksDataPackage = xTasksDataPackages[0];
+        if(context == null) return;
 
-        ArrayList<XTask> tasks = xTasksDataPackage.getTasks();
-        if (tasks != null) {
-            updateTasksDataOnDrive(tasks);
+        HashMap<String,ArrayList<?>> dataMap = new HashMap<>();
+        dataMap.put(fileName,data);
+
+        XDataUploader uploader = new XDataUploader(context, dataMap, onSuccessListener, onFailureListener);
+        uploader.execute(dataMap);
+
+
+    }
+
+    private XDataUploader(@NonNull Context context, @NonNull HashMap<String,ArrayList<?>> dataMap, @NonNull OnSuccessListener<DriveFile> onSuccessListener, @NonNull OnFailureListener onFailureListener){
+
+        final XDataUploaderable mXTaskDataMapUploaderInterface = getActivityAsInterface(context);
+
+        mXTaskDataMapUploaderInterface.dataUploading(dataMap);
+
+        this.mDriveResourceClient = mXTaskDataMapUploaderInterface.getDriveResourceClient();
+
+        this.onSuccessListener = onSuccessListener;
+
+        this.onFailureListener = onFailureListener;
+    }
+
+    private XDataUploaderable getActivityAsInterface(Context activity){
+
+        try {
+            return (XDataUploaderable) activity;
+
+        } catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString() + " must implement XDataUploaderable");
         }
+    }
 
-        ArrayList<XPayment> payments = xTasksDataPackage.getPayments();
-        if (payments != null) {
-            updatePaymentsDataOnDrive(payments);
+    @Override
+    protected Void doInBackground(HashMap<String,ArrayList<?>>... hashMaps) {
+
+        final HashMap<String,ArrayList<?>> map = hashMaps[0];
+
+        for(Map.Entry<String,ArrayList<?>> entry : map.entrySet()){
+
+            final String entryKey = entry.getKey();
+            final ArrayList<?> entryValue = entry.getValue();
+
+            if(entryKey != null && entryValue != null){
+
+                String json = new Gson().toJson(entryValue);
+
+                updateDataFileOnDrive(json,entryKey);
+
+            }
+
         }
 
         return null;
-    }
-
-    private void updateTasksDataOnDrive(@NonNull ArrayList<XTask> tasks) {
-
-        Log.i(TAG, "Google Drive API: Tasks data update started");
-
-        final String tasks_data = new Gson().toJson(tasks);
-
-        // Update tasks data locally
-        updateDataFileOnDevice(tasks_data, TASKS_DATA_SHARED_PREFS_PREFIX);
-
-        // Update tasks data on drive
-        updateDataFileOnDrive(tasks_data, TASKS_DATA_FILE_NAME);
-
-    }
-
-    private void updatePaymentsDataOnDrive(@NonNull ArrayList<XPayment> payments) {
-
-        final String payments_data = new Gson().toJson(payments);
-
-        // Update data locally
-        updateDataFileOnDevice(payments_data, PAYMENTS_DATA_SHARED_PREFS_PREFIX);
-
-        // Update data on Google Drive
-        updateDataFileOnDrive(payments_data, PAYMENTS_DATA_FILE_NAME);
     }
 
 
@@ -144,14 +150,17 @@ class XTasksDataUploader extends AsyncTask<XTasksDataPackage, Void, Void> {
                 })
 
                 .addOnSuccessListener(onSuccessListener)
+                .addOnFailureListener(onFailureListener)
 
                 // Delete any outdated files on drive
                 .addOnSuccessListener(new OnSuccessListener<DriveFile>() {
                     @Override
                     public void onSuccess(DriveFile driveFile) {
 
+                        Log.i(TAG, "Google Drive API: " + fileTitle + " updated successfully");
+
                         // Remove any existing versions of file from drive
-                        deleteOldestDriveFilesWithTitle(fileTitle);
+                        deleteOutdatedDriveFiles(fileTitle);
                     }
                 })
 
@@ -165,7 +174,7 @@ class XTasksDataUploader extends AsyncTask<XTasksDataPackage, Void, Void> {
     }
 
     // Delete all files on drive with title equal to fileTitle parameter
-    private void deleteOldestDriveFilesWithTitle(final String fileTitle) {
+    private void deleteOutdatedDriveFiles(final String fileTitle) {
 
         final Task<DriveFolder> appFolderTask = mDriveResourceClient.getAppFolder();
         appFolderTask.addOnSuccessListener(new OnSuccessListener<DriveFolder>() {
@@ -212,14 +221,6 @@ class XTasksDataUploader extends AsyncTask<XTasksDataPackage, Void, Void> {
         });
 
 
-    }
-
-
-    private void updateDataFileOnDevice(@NonNull String data, @NonNull String sharedPrefsKeyPrefix) {
-        String id = mGoogleSignInAccount.getId();
-        String key = sharedPrefsKeyPrefix + id;
-        sharedPreferences.edit().putString(key, data).apply();
-        Log.i(TAG, "SharedPreferences: " + key + " updated");
     }
 
 }

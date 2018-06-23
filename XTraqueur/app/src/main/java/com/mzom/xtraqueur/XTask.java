@@ -9,20 +9,27 @@ import java.util.Date;
 class XTask implements Serializable {
 
     // Object storing all task attributes (e.g. name, fee and color)
-    private final XTaskFields taskFields;
+    private XTaskIdentity taskIdentity;
 
     // Task payments
     private ArrayList<XTaskCompletion> completions;
 
+    private boolean isSingleUse;
 
-    XTask(@NonNull XTaskFields taskFields) {
-        this.taskFields = taskFields;
+
+    XTask(@NonNull XTaskIdentity taskIdentity) {
+        this.taskIdentity = taskIdentity;
         this.completions = new ArrayList<>();
+        this.isSingleUse = false;
+    }
+
+    XTask(String name, double fee, int color){
+        this.taskIdentity = new XTaskIdentity(name, fee, color);
     }
 
 
-    XTaskFields getTaskFields(){
-        return this.taskFields;
+    XTaskIdentity getTaskIdentity(){
+        return this.taskIdentity;
     }
 
     ArrayList<XTaskCompletion> getCompletions() {
@@ -38,13 +45,25 @@ class XTask implements Serializable {
     }
 
     double getValue() {
-        return this.taskFields.getFee() * this.getCompletionsCount();
+        return this.taskIdentity.getFee() * this.getCompletionsCount();
     }
 
+    boolean isSingleUse(){
+        return this.isSingleUse;
+    }
+
+
+    void setTaskIdentity(XTaskIdentity taskIdentity){
+        this.taskIdentity = taskIdentity;
+    }
 
     void setCompletions(@NonNull ArrayList<XTaskCompletion> completions){
 
         this.completions = completions;
+    }
+
+    void setIsSingleUse(boolean isSingleUse){
+        this.isSingleUse = isSingleUse;
     }
 
 
@@ -57,12 +76,18 @@ class XTask implements Serializable {
         }
 
         // Add new completion to list
-        XTaskCompletion completion = new XTaskCompletion(new Date().getTime(), taskFields);
+        XTaskCompletion completion = new XTaskCompletion(new Date().getTime(), taskIdentity);
         this.completions.add(completion);
     }
 
     // Remove a registered completion from this task
     void removeCompletion(@NonNull XTaskCompletion completion){
         completions.remove(completion);
+    }
+
+    @Override
+    public String toString() {
+
+        return super.toString() + " - Name: " + getTaskIdentity().getName() + ", Fee: " + getTaskIdentity().getFee() + ", Color: " + getTaskIdentity().getColor() + ", Completions: " + completions.toString();
     }
 }

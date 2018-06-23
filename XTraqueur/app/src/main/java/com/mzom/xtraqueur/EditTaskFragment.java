@@ -4,6 +4,7 @@ import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
+import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputEditText;
 import android.support.design.widget.TextInputLayout;
 import android.view.View;
@@ -12,6 +13,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.google.android.gms.drive.DriveFile;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.util.ArrayList;
@@ -32,11 +34,13 @@ public class EditTaskFragment extends BaseEditFragment {
     // Tasks data set
     private ArrayList<XTask> tasks;
 
+    private ArrayList<XPayment> payments;
+
     // Current task being edited
     private XTask task;
 
     // Index of task in the tasks data set
-    private int index;
+    private int taskIndex;
 
     // Color selected in color picker, but not yet saved to task
     private int temp_color;
@@ -44,12 +48,13 @@ public class EditTaskFragment extends BaseEditFragment {
     final static String TAG = "Xtraqueur-EditFrag";
 
     // Constructor that enables MainActivity to pass arguments to the fragments field variables on creation
-    public static EditTaskFragment newInstance(ArrayList<XTask> tasks, XTask task, int index) {
+    public static EditTaskFragment newInstance(ArrayList<XTask> tasks, ArrayList<XPayment> payments, XTask task, int index) {
         EditTaskFragment fragment = new EditTaskFragment();
-        fragment.index = index;
+        fragment.taskIndex = index;
         fragment.task = task;
         fragment.tasks = tasks;
-        fragment.temp_color = task.getTaskFields().getColor();
+        fragment.payments = payments;
+        fragment.temp_color = task.getTaskIdentity().getColor();
         return fragment;
     }
 
@@ -122,8 +127,8 @@ public class EditTaskFragment extends BaseEditFragment {
         mManageButton = fragmentView.findViewById(R.id.button_manage_completions);
 
         // Load task values to EditTexts
-        mNameEditText.setText(task.getTaskFields().getName());
-        mFeeEditText.setText(String.valueOf(task.getTaskFields().getFee()));
+        mNameEditText.setText(task.getTaskIdentity().getName());
+        mFeeEditText.setText(String.valueOf(task.getTaskIdentity().getFee()));
 
         // Manage button background
         Drawable manage_drawable = mManageButton.getBackground();
@@ -152,7 +157,7 @@ public class EditTaskFragment extends BaseEditFragment {
                     return;
                 }
 
-                getBaseEditListener().loadCompletionsFragment(tasks,task.getTaskFields());
+                FragmentLoader.loadFragment(TasksCompletionsFragment.newInstance(tasks,payments,task.getTaskIdentity()),getContext(),R.anim.enter_from_bottom, R.anim.exit_to_top, R.anim.enter_from_top, R.anim.exit_to_bottom, true);
             }
         });
 
@@ -181,7 +186,7 @@ public class EditTaskFragment extends BaseEditFragment {
         // Get edited task name
         String name = String.valueOf(mNameEditText.getEditableText());
 
-        return !(task.getTaskFields().getName().equals(name) && task.getTaskFields().getFee() == fee && temp_color == task.getTaskFields().getColor());
+        return !(task.getTaskIdentity().getName().equals(name) && task.getTaskIdentity().getFee() == fee && temp_color == task.getTaskIdentity().getColor());
     }
 
     @Override
@@ -197,7 +202,7 @@ public class EditTaskFragment extends BaseEditFragment {
 
         // Check if name is already in use
         for (XTask t : tasks) {
-            if (t.getTaskFields().getName().equals(name) && tasks.indexOf(t) != index) {
+            if (t.getTaskIdentity().getName().equals(name) && tasks.indexOf(t) != taskIndex) {
                 // Notify user that this name is already in use by another task
                 mNameLayout.setError(getString(R.string.already_in_use));
                 return;
@@ -219,20 +224,31 @@ public class EditTaskFragment extends BaseEditFragment {
 
             // Create duplicate of task and set properties according to input
             XTask edit = task;
-            edit.getTaskFields().setName(name);
-            edit.getTaskFields().setFee(fee);
-            edit.getTaskFields().setColor(temp_color);
+            edit.setTaskIdentity(new XTaskIdentity(name,fee,temp_color));
+
+            for(XTaskCompletion completion : edit.getCompletions()){
+                completion.setTaskIdentity(edit.getTaskIdentity());
+            }
 
             // Commit changes
-            tasks.set(index, edit);
+            tasks.set(taskIndex, edit);
 
             // Update tasks_data.txt on Google Drive
-            getBaseEditListener().updateTasksDataOnDrive(tasks, new OnSuccessListener<DriveFile>() {
-                @Override
-                public void onSuccess(DriveFile driveFile) {
-                    returnToItemsList();
-                }
-            });
+            XDataUploader.uploadData(
+                    XDataConstants.TASKS_DATA_FILE_NAME, tasks, getContext(), new OnSuccessListener<DriveFile>() {
+                        @Override
+                        public void onSuccess(DriveFile driveFile) {
+                            returnToItemsList();
+                        }
+                    }, new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+
+                            if(getView() == null) return;
+
+                            Snackbar.make(getView(), R.string.error_could_not_save_changes,Snackbar.LENGTH_LONG);
+                        }
+                    });
 
 
         }
@@ -240,16 +256,26 @@ public class EditTaskFragment extends BaseEditFragment {
 
     @Override
     void deleteItem() {
+
         // Delete task from ArrayList
         tasks.remove(task);
 
         // Update tasks data on drive
-        getBaseEditListener().updateTasksDataOnDrive(tasks, new OnSuccessListener<DriveFile>() {
-            @Override
-            public void onSuccess(DriveFile driveFile) {
-                returnToItemsList();
-            }
-        });
+        XDataUploader.uploadData(
+                XDataConstants.TASKS_DATA_FILE_NAME, tasks, getContext(), new OnSuccessListener<DriveFile>() {
+                    @Override
+                    public void onSuccess(DriveFile driveFile) {
+                        returnToItemsList();
+                    }
+                }, new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+
+                        if(getView() == null) return;
+
+                        Snackbar.make(getView(), R.string.error_could_not_save_changes,Snackbar.LENGTH_LONG);
+                    }
+                });
     }
 
     @Override

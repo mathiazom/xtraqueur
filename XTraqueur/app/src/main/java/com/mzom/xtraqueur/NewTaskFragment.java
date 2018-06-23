@@ -1,15 +1,14 @@
 package com.mzom.xtraqueur;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
+import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputEditText;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.widget.Toolbar;
@@ -21,6 +20,10 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+
+import com.google.android.gms.drive.DriveFile;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.util.ArrayList;
 
@@ -34,6 +37,8 @@ public class NewTaskFragment extends XFragment {
 
     // Tasks data set
     private ArrayList<XTask> tasks;
+
+    private ArrayList<XPayment> payments;
 
     // Task name input field
     private TextInputEditText mNameEditText;
@@ -49,36 +54,11 @@ public class NewTaskFragment extends XFragment {
     // Log tag for debugging
     private final static String TAG = "Xtraqueur-NewTask";
 
-    // Interface instance to communicate with MainActivity
-    private NewTaskFragmentListener newTaskFragmentListener;
-
-    // Interface class to communicate with MainActivity
-    interface NewTaskFragmentListener {
-
-        void onBackPressed();
-
-        void loadTasksFragment();
-
-        void updateTasksDataOnDrive(ArrayList<XTask> tasks);
-    }
-
-    // Initialize listener when activity is available
-    @Override
-    public void onAttach(Context activity) {
-        super.onAttach(activity);
-
-        try {
-            newTaskFragmentListener = (NewTaskFragmentListener) activity;
-
-        } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString() + " must implement NewTaskFragmentListener");
-        }
-    }
-
     // Custom constructor to pass required fragment variables
-    public static NewTaskFragment newInstance(ArrayList<XTask> tasks, int temp_color) {
+    public static NewTaskFragment newInstance(ArrayList<XTask> tasks, ArrayList<XPayment> payments, int temp_color) {
         NewTaskFragment fragment = new NewTaskFragment();
         fragment.tasks = tasks;
+        fragment.payments = payments;
         fragment.temp_color = temp_color;
         return fragment;
     }
@@ -91,7 +71,7 @@ public class NewTaskFragment extends XFragment {
         setRetainInstance(true);
 
         // Fragment root view
-        this.view = inflater.inflate(R.layout.fragment_newtask, container, false);
+        this.view = inflater.inflate(R.layout.fragment_new_task, container, false);
 
         // Fragment view fields
         mNameLayout = view.findViewById(R.id.newtask_layout_name);
@@ -116,7 +96,7 @@ public class NewTaskFragment extends XFragment {
     }
 
     // Initialize toolbar field variable and add action buttons with listeners
-    private void initToolbar() {
+    void initToolbar() {
 
         // Initialize toolbar field variable
         mToolbar = view.findViewById(R.id.toolbar);
@@ -129,7 +109,7 @@ public class NewTaskFragment extends XFragment {
             @Override
             public void onClick(View v) {
                 hideSoftKeyboard();
-                newTaskFragmentListener.onBackPressed();
+                FragmentLoader.reverseLoading(getContext());
             }
         });
 
@@ -139,7 +119,36 @@ public class NewTaskFragment extends XFragment {
             public boolean onMenuItemClick(MenuItem item) {
                 switch (item.getItemId()) {
                     case R.id.newtaks_new_task_icon:
-                        createTask();
+
+                        // Generate task object
+                        XTask newTask = createTaskFromInputs();
+
+                        if(newTask == null) return false;
+
+                        // Add new task to tasks ArrayList
+                        tasks.add(newTask);
+
+                        // Update tasks_data.txt on Google Drive with updated ArrayList
+                        XDataUploader.uploadData(XDataConstants.TASKS_DATA_FILE_NAME,tasks, getContext(), new OnSuccessListener<DriveFile>() {
+                            @Override
+                            public void onSuccess(DriveFile driveFile) {
+
+                                // Return to TasksFragment
+                                //newTaskFragmentListener.loadTasksFragment();
+                                FragmentLoader.loadFragment(TasksFragment.newInstance(tasks,payments),getContext());
+                            }
+                        }, new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+
+                                if(getView() == null) return;
+
+                                Snackbar.make(getView(), R.string.error_could_not_create_new_task,Snackbar.LENGTH_LONG);
+                            }
+                        });
+
+                        hideKeyboard();
+
                 }
                 return false;
             }
@@ -184,7 +193,7 @@ public class NewTaskFragment extends XFragment {
 
         // ScrollView background
         ScrollView scrollView = view.findViewById(R.id.newtask_main_scroll);
-        Drawable scrollDrawable = new ColorDrawable(darkenColor(temp_color));
+        Drawable scrollDrawable = new ColorDrawable(ColorUtilities.getDarkerColor(temp_color));
         scrollView.setBackground(scrollDrawable);
     }
 
@@ -211,9 +220,9 @@ public class NewTaskFragment extends XFragment {
     }
 
     // Chcek if name string is in use by another task
-    private boolean isNameUsed(String name) {
+    boolean isNameUsed(String name) {
         for (XTask t : tasks) {
-            if (t.getTaskFields().getName().equals(name)) {
+            if (t.getTaskIdentity().getName().equals(name)) {
                 return true;
             }
         }
@@ -221,52 +230,66 @@ public class NewTaskFragment extends XFragment {
     }
 
     // Check if name string is a valid task name
-    private boolean invalidName(String name) {
+    boolean invalidName(String name) {
         return String.valueOf(name).trim().isEmpty();
     }
 
     // Create task object according to input and add it to the tasks ArrayList
     // Tell MainActivity to update Google Drive and SharedPreferences
-    private void createTask() {
+    XTask createTaskFromInputs() {
 
         // Get name from TextInputEditText (with leading and trailing white space removed)
-        String name = String.valueOf(mNameEditText.getEditableText()).trim();
+        String name = getNameInput();
 
         // Notify user if the inputted name is invalid
-        if (invalidName(name)) mNameLayout.setError(getString(R.string.invalid_name));
+        boolean invalidName = displayNameError(name);
 
-        // Notify user if the inputted name is already in use by another task
-        if (isNameUsed(name)) mNameLayout.setError(getString(R.string.already_in_use));
-
-        // Check if inputted fee is valid (not too big and integer format)
-        boolean validFee;
-        double fee = 0;
-        try {
-            fee = Double.parseDouble(String.valueOf(mFeeEditText.getEditableText()));
-            validFee = true;
-        } catch (NumberFormatException e) {
-            mFeeLayout.setError(getString(R.string.invalid_fee));
-            validFee = false;
-        }
+        Double fee = getFeeInput();
 
         // Cancel task creation if any of the inputted values are invalid
-        if (invalidName(name) || isNameUsed(name) || !validFee) {
-            return;
+        if (invalidName || fee == null) {
+            return null;
         }
 
         // Create new task according to inputs
-        XTask newTask = new XTask(new XTaskFields(name, fee, temp_color));
+        return new XTask(new XTaskIdentity(name, fee, temp_color));
+    }
 
-        // Add new task to tasks ArrayList
-        tasks.add(newTask);
+    String getNameInput(){
+        return String.valueOf(mNameEditText.getEditableText()).trim();
+    }
 
-        // Update tasks_data.txt on Google Drive with updated ArrayList
-        newTaskFragmentListener.updateTasksDataOnDrive(tasks);
+    Double getFeeInput(){
 
-        // Return to TasksFragment
-        newTaskFragmentListener.loadTasksFragment();
+        // Check if inputted fee is valid (not too big and integer format)
 
-        hideKeyboard();
+        try {
+            return Double.parseDouble(String.valueOf(mFeeEditText.getEditableText()));
+        } catch (NumberFormatException e) {
+            mFeeLayout.setError(getString(R.string.invalid_fee));
+            return null;
+        }
+
+    }
+
+    boolean displayNameError(String name){
+
+        boolean invalidName = false;
+
+        // Notify user if the inputted name is invalid
+        if (invalidName(name)){
+            mNameLayout.setError(getString(R.string.invalid_name));
+            invalidName = true;
+        }
+
+        // Notify user if the inputted name is already in use by another task
+        if (isNameUsed(name)){
+            mNameLayout.setError(getString(R.string.already_in_use));
+            invalidName = true;
+        }
+
+        return invalidName;
+
     }
 
     private void hideKeyboard(){
@@ -289,7 +312,7 @@ public class NewTaskFragment extends XFragment {
 
         // Change ScrollView background to picked color
         ScrollView scrollView = view.findViewById(R.id.newtask_main_scroll);
-        Drawable scrollDrawable = new ColorDrawable(darkenColor(color));
+        Drawable scrollDrawable = new ColorDrawable(ColorUtilities.getDarkerColor(color));
         scrollView.setBackground(scrollDrawable);
 
         LinearLayout marker = view.findViewById(R.id.newtask_color_button_marker);
@@ -301,15 +324,6 @@ public class NewTaskFragment extends XFragment {
         String sColor = String.format("#%06X", (0xFFFFFF & temp_color));
         colorTitle.setText(sColor);
 
-    }
-
-    // Get a darker shade of the original task color
-    @ColorInt
-    private int darkenColor(@ColorInt int color) {
-        float[] hsv = new float[3];
-        Color.colorToHSV(color, hsv);
-        hsv[2] *= 0.8f;
-        return Color.HSVToColor(hsv);
     }
 
 }

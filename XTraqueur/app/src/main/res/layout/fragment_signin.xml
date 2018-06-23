@@ -14,7 +14,7 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <ImageView
-            android:id="@+id/welcome_image"
+            android:id="@+id/signin_image"
             android:layout_width="80dp"
             android:layout_height="80dp"
             android:src="@mipmap/ic_launcher_round"
@@ -24,7 +24,7 @@
             android:contentDescription="@string/app_name" />
 
         <TextView
-            android:id="@+id/welcome_text_app_name"
+            android:id="@+id/signin_text_app_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
@@ -34,10 +34,10 @@
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/welcome_image" />
+            app:layout_constraintTop_toBottomOf="@id/signin_image" />
 
         <TextView
-            android:id="@+id/welcome_text_sub_title"
+            android:id="@+id/signin_text_sub_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
@@ -45,31 +45,16 @@
             android:textColor="#eee"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/welcome_text_app_name" />
+            app:layout_constraintTop_toBottomOf="@id/signin_text_app_name" />
 
         <com.google.android.gms.common.SignInButton
-            android:id="@+id/welcome_button_sign_in"
+            android:id="@+id/signin_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="70dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/welcome_text_sub_title" />
-
-        <!-- <Button
-            android:layout_width="wrap_content"
-            android:layout_height="36dp"
-            android:layout_marginTop="16dp"
-            android:background="@drawable/dark_rounded_2dp"
-            android:paddingBottom="8dp"
-            android:paddingEnd="16dp"
-            android:paddingStart="16dp"
-            android:paddingTop="8dp"
-            android:text="@string/offline_mode"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/welcome_button_sign_in" /> -->
+            app:layout_constraintTop_toBottomOf="@id/signin_text_sub_title" />
 
     </android.support.constraint.ConstraintLayout>
 

@@ -6,13 +6,18 @@ import java.util.Locale;
 
 class DateFormatter {
 
-    static String formatDate(Date date){
+    private static String format(Long date, String format, Locale locale){
 
         // Date string format
-        final SimpleDateFormat dateFormat = new SimpleDateFormat("d MMM yyyy", Locale.getDefault());
+        final SimpleDateFormat dateFormat = new SimpleDateFormat(format, locale);
 
         // Format to string
-        return dateFormat.format(date);
+        return dateFormat.format(new Date(date));
+    }
+
+    static String format(Long date,String format){
+
+        return format(date,format,Locale.getDefault());
 
     }
 
@@ -23,6 +28,22 @@ class DateFormatter {
 
         // Format to string
         return dateFormat.format(new Date(date));
+
+    }
+
+    static String formatTime(Long date){
+
+        // Date string format
+        final SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
+
+        // Format to string
+        return dateFormat.format(new Date(date));
+
+    }
+
+    static String formatDateAndTime(Long date){
+
+        return formatDate(date) + " " + formatTime(date);
 
     }
 

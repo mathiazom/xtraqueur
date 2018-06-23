@@ -1,5 +1,6 @@
 package com.mzom.xtraqueur;
 
+import android.content.Context;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.util.Log;
@@ -26,60 +27,58 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 
 
-class XTasksDataRetriever extends AsyncTask<DriveResourceClient, Void, XTasksDataPackage> {
+class XDataRetriever extends AsyncTask<String, Void, ArrayList<?>> {
 
-    private static final String TAG = "XTQ-XTasksDataRetriever";
+    private static final String TAG = "XTQ-XDataRetriever";
 
-    private final XTasksDataRetrieverListener mXTasksDataRetrieverListener;
+    private final XDataFeedable mXDataFeedable;
 
-    private DriveResourceClient mDriveResourceClient;
+    private final DriveResourceClient mDriveResourceClient;
 
-    // Google Drive tasks data file name
-    static final String TASKS_DATA_FILE_NAME = "tasks_data.txt";
+    private ArrayList<?> retrievedData;
 
-    // Google Drive payments data file name
-    static final String PAYMENTS_DATA_FILE_NAME = "payments_data.txt";
+    interface XDataFeedable {
 
-    private XTasksDataPackage dataPackage;
+        DriveResourceClient getDriveResourceClient();
 
-    static final int RETRIEVE_ALL_DATA = 0;
-    private static final int RETRIEVE_TASKS_ONLY = 1;
-    private static final int RETRIEVE_PAYMENTS_ONLY = 2;
+        void onTasksDataRetrieved(@NonNull ArrayList<XTask> tasks);
 
-    private final int dataToRetrieve;
+        void onPaymentsDataRetrieved(@NonNull ArrayList<XPayment> payments);
 
-    interface XTasksDataRetrieverListener {
-        void onDataRetrieved(XTasksDataPackage dataPackage);
-        void updatePaymentsDataOnDrive(ArrayList<XPayment> payments);
-        void onDataNotFound(String fileName);
+        void onDataNotFound(String dataFileName);
     }
 
-    XTasksDataRetriever(int dataToRetrieve, XTasksDataRetrieverListener xTasksDataRetrieverListener) {
-        this.dataToRetrieve = dataToRetrieve;
-        this.mXTasksDataRetrieverListener = xTasksDataRetrieverListener;
+    private static XDataFeedable getInterfaceFromContext(Context context){
+        try{
+            return (XDataFeedable) context;
+        }catch (ClassCastException e){
+            throw new ClassCastException(context.toString() + " must implement XDataFeedable");
+        }
+    }
+
+    static void retrieveData(Context context, String... fileNames){
+
+        if(context == null) return;
+
+        XDataRetriever retriever = new XDataRetriever(context);
+        retriever.execute(fileNames);
+    }
+
+    private XDataRetriever(Context context) {
+
+        this.mXDataFeedable = getInterfaceFromContext(context);
+
+        this.mDriveResourceClient = mXDataFeedable.getDriveResourceClient();
     }
 
     @Override
-    protected XTasksDataPackage doInBackground(DriveResourceClient... driveResourceClients) {
+    protected ArrayList<?> doInBackground(String... strings) {
 
-        dataPackage = new XTasksDataPackage();
-
-        mDriveResourceClient = driveResourceClients[0];
-
-        if (dataToRetrieve == RETRIEVE_TASKS_ONLY) {
-            getLatestDataFromDrive(TASKS_DATA_FILE_NAME);
+        for(String fileName : strings){
+            if(fileName != null) getLatestDataFromDrive(fileName);
         }
 
-        else if (dataToRetrieve == RETRIEVE_PAYMENTS_ONLY) {
-            getLatestDataFromDrive(PAYMENTS_DATA_FILE_NAME);
-        }
-
-        else if (dataToRetrieve == RETRIEVE_ALL_DATA) {
-            getLatestDataFromDrive(TASKS_DATA_FILE_NAME);
-            getLatestDataFromDrive(PAYMENTS_DATA_FILE_NAME);
-        }
-
-        return dataPackage;
+        return retrievedData;
     }
 
     private void getLatestDataFromDrive(@NonNull final String dataFileName){
@@ -109,8 +108,11 @@ class XTasksDataRetriever extends AsyncTask<DriveResourceClient, Void, XTasksDat
                                 DriveFile driveFile;
                                 try {
                                     driveFile = metadata.get(0).getDriveId().asDriveFile();
+
                                 } catch (Exception e) {
-                                    mXTasksDataRetrieverListener.onDataNotFound(dataFileName);
+
+                                    mXDataFeedable.onDataNotFound(dataFileName);
+
                                     return;
                                 }
 
@@ -153,6 +155,11 @@ class XTasksDataRetriever extends AsyncTask<DriveResourceClient, Void, XTasksDat
                             }
                         });
             }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Log.e(TAG, "Google Drive API: Unable to retrieve app folder", e);
+            }
         });
 
 
@@ -161,24 +168,29 @@ class XTasksDataRetriever extends AsyncTask<DriveResourceClient, Void, XTasksDat
     private void onJSONRetrieved(String json, String fileName){
 
         switch (fileName){
-            case TASKS_DATA_FILE_NAME:
+            case XDataConstants.TASKS_DATA_FILE_NAME:
 
                 ArrayList<XTask> tasks = new Gson().fromJson(json, new TypeToken<ArrayList<XTask>>() {
                 }.getType());
-                dataPackage.setTasks(tasks);
 
-                if (dataToRetrieve == RETRIEVE_TASKS_ONLY)
-                    mXTasksDataRetrieverListener.onDataRetrieved(dataPackage);
+                if(tasks == null) return;
+
+                retrievedData = tasks;
+
+                mXDataFeedable.onTasksDataRetrieved(tasks);
 
                 break;
 
-            case PAYMENTS_DATA_FILE_NAME:
+            case XDataConstants.PAYMENTS_DATA_FILE_NAME:
 
                 ArrayList<XPayment> payments = new Gson().fromJson(json, new TypeToken<ArrayList<XPayment>>() {
                 }.getType());
-                dataPackage.setPayments(payments);
 
-                mXTasksDataRetrieverListener.onDataRetrieved(dataPackage);
+                if(payments == null) return;
+
+                retrievedData = payments;
+
+                mXDataFeedable.onPaymentsDataRetrieved(payments);
 
                 break;
 
@@ -188,7 +200,7 @@ class XTasksDataRetriever extends AsyncTask<DriveResourceClient, Void, XTasksDat
 
 
     @Override
-    protected void onPostExecute(XTasksDataPackage xTasksDataPackage) {
-        super.onPostExecute(xTasksDataPackage);
+    protected void onPostExecute(ArrayList<?> retrievedData) {
+        super.onPostExecute(retrievedData);
     }
 }

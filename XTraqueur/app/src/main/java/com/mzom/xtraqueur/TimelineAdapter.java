@@ -10,108 +10,102 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import java.lang.reflect.Field;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.Locale;
+
+
+/**
+ *
+        TimelineAdapter functionality:
+    * ITEM SORTING: Sorts items of a data set by date
+
+    * ITEM VIEW HOLDER: Delivers a view holder to add a visual item representation including item title, item date and item color
+
+    * DATE HEADERS: Adds a date header to group items of the same calendar date
+
+    * ITEM CLICK LISTENER: Catches users item clicks
+
+    * ITEM SELECTION: Logic to select items from list and store currently selected items
+
+    * VISUAL ITEM DELETION: Notifies item deletion to create visual animations
+
+
+        Functionality needed from extender of this class (using abstract methods from this class):
+    * DATA SET: This class only facilitates a list to store items and their data. The extender must therefore provide that data.
+
+    * SELECTION UI: This class only holds information about selected items (indexes) and does not provide any selection UI.
+
+    * ACTUAL ITEM DELETION FROM DATA SET: This class tries to visually present item deletion. For this to work,
+      the extender has to actually remove the item from the data set for this to work properly.
+
+    * SAVING DATA SET CHANGES: This class does not save any changes made to the data set (e.g. item deletion)
+
+    * REACTION TO ITEM CLICKS: This class only alerts extender that an item
+      has been clicked, the extender decides how to react to this.
+
+    * SELECTION INFORMATION: This class operates inside the RecyclerView, and therefore gives
+      no selection indicators outside this view
+
+
+ **/
+
 
 public abstract class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapter.ViewHolder> {
 
-    /*
-
-    * Abstract methods to enable class inheritance for use in classes like CompletionsTimelineAdapter and PaymentsTimelineAdapter
-
-     */
-
-    abstract void onSelectionChanged(final int totalSelected, final boolean isSelecting);
-
-    abstract void displayItemData(@NonNull ViewHolder holder, final int position);
-
-    abstract void displaySelectionState(@NonNull ViewHolder holder, boolean selected);
-
-    abstract void deleteItemData(final int position);
-
-    abstract void onItemsDataChanged();
-
-    abstract void onItemClicked(final int position, final int yPos);
-
-    abstract Date getItemDate(final int position);
-
-    abstract String getItemDateString(final int position);
-
-    abstract int getItemsDataSize();
-
-
-    /*
-
-    * end of abstract methods
-
-     */
 
     private static final String TAG = "XTQ-TimelineAdapter";
 
+    // Stores boolean selection status for every item in list
     private ArrayList<Boolean> selectionArray;
 
-    private boolean selectionMode;
+    // Used by various UI components to decide what information to show
+    private boolean isSelecting;
 
     private static final int NO_SELECTION_LOCK = 0;
     static final int ALWAYS_SELECTING = 100;
     private static final int NEVER_SELECTING = 200;
 
-    private final int selectionModeLock;
+    // Used to keep selection toolbar constantly visible if needed
+    private final int selectionLock;
 
+    // RecyclerView holding an instance of this adapter
     private RecyclerView mRecyclerView;
 
+    // Visual representation of item data in list
     private final int itemViewResId;
 
 
-    interface TimelineAdapterListener extends TimelineAdapterLockListener{
-
-        void onItemsDataChanged();
-
-        void onItemClicked(int position, int yPos);
-
+    TimelineAdapter(final int itemViewResId, boolean isSelecting) {
+        this(itemViewResId, isSelecting, NO_SELECTION_LOCK);
     }
 
-    interface TimelineAdapterLockListener{
-
-        void onSelectionChanged(int totalSelected, final boolean isSelecting);
-
+    TimelineAdapter(final int itemViewResId, int selectionLock) {
+        this(itemViewResId, selectionLock == ALWAYS_SELECTING, selectionLock);
     }
 
-
-
-    TimelineAdapter(final int itemViewResId, boolean selectionMode) {
-        this(itemViewResId, selectionMode, NO_SELECTION_LOCK);
-    }
-
-    TimelineAdapter(final int itemViewResId, int selectionModeLock) {
-        this(itemViewResId, selectionModeLock == ALWAYS_SELECTING, selectionModeLock);
-    }
-
-    private TimelineAdapter(final int itemViewResId, boolean selectionMode, int selectionModeLock) {
+    private TimelineAdapter(final int itemViewResId, boolean isSelecting, int selectionLock) {
 
         this.itemViewResId = itemViewResId;
 
-        this.selectionMode = selectionMode;
-        this.selectionModeLock = selectionModeLock;
+        this.isSelecting = isSelecting;
+        this.selectionLock = selectionLock;
 
         initSelectionArray();
     }
 
 
+    interface TimelineAdapterListener{
 
+        void onItemsDataChanged();
 
-    @Override
-    public void onAttachedToRecyclerView(@NonNull RecyclerView recyclerView) {
-        super.onAttachedToRecyclerView(recyclerView);
+        void onItemClicked(int position, int yPos);
 
-        mRecyclerView = recyclerView;
+        void onSelectionChanged(int totalSelected, final boolean isSelecting);
+
     }
 
 
@@ -154,13 +148,12 @@ public abstract class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapt
 
     abstract ViewHolder onCreateViewHolder(ConstraintLayout itemBaseLayout);
 
-
-
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, final int position) {
 
         // Display item data
         displayItemData(holder, holder.getAdapterPosition());
+        setItemBackgroundColor(holder,getItemColor(position));
 
         // Show mark state (marked or not marked)
         boolean selected = selectionArray.size() != 0 && selectionArray.get(position);
@@ -170,11 +163,19 @@ public abstract class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapt
         displayDateHeaderIfNeeded(holder,holder.getAdapterPosition());
 
         // Set item click- and hold listeners
-        setItemListeners(holder);
+        initItemListeners(holder);
+    }
+
+    @Override
+    public void onAttachedToRecyclerView(@NonNull RecyclerView recyclerView) {
+        super.onAttachedToRecyclerView(recyclerView);
+
+        mRecyclerView = recyclerView;
     }
 
 
-    private void setItemListeners(@NonNull final ViewHolder holder) {
+
+    private void initItemListeners(@NonNull final ViewHolder holder) {
 
         // Item on click listener
         holder.itemDataLayout.setOnClickListener(new View.OnClickListener() {
@@ -182,7 +183,7 @@ public abstract class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapt
             public void onClick(View v) {
 
                 // Fire long click listener if selection mode is enabled
-                if (selectionMode) {
+                if (isSelecting) {
                     toggleItemSelection(holder);
                     return;
                 }
@@ -205,20 +206,22 @@ public abstract class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapt
     }
 
 
-    void timelineItemRangeInserted(int positionStart, int itemCount) {
-        notifyItemRangeInserted(positionStart, itemCount);
+    void timelineItemRangeInserted(int itemCount) {
+
+        for(int i = 0;i<itemCount;i++){
+            selectionArray.add(i,false);
+        }
+
+        notifyItemRangeInserted(0, itemCount);
+
         startLayoutAnimation();
     }
 
-    private void startLayoutAnimation() {
-        mRecyclerView.scheduleLayoutAnimation();
-    }
-
-
-    void setItemBackgroundColor(final ViewHolder holder, final int color){
+    private void setItemBackgroundColor(final ViewHolder holder, final int color){
 
         Drawable itemDataLayoutDrawable = holder.itemDataLayout.getBackground();
         itemDataLayoutDrawable.setColorFilter(color, PorterDuff.Mode.SRC_ATOP);
+
         holder.itemDataLayout.setBackground(itemDataLayoutDrawable);
 
     }
@@ -245,35 +248,27 @@ public abstract class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapt
         notifyDataSetChanged();
 
         // Update selection toolbar
-        onSelectionChanged(getTotalSelected(selectionArray), selectionMode);
+        onSelectionChanged(getTotalSelected(selectionArray), isSelecting);
     }
 
-    // Set selectionMode (controlled by selectionModeLock)
-    private void setSelecting(boolean selectionMode) {
+    // Set isSelecting (controlled by selectionLock)
+    private void setSelecting(boolean isSelecting) {
 
-        boolean oldSelecting = this.selectionMode;
+        // Check if any selection lock prohibits change to isSelecting
+        if(selectionLock == ALWAYS_SELECTING || selectionLock == NEVER_SELECTING) return;
 
-        switch (selectionModeLock) {
-            case ALWAYS_SELECTING:
-                this.selectionMode = true;
-                break;
-            case NEVER_SELECTING:
-                this.selectionMode = false;
-                break;
-            case NO_SELECTION_LOCK:
-            default:
-                // Set given selection if no locks exist
-                this.selectionMode = selectionMode;
-                break;
-        }
+        // Make sure selection state is different from current selection state
+        if(isSelecting == this.isSelecting) return;
 
-        // Check if selection state has changed
-        if (oldSelecting != selectionMode) {
-            // If so, notify fragment to update selection based UI
-            onSelectionChanged(getTotalSelected(selectionArray), selectionMode);
-        }
+
+        // Apply given state
+        this.isSelecting = isSelecting;
+
+        // Notify fragment that selection state has changed
+        onSelectionChanged(getTotalSelected(selectionArray), isSelecting);
+
+
     }
-
 
     private void toggleItemSelection(final ViewHolder holder) {
 
@@ -284,16 +279,17 @@ public abstract class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapt
         // Get correct TaskViewHolder position
         int position = holder.getAdapterPosition();
 
+        // Make sure the holder exists in adapter
         if (position == -1) return;
 
-        // Toggle value stored in selection
+        // Work out new item selection value by toggling current value
         boolean selected = !selectionArray.get(position);
 
-        // Toggle selection array value for current position
+        // Apply new item selection value
         selectionArray.set(position, selected);
 
         // Notify fragment that selection has changed (to update selection based UI)
-        onSelectionChanged(getTotalSelected(selectionArray), selectionMode);
+        onSelectionChanged(getTotalSelected(selectionArray), isSelecting);
 
         // Stop selection if nothing is selected
         setSelecting(getTotalSelected(selectionArray) > 0);
@@ -313,7 +309,7 @@ public abstract class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapt
         // Update items layout
         notifyDataSetChanged();
 
-        onSelectionChanged(getTotalSelected(selectionArray), selectionMode);
+        onSelectionChanged(getTotalSelected(selectionArray), isSelecting);
 
         setSelecting(selected);
     }
@@ -350,28 +346,7 @@ public abstract class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapt
 
 
 
-    // Delete item from adapter with animation
-    private void deleteItem(final int index) {
-
-        selectionArray.remove(index);
-
-        // Removed item from adapter with animation
-        notifyItemRemoved(index);
-
-        // Update item above to keep date header (use same index because of index shifting after item deletion)
-        notifyItemChanged(index);
-    }
-
-    void deleteItemRange(int position, int itemCount) {
-
-        initSelectionArray();
-
-        notifyItemRangeRemoved(position, itemCount);
-
-        startLayoutAnimation();
-
-    }
-
+    // Remove selected items from list AND tell extender to delete them from data set
     void deleteSelectedItems() {
 
         ArrayList<Integer> selectedIndices = getSelectedIndices();
@@ -388,9 +363,11 @@ public abstract class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapt
 
             int index = selectedIndices.get(x);
 
+            // Delete data from data set
             deleteItemData(index);
 
-            deleteItem(index);
+            // Visually remove item from list
+            removeItem(index);
 
         }
 
@@ -400,16 +377,42 @@ public abstract class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapt
 
     }
 
+    // Removes item from list (does NOT delete it from the data set)
+    private void removeItem(final int index) {
+
+        selectionArray.remove(index);
+
+        // Removed item from adapter with animation
+        notifyItemRemoved(index);
+
+        // Update item above to keep date header (use same index because of index shifting after item deletion)
+        notifyItemChanged(index);
+    }
+
+    // Removes all item from list (does NOT delete them from the data set)
+    void removeAllItems() {
+
+        initSelectionArray();
+
+        notifyItemRangeRemoved(0, getItemCount());
+
+        startLayoutAnimation();
+
+    }
+
+
+    private void startLayoutAnimation() {
+        mRecyclerView.scheduleLayoutAnimation();
+    }
+
+
     // Additional date header if item starts new date
     private void displayDateHeaderIfNeeded(@NonNull ViewHolder holder, final int position){
 
-        if (firstOfDate(holder.getAdapterPosition())) {
-
-            // Date formatting pattern
-            final SimpleDateFormat newDateFormat = new SimpleDateFormat("d MMM yyyy", Locale.getDefault());
+        if (isFirstOfDate(holder.getAdapterPosition())) {
 
             // Set date header text
-            holder.itemDateHeader.setText(getItemDateString(holder.getAdapterPosition()));
+            holder.itemDateHeader.setText(DateFormatter.formatDate(getItemDate(position).getTime()));
 
             // Show date header
             holder.itemDateHeader.setVisibility(View.VISIBLE);
@@ -421,7 +424,7 @@ public abstract class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapt
     }
 
     // Check if item of specified position is the first item of its date
-    private boolean firstOfDate(final int position){
+    private boolean isFirstOfDate(final int position){
 
         if(position == 0) return true;
 
@@ -442,11 +445,6 @@ public abstract class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapt
 
     }
 
-    // Get total number of adapter items
-    @Override
-    public int getItemCount() {
-        return getItemsDataSize();
-    }
 
     // int direction : 0 for x-component, 1 for y-component
     private int[] getScreenCoordinates(View v){
@@ -454,4 +452,24 @@ public abstract class TimelineAdapter extends RecyclerView.Adapter<TimelineAdapt
         v.getLocationOnScreen(location);
         return location;
     }
+
+
+
+    abstract void onSelectionChanged(final int totalSelected, final boolean isSelecting);
+
+    abstract void displayItemData(@NonNull ViewHolder holder, final int position);
+
+    abstract void displaySelectionState(@NonNull ViewHolder holder, boolean selected);
+
+    abstract void deleteItemData(final int position);
+
+    abstract void onItemsDataChanged();
+
+    abstract void onItemClicked(final int position, final int yPos);
+
+    abstract Date getItemDate(final int position);
+
+    abstract int getItemColor(final int position);
+
+
 }

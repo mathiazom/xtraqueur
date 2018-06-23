@@ -76,4 +76,12 @@
     <string name="show_completions">Vis utførelser</string>
     <string name="settings_section_resetting">Tilbakestilling</string>
     <string name="select_payments">Velg betalinger</string>
+    <string name="error_could_not_save_changes">Feil: Kunne ikke lagre endringer</string>
+    <string name="error_could_not_delete_item">Feil: Kunne ikke slette element</string>
+    <string name="error_could_not_setup_data_directory">Feil: Kunne ikke opprett ny lagringsmappe</string>
+    <string name="error_could_not_create_new_task">Feil: Kunne ikke opprette ny oppgave</string>
+    <string name="changes_have_been_saved">Endringer har blitt lagret</string>
+    <string name="other">Annet</string>
+    <string name="hint_task">Oppgave</string>
+    <string name="completion_of">"Utførelse av "</string>
 </resources>

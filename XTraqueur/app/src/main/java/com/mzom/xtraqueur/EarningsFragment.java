@@ -1,6 +1,5 @@
 package com.mzom.xtraqueur;
 
-import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -25,18 +24,6 @@ public class EarningsFragment extends XFragment {
     private ArrayList<XTask> tasks;
 
     private ArrayList<XPayment> payments;
-
-    private EarningsFragmentListener mEarningsFragmentListener;
-
-    interface EarningsFragmentListener {
-        void onBackPressed();
-
-        void loadNewPaymentFragment();
-
-        void loadPaymentsFragment(boolean addToBackStack);
-
-        void loadTasksFragment();
-    }
 
     @Nullable
     @Override
@@ -63,18 +50,6 @@ public class EarningsFragment extends XFragment {
         return fragment;
     }
 
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-
-        try {
-            mEarningsFragmentListener = (EarningsFragmentListener) context;
-
-        } catch (ClassCastException e) {
-            throw new ClassCastException(context.toString() + " must implement EarningsFragmentListener");
-        }
-    }
-
     // Initialize toolbar field variable and add action buttons with listeners
     private void initToolbar() {
 
@@ -90,7 +65,7 @@ public class EarningsFragment extends XFragment {
         mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mEarningsFragmentListener.onBackPressed();
+                FragmentLoader.reverseLoading(getContext());
             }
         });
     }
@@ -102,7 +77,7 @@ public class EarningsFragment extends XFragment {
         button_new_payment.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mEarningsFragmentListener.loadNewPaymentFragment();
+                FragmentLoader.loadFragment(NewPaymentFragment.newInstance(tasks,payments),getContext(), R.anim.enter_from_top, R.anim.exit_to_bottom, R.anim.enter_from_bottom, R.anim.exit_to_top, true);
             }
         });
 
@@ -112,7 +87,7 @@ public class EarningsFragment extends XFragment {
         button_payments_timeline.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-            mEarningsFragmentListener.loadPaymentsFragment(true);
+                FragmentLoader.loadFragment(PaymentsFragment.newInstance(payments),getContext(),R.anim.enter_from_right, R.anim.exit_to_left, R.anim.enter_from_left, R.anim.exit_to_right,true);
             }
         });
 
@@ -149,10 +124,6 @@ public class EarningsFragment extends XFragment {
 
         Button button_payments_timeline = view.findViewById(R.id.button_total_earnings_payments_timeline);
         button_payments_timeline.setEnabled(payments.size() > 0);
-
-
-        /*final PieView pieView = new PieView(getContext(),colorArray);
-        ((ConstraintLayout)view.findViewById(R.id.total_earnings_value_container)).addView(pieView);*/
 
     }
 }

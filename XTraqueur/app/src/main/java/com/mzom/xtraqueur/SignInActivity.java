@@ -22,7 +22,7 @@ import com.google.android.gms.drive.DriveClient;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
-public class SignInActivity extends AppCompatActivity implements WelcomeFragment.WelcomeFragmentListener {
+public class SignInActivity extends AppCompatActivity implements SignInFragment.SignInFragmentListener {
 
     private static final String TAG = "XTQ-SignInActivity";
 
@@ -72,8 +72,8 @@ public class SignInActivity extends AppCompatActivity implements WelcomeFragment
         boolean signedIn = GoogleSignIn.getLastSignedInAccount(this) != null;
 
         if (!signedIn) {
-            // No Google accounts signed in, load WelcomeFragment to let the user sign in
-            Log.e(TAG, "No signed in account, loading welcome-page");
+            // No Google accounts signed in, load SignInFragment to let the user sign in
+            Log.i(TAG, "No signed in account, loading welcome-page");
             loadWelcomeFragment();
         } else {
             // Google Drive API client sign in
@@ -164,8 +164,8 @@ public class SignInActivity extends AppCompatActivity implements WelcomeFragment
 
     // Fragment that lets the user sign in to a Google account to use with the app
     private void loadWelcomeFragment() {
-        WelcomeFragment mWelcomeFragment = new WelcomeFragment();
-        getSupportFragmentManager().beginTransaction().replace(R.id.sign_in_frame_layout, mWelcomeFragment).commit();
+        SignInFragment mSignInFragment = new SignInFragment();
+        getSupportFragmentManager().beginTransaction().replace(R.id.sign_in_frame_layout, mSignInFragment).commit();
     }
 
     // Activity ProgressBar

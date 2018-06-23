@@ -2,23 +2,16 @@ package com.mzom.xtraqueur;
 
 import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
-import com.google.android.gms.drive.DriveFile;
-import com.google.android.gms.tasks.OnSuccessListener;
-
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 
 public class EditCompletionFragment extends BaseEditFragment {
-
-    private ArrayList<XTask> tasks;
-
-    private XTask task;
 
     private XTaskCompletion completion;
 
@@ -29,43 +22,54 @@ public class EditCompletionFragment extends BaseEditFragment {
     private EditText completionDateEdit;
     private EditText completionTimeEdit;
 
-    public static EditCompletionFragment newInstance(ArrayList<XTask> tasks, XTaskCompletion completion) {
+    private EditCompletionFragmentListener editCompletionFragmentListener;
 
-        EditCompletionFragment fragment = new EditCompletionFragment();
-        fragment.task = XTaskFieldsUtilities.getTaskFromCompletion(completion,tasks);
-        fragment.tasks = tasks;
-        fragment.completion = completion;
-        fragment.completionColor = fragment.task.getTaskFields().getColor();
-        fragment.tempCompletionDate = completion.getDate();
-        return fragment;
+    interface EditCompletionFragmentListener{
+
+        void onEditCompletionDate(XTaskCompletion completion, long editedCompletionDate, final OnFinishedListener onFinishedListener);
+
+        void onDeleteCompletion(XTaskCompletion completion, final OnFinishedListener onFinishedListener);
     }
 
-    // Base edit methods
+    interface OnFinishedListener{
+        void onFinished();
+    }
+
+    public static EditCompletionFragment newInstance(XTaskCompletion completion, EditCompletionFragmentListener editCompletionFragmentListener) {
+
+        EditCompletionFragment fragment = new EditCompletionFragment();
+        fragment.completion = completion;
+        fragment.completionColor = fragment.completion.getTaskIdentity().getColor();
+        fragment.tempCompletionDate = completion.getDate();
+        fragment.editCompletionFragmentListener = editCompletionFragmentListener;
+        return fragment;
+    }
 
     @NonNull
     @Override
     ConstraintLayout getEditLayout(ConstraintLayout baseEditContainer) {
 
+        // Specific edit layout
         final ConstraintLayout editLayout = (ConstraintLayout) getLayoutInflater().inflate(R.layout.fragment_edit_completion, baseEditContainer, false);
 
-        // Tell base fragment that this fragment uses a item delete button
+        // Tell base fragment that this layout contains an item delete button
         Button mDeleteButton = editLayout.findViewById(R.id.button_delete_completion);
         setItemDeleteButton(mDeleteButton,getString(R.string.delete_completion_confirmation_title),getString(R.string.delete_completion_confirmation_message));
+
 
         // Completion date
         final Date date = new Date(tempCompletionDate);
 
-        // Get completion date string
-        final SimpleDateFormat dateFormat = new SimpleDateFormat("EEEE d MMM yyyy", Locale.getDefault());
-        final String completionDate = dateFormat.format(date);
+        //Display fragment title
+        setToolbarTitle(getString(R.string.completion_of) + completion.getTaskIdentity().getName());
 
-        // Get completion time string
-        final SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
-        final String completionTime = timeFormat.format(date);
 
         // Edit completion date
         completionDateEdit = editLayout.findViewById(R.id.edit_completion_date);
-        completionDateEdit.setText(completionDate);
+        final String completionDateString = DateFormatter.format(date.getTime(),"EEEE d MMM yyyy");
+        completionDateEdit.setText(completionDateString);
+
+        // Edit date listener
         completionDateEdit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -73,9 +77,13 @@ public class EditCompletionFragment extends BaseEditFragment {
             }
         });
 
-        // Edit completion time (hour and minute)
+
+        // Completion time string
         completionTimeEdit = editLayout.findViewById(R.id.edit_completion_time);
-        completionTimeEdit.setText(completionTime);
+        final String completionTimeString = DateFormatter.format(date.getTime(),"HH:mm");
+        completionTimeEdit.setText(completionTimeString);
+
+        // Edit time listener
         completionTimeEdit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -92,46 +100,36 @@ public class EditCompletionFragment extends BaseEditFragment {
         return completionColor;
     }
 
+    // Check if any changes have been made to the completion
     @Override
     boolean itemDataIsChanged() {
         return completion.getDate() != tempCompletionDate;
     }
 
+    // Save any changes that have been made to the completion
     @Override
     void saveChanges() {
 
+        // Check if any changes have been made
         if(!itemDataIsChanged()) return;
 
-        XTaskCompletion oldCompletion = completion;
-
-        completion.setDate(tempCompletionDate);
-
-        // Update completionsList
-        ArrayList<XTaskCompletion> completions = task.getCompletions();
-        completions.set(completions.indexOf(oldCompletion),completion);
-
-        // Update tasks data
-        tasks.get(tasks.indexOf(task)).setCompletions(completions);
-
-        // Update tasks data with change
-        getBaseEditListener().updateTasksDataOnDrive(tasks, new OnSuccessListener<DriveFile>() {
+        editCompletionFragmentListener.onEditCompletionDate(completion, tempCompletionDate, new OnFinishedListener() {
             @Override
-            public void onSuccess(DriveFile driveFile) {
+            public void onFinished() {
                 returnToItemsList();
             }
         });
+
+
     }
 
     @Override
     void deleteItem() {
 
-        // Remove completion from task
-        tasks = XTaskFieldsUtilities.removeCompletion(completion,tasks);
-
-        // Update tasks data with change
-        getBaseEditListener().updateTasksDataOnDrive(tasks, new OnSuccessListener<DriveFile>() {
+        editCompletionFragmentListener.onDeleteCompletion(completion, new OnFinishedListener() {
             @Override
-            public void onSuccess(DriveFile driveFile) {
+            public void onFinished() {
+                Log.i("XTQ-EditCompletion","Completion deleted");
                 returnToItemsList();
             }
         });

@@ -64,8 +64,8 @@ class TasksListAdapter extends ArrayAdapter<XTask> {
         // Get task object from current position
         final XTask task = tasks.get(position);
 
-        // Get task's taskFields object from current position
-        final XTaskFields taskFields = task.getTaskFields();
+        // Get task's taskIdentity object from current position
+        final XTaskIdentity taskIdentity = task.getTaskIdentity();
 
         // Task view inflation
         if (convertView == null) {
@@ -76,7 +76,7 @@ class TasksListAdapter extends ArrayAdapter<XTask> {
 
         // Task name
         TextView tv_name = holder.mTaskName;
-        tv_name.setText(taskFields.getName());
+        tv_name.setText(taskIdentity.getName());
         tv_name.setTextColor(getContext().getResources().getColor(R.color.colorWhite));
 
         // Task payments count
@@ -104,7 +104,7 @@ class TasksListAdapter extends ArrayAdapter<XTask> {
         });
 
         // Set task view background according to task color
-        convertView.setBackground(new ColorDrawable(taskFields.getColor()));
+        convertView.setBackground(new ColorDrawable(taskIdentity.getColor()));
 
         return convertView;
     }

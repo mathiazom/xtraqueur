@@ -1,6 +1,7 @@
 package com.mzom.xtraqueur;
 
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 class XTaskCompletion {
 
@@ -8,11 +9,11 @@ class XTaskCompletion {
     private long date;
 
     // Attributes of the completion's associated task
-    private XTaskFields taskFields;
+    private XTaskIdentity taskIdentity;
 
-    XTaskCompletion(long date, final XTaskFields taskFields) {
+    XTaskCompletion(long date, final XTaskIdentity taskIdentity) {
         this.date = date;
-        this.taskFields = taskFields;
+        this.taskIdentity = taskIdentity;
     }
 
 
@@ -20,8 +21,8 @@ class XTaskCompletion {
         return this.date;
     }
 
-    XTaskFields getTaskFields(){
-        return this.taskFields;
+    XTaskIdentity getTaskIdentity(){
+        return this.taskIdentity;
     }
 
 
@@ -29,9 +30,9 @@ class XTaskCompletion {
         this.date = date;
     }
 
-    void setTaskFields(@NonNull XTaskFields taskFields){
+    void setTaskIdentity(@NonNull XTaskIdentity taskIdentity){
 
-        this.taskFields = taskFields;
+        this.taskIdentity = taskIdentity;
 
     }
 

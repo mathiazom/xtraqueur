@@ -70,11 +70,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
+                android:textStyle="bold"
                 android:text="@string/no_tasks_message1"
                 android:textAlignment="center"
                 android:textColor="#888"
-                android:textSize="20sp"
-                android:textStyle="bold" />
+                android:textSize="20sp" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -83,8 +83,7 @@
                 android:text="@string/no_tasks_message2"
                 android:textAlignment="center"
                 android:textColor="#555"
-                android:textSize="15sp"
-                android:textStyle="normal" />
+                android:textSize="15sp"/>
 
         </LinearLayout>
 
@@ -139,7 +138,7 @@
             app:layout_constraintBottom_toBottomOf="parent"/>
 
         <ImageButton
-            android:id="@+id/new_instant_completion_button"
+            android:id="@+id/new_single_use_task_button"
             android:paddingBottom="10dp"
             android:paddingEnd="15dp"
             android:paddingStart="15dp"

@@ -14,7 +14,7 @@ import java.net.URL;
 
 // AsyncTask that retrieves image bitmap from url string
 // Uses an interface to return the result
-class AsyncURLImageRetriever extends AsyncTask<String,Void,File> {
+class GAccountPhotoRetriever extends AsyncTask<String,Void,File> {
 
     private final static String TAG = "Xtraqueur-ImageFromUrl";
 
@@ -28,7 +28,7 @@ class AsyncURLImageRetriever extends AsyncTask<String,Void,File> {
         void onTaskFinished(File file);
     }
 
-    AsyncURLImageRetriever(AsyncURLImageRetrieverListener asyncURLImageRetrieverListener,String path){
+    GAccountPhotoRetriever(AsyncURLImageRetrieverListener asyncURLImageRetrieverListener, String path){
         this.mAsyncURLImageRetrieverListener = asyncURLImageRetrieverListener;
         this.path = path;
     }

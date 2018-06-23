@@ -1,11 +1,12 @@
 package com.mzom.xtraqueur;
 
-import android.graphics.Color;
+import android.support.v4.app.Fragment;
+import android.content.Context;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
-import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -13,36 +14,68 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.Date;
 
+/**
+
+        Functionality of CompletionsTimelineAdapter:
+     * DATA SET: Provides the data for the base adapter
+
+     * ACTUAL ITEM DELETION FROM DATA SET: This class tries to visually present item deletion. For this to work,
+     the extender has to actually remove the item from the data set for this to work properly.
+
+     * SAVING DATA SET CHANGES: This class does not save any changes made to the data set (e.g. item deletion)
+
+     * REACTION TO ITEM CLICKS: This class only alerts extender that an item
+     has been clicked, the extender decides how to react to this.
+
+     * SELECTION INFORMATION: This class operates inside the RecyclerView, and therefore gives
+     no selection indicators outside this view
+
+ **/
+
 class CompletionsTimelineAdapter extends TimelineAdapter {
 
     private static final int completionViewResId = R.layout.template_timeline_completion_item;
 
     private ArrayList<XTaskCompletion> completions = new ArrayList<>();
 
-    CompletionsTimelineAdapter(ArrayList<XTaskCompletion> completions, CompletionsTimelineAdapterNoLockListener completionsTimelineAdapterListener) {
+    /*private CompletionsTimelineAdapterListener getInterfaceFromContext(Context context){
+
+        try{
+            return (CompletionsTimelineAdapterListener) context;
+        }catch (ClassCastException e){
+            throw new ClassCastException(context.toString() + " must implement CompletionsTimelineAdapterListener");
+        }
+
+    }*/
+
+
+    CompletionsTimelineAdapter(ArrayList<XTaskCompletion> completions, Fragment fragment) {
         super(completionViewResId, false);
 
         this.completions = completions;
-        this.completionsTimelineAdapterListener = completionsTimelineAdapterListener;
+
+        this.completionsTimelineAdapterListener = (CompletionsTimelineAdapterListener) fragment;
     }
 
-    CompletionsTimelineAdapter(ArrayList<XTaskCompletion> completions, int selectionModeLock, TimelineAdapterLockListener completionsTimelineAdapterListener) {
-        super(completionViewResId, selectionModeLock);
+    CompletionsTimelineAdapter(ArrayList<XTaskCompletion> completions, int selectionLock, TimelineAdapterListener completionsTimelineAdapterListener) {
+        super(completionViewResId, selectionLock);
 
         this.completions = completions;
         this.completionsTimelineAdapterListener = completionsTimelineAdapterListener;
     }
 
-    private final TimelineAdapterLockListener completionsTimelineAdapterListener;
+    private final TimelineAdapterListener completionsTimelineAdapterListener;
 
-    interface CompletionsTimelineAdapterNoLockListener extends TimelineAdapterListener{
+    interface CompletionsTimelineAdapterListener extends TimelineAdapterListener{
 
-        void deleteCompletionData(XTaskCompletion completion);
+        void onDeleteCompletion(XTaskCompletion completion);
 
     }
 
-    void setCompletions(ArrayList<XTaskCompletion> completions){
+
+    void loadCompletions(ArrayList<XTaskCompletion> completions){
         this.completions = completions;
+        timelineItemRangeInserted(completions.size());
     }
 
 
@@ -57,15 +90,13 @@ class CompletionsTimelineAdapter extends TimelineAdapter {
     void displayItemData(@NonNull ViewHolder holder, int position) {
 
         final XTaskCompletion completion = completions.get(position);
-        final XTaskFields taskFields = completion.getTaskFields();
+        final XTaskIdentity taskIdentity = completion.getTaskIdentity();
 
         CompletionViewHolder completionViewHolder = (CompletionViewHolder) holder;
 
-        setItemBackgroundColor(holder, taskFields.getColor());
+        completionViewHolder.taskTitle.setText(taskIdentity.getName());
 
-        completionViewHolder.taskTitle.setText(taskFields.getName());
-
-        completionViewHolder.completionDate.setText(DateFormatter.formatDate(completion.getDate()));
+        completionViewHolder.completionDate.setText(DateFormatter.formatDateAndTime(completion.getDate()));
 
     }
 
@@ -74,7 +105,7 @@ class CompletionsTimelineAdapter extends TimelineAdapter {
     void displaySelectionState(@NonNull ViewHolder holder, boolean selected) {
 
         final XTaskCompletion completion = completions.get(holder.getAdapterPosition());
-        final XTaskFields taskFields = completion.getTaskFields();
+        final XTaskIdentity taskIdentity = completion.getTaskIdentity();
 
         CompletionViewHolder completionViewHolder = (CompletionViewHolder) holder;
 
@@ -82,7 +113,7 @@ class CompletionsTimelineAdapter extends TimelineAdapter {
         if (selected) {
             // Selected item background
             Drawable itemBackground = holder.itemDataLayout.getBackground();
-            itemBackground.setColorFilter(darkenColor(taskFields.getColor()), PorterDuff.Mode.SRC_ATOP);
+            itemBackground.setColorFilter(ColorUtilities.getDarkerColor(taskIdentity.getColor()), PorterDuff.Mode.SRC_ATOP);
             holder.itemDataLayout.setBackground(itemBackground);
 
             // Show selection check mark
@@ -92,7 +123,7 @@ class CompletionsTimelineAdapter extends TimelineAdapter {
         else {
             // Regular item background
             Drawable itemBackground = holder.itemDataLayout.getBackground();
-            itemBackground.setColorFilter(taskFields.getColor(), PorterDuff.Mode.SRC_ATOP);
+            itemBackground.setColorFilter(taskIdentity.getColor(), PorterDuff.Mode.SRC_ATOP);
             holder.itemDataLayout.setBackground(itemBackground);
 
             // Hide selection check mark
@@ -108,21 +139,21 @@ class CompletionsTimelineAdapter extends TimelineAdapter {
 
         completions.remove(completion);
 
-        ((CompletionsTimelineAdapterNoLockListener) completionsTimelineAdapterListener).deleteCompletionData(completion);
+        ((CompletionsTimelineAdapterListener) completionsTimelineAdapterListener).onDeleteCompletion(completion);
 
     }
 
     @Override
     void onItemsDataChanged() {
 
-        ((CompletionsTimelineAdapterNoLockListener) completionsTimelineAdapterListener).onItemsDataChanged();
+        completionsTimelineAdapterListener.onItemsDataChanged();
 
     }
 
     @Override
     void onItemClicked(int position, int yPos) {
 
-        ((CompletionsTimelineAdapterNoLockListener) completionsTimelineAdapterListener).onItemClicked(position, yPos);
+        completionsTimelineAdapterListener.onItemClicked(position, yPos);
 
     }
 
@@ -132,12 +163,12 @@ class CompletionsTimelineAdapter extends TimelineAdapter {
     }
 
     @Override
-    String getItemDateString(int position) {
-        return DateFormatter.formatDate(completions.get(position).getDate());
+    int getItemColor(int position) {
+        return completions.get(position).getTaskIdentity().getColor();
     }
 
     @Override
-    int getItemsDataSize() {
+    public int getItemCount() {
         if(completions == null) return 0;
         return completions.size();
     }
@@ -161,13 +192,5 @@ class CompletionsTimelineAdapter extends TimelineAdapter {
     @Override
     ViewHolder onCreateViewHolder(ConstraintLayout itemBaseLayout) {
         return new CompletionViewHolder(itemBaseLayout);
-    }
-
-    @ColorInt
-    private int darkenColor(@ColorInt int color) {
-        float[] hsv = new float[3];
-        Color.colorToHSV(color, hsv);
-        hsv[2] *= 0.8f;
-        return Color.HSVToColor(hsv);
     }
 }
