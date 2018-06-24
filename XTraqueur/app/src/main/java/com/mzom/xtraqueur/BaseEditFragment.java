@@ -118,7 +118,6 @@ public abstract class BaseEditFragment extends XFragment {
                                 public void onClick(DialogInterface dialogInterface, int i) {
                                     // Call abstract methods for deletion
                                     deleteItem();
-                                    //returnToItemsList();
                                 }
                             })
                             .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {

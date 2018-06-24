@@ -14,13 +14,10 @@ class XTask implements Serializable {
     // Task payments
     private ArrayList<XTaskCompletion> completions;
 
-    private boolean isSingleUse;
-
 
     XTask(@NonNull XTaskIdentity taskIdentity) {
         this.taskIdentity = taskIdentity;
         this.completions = new ArrayList<>();
-        this.isSingleUse = false;
     }
 
     XTask(String name, double fee, int color){
@@ -48,10 +45,6 @@ class XTask implements Serializable {
         return this.taskIdentity.getFee() * this.getCompletionsCount();
     }
 
-    boolean isSingleUse(){
-        return this.isSingleUse;
-    }
-
 
     void setTaskIdentity(XTaskIdentity taskIdentity){
         this.taskIdentity = taskIdentity;
@@ -62,13 +55,12 @@ class XTask implements Serializable {
         this.completions = completions;
     }
 
-    void setIsSingleUse(boolean isSingleUse){
-        this.isSingleUse = isSingleUse;
+    // Register new completion of this task
+    void registerCompletion(){
+        registerCompletion(new Date());
     }
 
-
-    // Register new completion of this task
-    void newCompletion() {
+    void registerCompletion(Date date) {
 
         // Create tasks payments list if it doesn't exist
         if (this.completions == null) {
@@ -76,7 +68,7 @@ class XTask implements Serializable {
         }
 
         // Add new completion to list
-        XTaskCompletion completion = new XTaskCompletion(new Date().getTime(), taskIdentity);
+        XTaskCompletion completion = new XTaskCompletion(date.getTime(), taskIdentity);
         this.completions.add(completion);
     }
 

@@ -6,6 +6,7 @@
     <color name="colorAccentDark">#005662</color>
 
     <color name="colorWhite">#eee</color>
+    <color name="colorWhiteDark">#bbbbbb</color>
     <color name="colorPayment">#c43e00</color>
     <color name="colorGrey">#424242</color>
 </resources>

@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="@color/colorPrimary"
-        android:elevation="4dp"
+        app:elevation="4dp"
         app:title="@string/app_name">
 
         <TextView
@@ -113,7 +113,6 @@
         android:background="@color/colorPrimary"
         android:elevation="4dp"
         android:orientation="horizontal"
-
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">

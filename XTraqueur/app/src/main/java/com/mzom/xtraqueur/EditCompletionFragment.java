@@ -137,6 +137,7 @@ public class EditCompletionFragment extends BaseEditFragment {
 
     @Override
     void onDatePicked(Date newDate) {
+
         tempCompletionDate = newDate.getTime();
 
         // Completion date text

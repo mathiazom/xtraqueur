@@ -45,15 +45,22 @@ public class TasksCompletionsFragment extends BaseCompletionsFragment {
     @Override
     void deleteCompletion(XTaskCompletion completion, final OnSuccessListener<DriveFile> onSuccessListener) {
 
-        XTask task = XTaskUtilities.getTaskFromCompletion(completion, tasks);
+        // Find task storing completion
+        final XTask task = completion.findTask(tasks);
 
+        // Make sure task search was successful
         if(task == null) return;
 
-        tasks = XTaskUtilities.removeCompletionFromTasks(completion,tasks);
+        // Remove completion from this task
+        task.removeCompletion(completion);
 
-        ArrayList<XTaskCompletion> completions = XTaskUtilities.getCompletionsFromTasks(tasks);
+        final ArrayList<XTaskCompletion> completions = XTaskUtilities.getCompletionsFromTasks(tasks);
+        setAllCompletions(completions);
 
-        Log.i("XTQ-TasksCompletions","Core post-deletion, loading " + String.valueOf(completions.size()) + " completions: " + new Gson().toJson(completions));
+        final ArrayList<XTaskIdentity> taskIdentities = XTaskUtilities.getTaskIdentitiesFromCompletions(completions);
+        setAllTaskIdentities(taskIdentities);
+
+        loadCompletions();
 
         XDataUploader.uploadData(XDataConstants.TASKS_DATA_FILE_NAME, tasks, getContext(), onSuccessListener, new OnFailureListener() {
             @Override
@@ -67,7 +74,7 @@ public class TasksCompletionsFragment extends BaseCompletionsFragment {
     @Override
     void editCompletionDate(XTaskCompletion completion, long completionDate, OnSuccessListener<DriveFile> onSuccessListener) {
 
-        final XTask task = XTaskUtilities.getTaskFromCompletion(completion,tasks);
+        final XTask task = completion.findTask(tasks);
 
         if(task == null) return;
 

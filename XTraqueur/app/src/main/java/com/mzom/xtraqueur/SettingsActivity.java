@@ -33,6 +33,7 @@ import java.util.HashMap;
 
 public class SettingsActivity extends AppCompatActivity
         implements
+        FragmentLoader.FragmentLoadable,
         SettingsFragment.SettingsFragmentListener,
         XDataUploader.XDataUploaderable {
 
@@ -68,6 +69,7 @@ public class SettingsActivity extends AppCompatActivity
         if (intentTasks == null) return;
 
         tasks = intentTasks;
+
         loadSettingsFragment();
 
     }
@@ -135,13 +137,14 @@ public class SettingsActivity extends AppCompatActivity
 
     // Fragment to change app settings
     private void loadSettingsFragment() {
-        SettingsFragment mSettingsFragment = SettingsFragment.newInstance(tasks, mGoogleSignInAccount, mGoogleAccountPhoto);
-        getSupportFragmentManager().beginTransaction().replace(R.id.settings_frame_layout, mSettingsFragment).commit();
+        FragmentLoader.loadFragment(SettingsFragment.newInstance(tasks, mGoogleSignInAccount, mGoogleAccountPhoto), this);
     }
 
     private void updateTasksDataOnDrive() {
 
-        XDataUploader.uploadData(XDataConstants.TASKS_DATA_FILE_NAME,tasks, this, new OnSuccessListener<DriveFile>() {
+        final Context context = this;
+
+        XDataUploader.uploadData(XDataConstants.TASKS_DATA_FILE_NAME,tasks, context, new OnSuccessListener<DriveFile>() {
             @Override
             public void onSuccess(DriveFile driveFile) {
                 loadSettingsFragment();
@@ -229,8 +232,13 @@ public class SettingsActivity extends AppCompatActivity
 
 
     @Override
+    public int getFragmentFrameResId() {
+        return R.id.settings_frame_layout;
+    }
+
+    @Override
     public void onFragmentBackPressed() {
-        super.onBackPressed();
+        onBackPressed();
     }
 
     @Override
@@ -245,5 +253,19 @@ public class SettingsActivity extends AppCompatActivity
             tasks = (ArrayList<XTask>) dataMap.get(XDataConstants.TASKS_DATA_FILE_NAME);
         }
 
+    }
+
+    @Override
+    public void onBackPressed() {
+
+        if (getSupportFragmentManager().getBackStackEntryCount() <= 1) {
+
+            // Finish activity if backstack is empty of fragments on back button press
+            finish();
+
+            return;
+        }
+
+        super.onBackPressed();
     }
 }

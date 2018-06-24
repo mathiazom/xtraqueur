@@ -1,12 +1,9 @@
 package com.mzom.xtraqueur;
 
-import android.support.v4.app.Fragment;
-import android.content.Context;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -38,23 +35,13 @@ class CompletionsTimelineAdapter extends TimelineAdapter {
 
     private ArrayList<XTaskCompletion> completions = new ArrayList<>();
 
-    /*private CompletionsTimelineAdapterListener getInterfaceFromContext(Context context){
 
-        try{
-            return (CompletionsTimelineAdapterListener) context;
-        }catch (ClassCastException e){
-            throw new ClassCastException(context.toString() + " must implement CompletionsTimelineAdapterListener");
-        }
-
-    }*/
-
-
-    CompletionsTimelineAdapter(ArrayList<XTaskCompletion> completions, Fragment fragment) {
+    CompletionsTimelineAdapter(ArrayList<XTaskCompletion> completions, CompletionsTimelineAdapterListener completionsTimelineAdapterListener) {
         super(completionViewResId, false);
 
         this.completions = completions;
 
-        this.completionsTimelineAdapterListener = (CompletionsTimelineAdapterListener) fragment;
+        this.completionsTimelineAdapterListener = completionsTimelineAdapterListener;
     }
 
     CompletionsTimelineAdapter(ArrayList<XTaskCompletion> completions, int selectionLock, TimelineAdapterListener completionsTimelineAdapterListener) {

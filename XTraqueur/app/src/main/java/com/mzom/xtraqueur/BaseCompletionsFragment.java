@@ -1,6 +1,5 @@
 package com.mzom.xtraqueur;
 
-import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -20,7 +19,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
-abstract class BaseCompletionsFragment extends XFragment implements CompletionsTimelineAdapter.CompletionsTimelineAdapterListener {
+abstract class BaseCompletionsFragment extends XFragment {
 
 
 
@@ -42,7 +41,6 @@ abstract class BaseCompletionsFragment extends XFragment implements CompletionsT
     private View view;
 
     private ArrayList<XTaskIdentity> allTaskIdentities;
-    private ArrayList<XTaskIdentity> completedTaskIdentities;
 
     private ArrayList<XTaskCompletion> allCompletions;
     private ArrayList<XTaskCompletion> filteredCompletions;
@@ -53,6 +51,85 @@ abstract class BaseCompletionsFragment extends XFragment implements CompletionsT
 
     private Toolbar mToolbar;
     private Toolbar mSelectionModeToolbar;
+
+    private CompletionsTimelineAdapter.CompletionsTimelineAdapterListener completionsTimelineAdapterListener = new CompletionsTimelineAdapter.CompletionsTimelineAdapterListener() {
+        @Override
+        public void onSelectionChanged(int totalSelected, final boolean isSelecting) {
+
+            // Update toolbar title based on number of selected
+            String toolbar_title;
+            if (totalSelected == 0 && isSelecting) {
+                toolbar_title = getString(R.string.select_completions);
+            } else {
+                toolbar_title = String.valueOf(totalSelected) + " " + getString(R.string.selected);
+            }
+
+            mSelectionModeToolbar.setTitle(toolbar_title);
+
+            if (isSelecting) {
+                displaySelectionUI();
+                return;
+            }
+
+            hideSelectionUI();
+
+        }
+
+        @Override
+        public void onDeleteCompletion(XTaskCompletion completion) {
+
+            deleteCompletion(completion, new OnSuccessListener<DriveFile>() {
+                @Override
+                public void onSuccess(DriveFile driveFile) {
+
+                }
+            });
+
+        }
+
+        @Override
+        public void onItemsDataChanged() {
+
+            onDataSetChanged(new OnSuccessListener<DriveFile>() {
+                @Override
+                public void onSuccess(DriveFile driveFile) {
+
+                }
+            });
+
+        }
+
+        @Override
+        public void onItemClicked(final int position, int yPos) {
+
+            // Get completion represented by clicked item
+            final XTaskCompletion completion = filteredCompletions.get(position);
+
+            // Use EditCompletionFragment to let user edit properties of clicked completion
+            FragmentLoader.loadFragment(EditCompletionFragment.newInstance(completion, new EditCompletionFragment.EditCompletionFragmentListener() {
+                @Override
+                public void onEditCompletionDate(XTaskCompletion completion, long editedCompletionDate, final EditCompletionFragment.OnFinishedListener onFinishedListener) {
+                    editCompletionDate(completion, editedCompletionDate, new OnSuccessListener<DriveFile>() {
+                        @Override
+                        public void onSuccess(DriveFile driveFile) {
+                            onFinishedListener.onFinished();
+                        }
+                    });
+                }
+
+                @Override
+                public void onDeleteCompletion(XTaskCompletion completion, final EditCompletionFragment.OnFinishedListener onFinishedListener) {
+                    deleteCompletion(completion, new OnSuccessListener<DriveFile>() {
+                        @Override
+                        public void onSuccess(DriveFile driveFile) {
+                            onFinishedListener.onFinished();
+                        }
+                    });
+                }
+            }),getContext());
+
+        }
+    };
 
     @Nullable
     @Override
@@ -65,8 +142,6 @@ abstract class BaseCompletionsFragment extends XFragment implements CompletionsT
 
         initToolbar();
 
-        this.completedTaskIdentities = XTaskUtilities.getTaskIdentitiesFromCompletions(allCompletions);
-
         loadCompletions();
 
         return view;
@@ -76,7 +151,6 @@ abstract class BaseCompletionsFragment extends XFragment implements CompletionsT
     CompletionsTimelineAdapter getAdapter(){
         return this.mAdapter;
     }
-
 
     final void setAllCompletions(ArrayList<XTaskCompletion> completions){
         this.allCompletions = completions;
@@ -89,6 +163,7 @@ abstract class BaseCompletionsFragment extends XFragment implements CompletionsT
     final void setFilterTaskIdentity(XTaskIdentity taskIdentity){
         this.filterTaskIdentity = taskIdentity;
     }
+
 
     // Initialize toolbar field variable and add action buttons with listeners
     private void initToolbar() {
@@ -105,18 +180,29 @@ abstract class BaseCompletionsFragment extends XFragment implements CompletionsT
             @Override
             public void onClick(View v) {
 
-                new TasksFilterDialog(getContext(), filterTaskIdentity, allCompletions,allTaskIdentities, completedTaskIdentities, mAdapter, new TasksFilterDialog.TasksFilterDialogListener() {
+                final ArrayList<XTaskIdentity> completedTaskIdentities = XTaskUtilities.getTaskIdentitiesFromCompletions(allCompletions);
+
+                new TasksFilterDialog(getContext(), filterTaskIdentity, allTaskIdentities, completedTaskIdentities, new TasksFilterDialog.TasksFilterDialogListener() {
                     @Override
                     public void onFilter(XTaskIdentity filterIdentity) {
+
+                        // Update task identity filter
                         filterTaskIdentity = filterIdentity;
-                        displayCurrentTasksFilter(filterIdentity);
+
+                        // Reload completions adapter to reflect filter change
+                        loadCompletions();
+
+                        // Reflect filter change in UI elements
+                        displayCurrentTasksFilter();
+
+
                     }
                 }).show();
             }
         });
 
         // Init filter UI
-        displayCurrentTasksFilter(filterTaskIdentity);
+        displayCurrentTasksFilter();
 
         // Set back button as toolbar navigation icon
         mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
@@ -158,7 +244,7 @@ abstract class BaseCompletionsFragment extends XFragment implements CompletionsT
         // Filtered for single task (from EditTaskFragment)
         if (filterTaskIdentity != null) {
 
-            filteredCompletions = XTaskUtilities.getCompletionsFromTaskIdentity(filterTaskIdentity,allCompletions);
+            filteredCompletions = filterTaskIdentity.findCompletions(allCompletions);
 
         } else {
             filteredCompletions = allCompletions;
@@ -173,7 +259,7 @@ abstract class BaseCompletionsFragment extends XFragment implements CompletionsT
         });
 
         // Display filteredCompletions in RecyclerView with Adapter
-        mAdapter = new CompletionsTimelineAdapter(filteredCompletions, this);
+        mAdapter = new CompletionsTimelineAdapter(filteredCompletions, completionsTimelineAdapterListener);
 
         mRecyclerView.setAdapter(mAdapter);
 
@@ -182,36 +268,8 @@ abstract class BaseCompletionsFragment extends XFragment implements CompletionsT
 
     }
 
-    private void editCompletion(int position){
-
-        final XTaskCompletion completion = filteredCompletions.get(position);
-
-        FragmentLoader.loadFragment(EditCompletionFragment.newInstance(completion, new EditCompletionFragment.EditCompletionFragmentListener() {
-            @Override
-            public void onEditCompletionDate(XTaskCompletion completion, long editedCompletionDate, final EditCompletionFragment.OnFinishedListener onFinishedListener) {
-                editCompletionDate(completion, editedCompletionDate, new OnSuccessListener<DriveFile>() {
-                    @Override
-                    public void onSuccess(DriveFile driveFile) {
-                        onFinishedListener.onFinished();
-                    }
-                });
-            }
-
-            @Override
-            public void onDeleteCompletion(XTaskCompletion completion, final EditCompletionFragment.OnFinishedListener onFinishedListener) {
-                deleteCompletion(completion, new OnSuccessListener<DriveFile>() {
-                    @Override
-                    public void onSuccess(DriveFile driveFile) {
-                        onFinishedListener.onFinished();
-                    }
-                });
-            }
-        }),getContext());
-
-    }
-
     // Visually display current tasks filter
-    private void displayCurrentTasksFilter(@Nullable XTaskIdentity filterTaskIdentity) {
+    private void displayCurrentTasksFilter() {
 
         // Completions task filter
         final LinearLayout taskFilterContainer = mToolbar.findViewById(R.id.task_filter_field);
@@ -240,86 +298,22 @@ abstract class BaseCompletionsFragment extends XFragment implements CompletionsT
         taskFilterName.setText(name);
     }
 
-
-    private void updateSelectionUI(int totalSelected, final boolean isSelecting) {
-
-        // Update toolbar title based on number of selected
-        String toolbar_title;
-        if (totalSelected == 0 && isSelecting) {
-            toolbar_title = getString(R.string.select_completions);
-        } else {
-            toolbar_title = String.valueOf(totalSelected) + " " + getString(R.string.selected);
-        }
-
-        mSelectionModeToolbar.setTitle(toolbar_title);
-
-        if (isSelecting) {
-            displaySelectionUI();
-            return;
-        }
-
-        hideSelectionUI();
-    }
-
     private void displaySelectionUI() {
 
         // Hide regular toolbar
-        mToolbar = view.findViewById(R.id.toolbar);
         mToolbar.setVisibility(View.GONE);
 
         // Make selection mode toolbar visible
-        mSelectionModeToolbar = view.findViewById(R.id.toolbar_selection_mode);
         mSelectionModeToolbar.setVisibility(View.VISIBLE);
     }
 
     final void hideSelectionUI() {
 
         // Hide selection mode toolbar
-        mSelectionModeToolbar = view.findViewById(R.id.toolbar_selection_mode);
         mSelectionModeToolbar.setVisibility(View.GONE);
 
         // Make regular toolbar visible
-        mToolbar = view.findViewById(R.id.toolbar);
         mToolbar.setVisibility(View.VISIBLE);
-    }
-
-
-    @Override
-    public void onSelectionChanged(int totalSelected, final boolean isSelecting) {
-
-        updateSelectionUI(totalSelected, isSelecting);
-
-    }
-
-    @Override
-    public void onDeleteCompletion(XTaskCompletion completion) {
-
-        deleteCompletion(completion, new OnSuccessListener<DriveFile>() {
-            @Override
-            public void onSuccess(DriveFile driveFile) {
-
-            }
-        });
-
-    }
-
-    @Override
-    public void onItemsDataChanged() {
-
-        onDataSetChanged(new OnSuccessListener<DriveFile>() {
-            @Override
-            public void onSuccess(DriveFile driveFile) {
-
-            }
-        });
-
-    }
-
-    @Override
-    public void onItemClicked(final int position, int yPos) {
-
-        editCompletion(position);
-
     }
 
 }

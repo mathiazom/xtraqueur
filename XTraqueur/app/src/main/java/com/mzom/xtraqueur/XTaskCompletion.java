@@ -1,7 +1,10 @@
 package com.mzom.xtraqueur;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
+
+import java.util.ArrayList;
 
 class XTaskCompletion {
 
@@ -23,6 +26,18 @@ class XTaskCompletion {
 
     XTaskIdentity getTaskIdentity(){
         return this.taskIdentity;
+    }
+
+    // Search tasks data set for XTask with XTaskIdentity equalling XTaskIdentity of this completion
+    // (returns null if no such task is found)
+    @Nullable
+    XTask findTask(ArrayList<XTask> tasks){
+        for(XTask task : tasks){
+            if(taskIdentity.equals(task.getTaskIdentity())){
+                return task;
+            }
+        }
+        return null;
     }
 
 

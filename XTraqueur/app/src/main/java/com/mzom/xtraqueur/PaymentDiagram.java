@@ -50,6 +50,15 @@ public class PaymentDiagram extends View {
 
         this.completions = payment.getCompletions();
         this.taskIdentities = XTaskUtilities.getTaskIdentitiesFromCompletions(completions);
+
+        // Sort taskIdentities based on completion counts
+        Collections.sort(taskIdentities, new Comparator<XTaskIdentity>() {
+
+            @Override
+            public int compare(XTaskIdentity o1, XTaskIdentity o2) {
+                return Long.compare(o2.getCompletionsCount(completions), o1.getCompletionsCount(completions));
+            }
+        });
     }
 
     private ArrayList<XTaskCompletion> completions;
@@ -72,22 +81,9 @@ public class PaymentDiagram extends View {
 
         float leftOffset = getPaddingLeft();
 
-        // Sort taskIdentities based on completion counts
-        Collections.sort(taskIdentities, new Comparator<XTaskIdentity>() {
-
-            @Override
-            public int compare(XTaskIdentity o1, XTaskIdentity o2) {
-
-                int count1 = XTaskUtilities.getCompletionCountOfTask(completions,o1);
-                int count2 = XTaskUtilities.getCompletionCountOfTask(completions,o2);
-
-                return Long.compare(count2, count1);
-            }
-        });
-
         for(XTaskIdentity taskIdentity : taskIdentities){
 
-            int completionsCount = XTaskUtilities.getCompletionCountOfTask(completions,taskIdentity);
+            int completionsCount = taskIdentity.getCompletionsCount(completions);
 
             float portion = completionsCount/(float)completions.size();
 

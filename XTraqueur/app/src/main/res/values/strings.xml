@@ -59,7 +59,6 @@
     <string name="deselect_all">Deselect all</string>
     <string name="new_payment_date">Date</string>
     <string name="new_payment_title">New payment</string>
-    <string name="register">Register</string>
     <string name="payments_timeline">Payments timeline</string>
     <string name="confirmation_dialog_register_payment">Register new payment?</string>
     <string name="confirmation_dialog_register_payment_msg">This action can not be undone. Do you really want to archive selected completions to a new payment?</string>
@@ -90,4 +89,6 @@
     <string name="other">Other</string>
     <string name="hint_task">Task</string>
     <string name="completion_of">Completion of</string>
+    <string name="register_new_completion">Register new completion</string>
+    <string name="register">Register</string>
 </resources>

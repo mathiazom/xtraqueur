@@ -84,4 +84,5 @@
     <string name="other">Annet</string>
     <string name="hint_task">Oppgave</string>
     <string name="completion_of">"Utførelse av "</string>
+    <string name="register_new_completion">Registrer ny utførelse</string>
 </resources>

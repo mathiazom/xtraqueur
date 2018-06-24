@@ -131,18 +131,19 @@ public class TasksFragment extends XFragment {
     }
 
     private void initListeners() {
+
         // TextView to load NewTaskFragment
         view.findViewById(R.id.new_task_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                FragmentLoader.loadFragment(NewTaskFragment.newInstance(tasks, payments,XTaskUtilities.getRandomMaterialColor(getContext())),getContext(), R.anim.enter_from_top, R.anim.exit_to_bottom, R.anim.enter_from_bottom, R.anim.exit_to_top,true);
+                FragmentLoader.loadFragment(NewTaskFragment.newInstance(tasks, payments,ColorUtilities.getRandomMaterialColor(getContext())),getContext(), R.anim.enter_from_top, R.anim.exit_to_bottom, R.anim.enter_from_bottom, R.anim.exit_to_top,true);
             }
         });
 
         view.findViewById(R.id.new_single_use_task_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                FragmentLoader.loadFragment(NewTaskFragment.newInstance(tasks,payments, XTaskUtilities.getRandomMaterialColor(getContext())),getContext(), R.anim.enter_from_top, R.anim.exit_to_bottom, R.anim.enter_from_bottom, R.anim.exit_to_top,true);
+                FragmentLoader.loadFragment(NewTaskFragment.newInstance(tasks,payments, ColorUtilities.getRandomMaterialColor(getContext())),getContext(), R.anim.enter_from_top, R.anim.exit_to_bottom, R.anim.enter_from_bottom, R.anim.exit_to_top,true);
             }
         });
 
@@ -188,20 +189,21 @@ public class TasksFragment extends XFragment {
         // Enables drag and sort functionality to the list
         final DragSortListView tasksListView = view.findViewById(R.id.xtask_container);
 
-        ArrayList<XTask> nonSingleUseTasks = XTaskUtilities.getNonSingleUseTasks(tasks);
-
         // ListView ArrayAdapter
-        mListAdapter = new TasksListAdapter(getContext(), nonSingleUseTasks, new TasksListAdapter.XTaskListAdapterListener() {
+        mListAdapter = new TasksListAdapter(getContext(), tasks, new TasksListAdapter.XTaskListAdapterListener() {
             @Override
-            public void onUpdateTasks(ArrayList<XTask> tasks) {
+            public void onTasksUpdated(ArrayList<XTask> updatedTasks) {
 
                 // Save the scroll position before refresh
                 int index = tasksListView.getFirstVisiblePosition();
                 View v = tasksListView.getChildAt(0);
                 int top = (v == null) ? 0 : (v.getTop() - tasksListView.getPaddingTop());
 
-                // Refresh ListView
-                updateTasks(tasks);
+                // Update fragment field variable for the tasks data set
+                tasks = updatedTasks;
+
+                // "Reload" ListView to make changes take effect
+                loadTasks();
 
                 // Restore the scroll position after refresh
                 tasksListView.setSelectionFromTop(index, top);
@@ -300,19 +302,6 @@ public class TasksFragment extends XFragment {
         expand_animation.setAnimationListener(animationListener);
 
         scaleView.startAnimation(expand_animation);
-    }
-
-    // Update Google Drive tasks_data.txt and update TextView displaying the tasks total value
-    private void updateTasks(ArrayList<XTask> tasks) {
-
-        // Update fragment field variable for the tasks data set
-        this.tasks = tasks;
-
-        // Update tasks_data.txt stored with Google Drive
-        XDataUploader.uploadData(XDataConstants.TASKS_DATA_FILE_NAME,tasks,getContext());
-
-        // "Reload" ListView to make changes take effect
-        loadTasks();
     }
 
     // Update TextView displaying the tasks total value

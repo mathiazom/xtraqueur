@@ -324,19 +324,15 @@ public class NewPaymentFragment extends XFragment {
     // Register new payment for selected payments
     private void registerPayment() {
 
-        double paymentValue = 0;
-
         // Completions will be archived, so remove them from regular completion list
         for (XTaskCompletion completion : getSelectedCompletions()) {
 
-            XTask task = XTaskUtilities.getTaskFromCompletion(completion, tasks);
+            // Find task storing completion
+            final XTask task = completion.findTask(tasks);
 
-            if(task != null){
+            // Remove completion from this task
+            if(task != null) task.removeCompletion(completion);
 
-                tasks = XTaskUtilities.removeCompletionFromTasks(completion,tasks);
-
-                paymentValue += completion.getTaskIdentity().getFee();
-            }
 
         }
 

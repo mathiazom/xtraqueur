@@ -1,10 +1,10 @@
 package com.mzom.xtraqueur;
 
+import android.app.AlertDialog;
 import android.content.Context;
-import android.graphics.Color;
+import android.content.DialogInterface;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.ColorDrawable;
-import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
@@ -13,8 +13,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import java.util.ArrayList;
+import java.util.Date;
 
 class TasksListAdapter extends ArrayAdapter<XTask> {
 
@@ -31,7 +34,7 @@ class TasksListAdapter extends ArrayAdapter<XTask> {
 
     public interface XTaskListAdapterListener {
 
-        void onUpdateTasks(ArrayList<XTask> tasks);
+        void onTasksUpdated(ArrayList<XTask> updatedTasks);
     }
 
     TasksListAdapter(Context ctx, ArrayList<XTask> tasks, XTaskListAdapterListener xTaskListAdapterListener) {
@@ -86,20 +89,41 @@ class TasksListAdapter extends ArrayAdapter<XTask> {
 
         // Addition button
         ImageButton button_add = holder.mAddButton;
-
-        // Subtraction button background
-        Drawable button_drawable1 = button_add.getBackground();
-        button_drawable1.setColorFilter(Color.argb(51, 255, 255, 255), PorterDuff.Mode.MULTIPLY);
-
-        //button_add.setColorFilter(task.getColor());
-        button_add.setColorFilter(getContext().getResources().getColor(R.color.colorWhite));
+        button_add.setColorFilter(getContext().getResources().getColor(R.color.colorWhite), PorterDuff.Mode.SRC_ATOP);
 
         // Addition button listener
         button_add.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                task.newCompletion();
-                xTaskListAdapterListener.onUpdateTasks(tasks);
+
+                // Create new XTaskCompletion instance and store it inside task
+                task.registerCompletion();
+
+                // Update tasks_data.txt stored with Google Drive
+                XDataUploader.uploadData(XDataConstants.TASKS_DATA_FILE_NAME,tasks,getContext());
+
+                xTaskListAdapterListener.onTasksUpdated(tasks);
+            }
+        });
+
+        button_add.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+
+                new RegisterCompletionDialog(getContext(), task, new RegisterCompletionDialog.RegisterCompletionDialogInterface() {
+                    @Override
+                    public void onCompletionRegistered(Date completionDate) {
+                        task.registerCompletion(completionDate);
+
+                        // Update tasks_data.txt stored with Google Drive
+                        XDataUploader.uploadData(XDataConstants.TASKS_DATA_FILE_NAME,tasks,getContext());
+
+                        xTaskListAdapterListener.onTasksUpdated(tasks);
+                    }
+                }).show();
+
+                // Consume long click to prevent firing regular on click
+                return true;
             }
         });
 

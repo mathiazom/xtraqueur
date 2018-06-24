@@ -28,10 +28,10 @@ public class PaymentCompletionsFragment extends BaseCompletionsFragment {
         fragment.payment = payments.get(paymentIndex);
         fragment.payments = payments;
 
-        ArrayList<XTaskCompletion> allCompletions = payments.get(paymentIndex).getCompletions();
+        final ArrayList<XTaskCompletion> allCompletions = payments.get(paymentIndex).getCompletions();
         fragment.setAllCompletions(allCompletions);
 
-        ArrayList<XTaskIdentity> allTaskIdentities = XTaskUtilities.getTaskIdentitiesFromCompletions(allCompletions);
+        final ArrayList<XTaskIdentity> allTaskIdentities = XTaskUtilities.getTaskIdentitiesFromCompletions(allCompletions);
         fragment.setAllTaskIdentities(allTaskIdentities);
 
         return fragment;
@@ -45,6 +45,14 @@ public class PaymentCompletionsFragment extends BaseCompletionsFragment {
 
         // Update changes in payments data set if deletion was successful
         payments.set(paymentIndex, payment);
+
+        final ArrayList<XTaskCompletion> allCompletions = payments.get(paymentIndex).getCompletions();
+        setAllCompletions(allCompletions);
+
+        final ArrayList<XTaskIdentity> allTaskIdentities = XTaskUtilities.getTaskIdentitiesFromCompletions(allCompletions);
+        setAllTaskIdentities(allTaskIdentities);
+
+        loadCompletions();
 
         XDataUploader.uploadData(XDataConstants.PAYMENTS_DATA_FILE_NAME, payments, getContext(), onSuccessListener, new OnFailureListener() {
             @Override
