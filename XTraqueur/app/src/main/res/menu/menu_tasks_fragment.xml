@@ -2,6 +2,6 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <!-- <item android:title="@string/total_earnings" android:id="@+id/tasks_payment_icon" android:icon="@drawable/ic_payment_icon" app:showAsAction="ifRoom"/> -->
-    <item android:title="@string/menu_icon_title_timeline" android:id="@+id/tasks_timeline_icon" android:icon="@drawable/ic_timeline" app:showAsAction="ifRoom"/>
-    <item android:title="@string/menu_icon_title_settings" android:id="@+id/tasks_settings_icon" android:icon="@drawable/ic_settings" app:showAsAction="ifRoom"/>
+    <item android:title="@string/menu_icon_title_timeline" android:id="@+id/tasks_timeline_icon" android:icon="@drawable/ic_timeline_grey" app:showAsAction="ifRoom"/>
+    <item android:title="@string/menu_icon_title_settings" android:id="@+id/tasks_settings_icon" android:icon="@drawable/ic_settings_grey" app:showAsAction="ifRoom"/>
 </menu>

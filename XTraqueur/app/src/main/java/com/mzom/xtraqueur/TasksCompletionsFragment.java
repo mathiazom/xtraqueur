@@ -4,13 +4,11 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.MenuItem;
 
 import com.google.android.gms.drive.DriveFile;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.gson.Gson;
 
 import java.util.ArrayList;
 
@@ -20,18 +18,22 @@ public class TasksCompletionsFragment extends BaseCompletionsFragment {
 
     private ArrayList<XPayment> payments;
 
-    public static TasksCompletionsFragment newInstance(ArrayList<XTask> tasks,ArrayList<XPayment> payments) {
-        return newInstance(tasks,payments,null);
+    private ArrayList<XTaskCompletion> instantCompletions;
+
+    public static TasksCompletionsFragment newInstance(ArrayList<XTask> tasks,ArrayList<XPayment> payments,ArrayList<XTaskCompletion> instantCompletions) {
+        return newInstance(tasks,payments,instantCompletions,null);
     }
 
-    public static TasksCompletionsFragment newInstance(ArrayList<XTask> tasks, ArrayList<XPayment> payments,XTaskIdentity taskIdentity) {
+    public static TasksCompletionsFragment newInstance(ArrayList<XTask> tasks, ArrayList<XPayment> payments,ArrayList<XTaskCompletion> instantCompletions, XTaskIdentity taskIdentity) {
 
         TasksCompletionsFragment fragment = new TasksCompletionsFragment();
 
         fragment.tasks = tasks;
         fragment.payments = payments;
+        fragment.instantCompletions = instantCompletions;
 
         ArrayList<XTaskCompletion> completions = XTaskUtilities.getCompletionsFromTasks(tasks);
+        completions.addAll(fragment.instantCompletions);
         fragment.setAllCompletions(completions);
 
         ArrayList<XTaskIdentity> taskIdentities = XTaskUtilities.getTaskIdentitiesFromCompletions(completions);
@@ -43,57 +45,58 @@ public class TasksCompletionsFragment extends BaseCompletionsFragment {
     }
 
     @Override
-    void deleteCompletion(XTaskCompletion completion, final OnSuccessListener<DriveFile> onSuccessListener) {
+    void onCompletionClicked(XTaskCompletion completion, int yPos) {
+
+        if(completion.isInstantCompletion()){
+
+            // Edit instant completion
+            FragmentLoader.loadFragment(EditInstantCompletionFragment.newInstance(completion, instantCompletions),getContext());
+
+        }else{
+
+            // Edit task completion
+            FragmentLoader.loadFragment(EditTaskCompletionFragment.newInstance(completion, tasks),getContext());
+        }
+
+    }
+
+    @Override
+    void deleteCompletion(XTaskCompletion completion) {
 
         // Find task storing completion
         final XTask task = completion.findTask(tasks);
 
         // Make sure task search was successful
-        if(task == null) return;
+        if(task != null){
 
-        // Remove completion from this task
-        task.removeCompletion(completion);
+            // Remove completion from this task
+            task.removeCompletion(completion);
+
+            XDataUploader.uploadData(XDataConstants.TASKS_DATA_FILE_NAME, tasks, getContext());
+
+        }else{
+
+            int index = instantCompletions.indexOf(completion);
+
+            if(index != -1){
+
+                instantCompletions.remove(completion);
+
+                XDataUploader.uploadData(XDataConstants.INSTANT_COMPLETIONS_DATA_FILE_NAME, instantCompletions, getContext());
+            }
+
+
+        }
 
         final ArrayList<XTaskCompletion> completions = XTaskUtilities.getCompletionsFromTasks(tasks);
+        completions.addAll(instantCompletions);
         setAllCompletions(completions);
 
         final ArrayList<XTaskIdentity> taskIdentities = XTaskUtilities.getTaskIdentitiesFromCompletions(completions);
+        taskIdentities.addAll(XTaskUtilities.getTaskIdentitiesFromCompletions(instantCompletions));
         setAllTaskIdentities(taskIdentities);
 
         loadCompletions();
-
-        XDataUploader.uploadData(XDataConstants.TASKS_DATA_FILE_NAME, tasks, getContext(), onSuccessListener, new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-
-            }
-        });
-        
-    }
-
-    @Override
-    void editCompletionDate(XTaskCompletion completion, long completionDate, OnSuccessListener<DriveFile> onSuccessListener) {
-
-        final XTask task = completion.findTask(tasks);
-
-        if(task == null) return;
-
-        ArrayList<XTaskCompletion> completions = task.getCompletions();
-
-        int index = completions.indexOf(completion);
-
-        completion.setDate(completionDate);
-
-        completions.set(index,completion);
-
-        task.setCompletions(completions);
-
-        XDataUploader.uploadData(XDataConstants.TASKS_DATA_FILE_NAME, tasks, getContext(), onSuccessListener, new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-
-            }
-        });
 
     }
 
@@ -110,7 +113,7 @@ public class TasksCompletionsFragment extends BaseCompletionsFragment {
                 switch (item.getItemId()) {
                     case R.id.timeline_selection_mode_icon_register_payment:
 
-                        FragmentLoader.loadFragment(NewPaymentFragment.newInstance(tasks,payments,getAdapter().getSelectionArray()),getContext(),R.anim.enter_from_bottom, R.anim.exit_to_top, R.anim.enter_from_top, R.anim.exit_to_bottom, true);
+                        FragmentLoader.loadFragment(NewPaymentFragment.newInstance(tasks,payments,instantCompletions,getCompleteSelectionArray()),getContext(),R.anim.enter_from_bottom, R.anim.exit_to_top, R.anim.enter_from_top, R.anim.exit_to_bottom, true);
 
                         hideSelectionUI();
                         break;
@@ -144,15 +147,35 @@ public class TasksCompletionsFragment extends BaseCompletionsFragment {
         };
     }
 
+    // Iterate selected completions to create a complete selection array
+    private ArrayList<Boolean> getCompleteSelectionArray(){
+
+        final ArrayList<XTaskCompletion> allCompletions = XTaskUtilities.getCompletionsFromTasks(tasks);
+
+        final ArrayList<Boolean> completeSelectionArray = new ArrayList<>(allCompletions.size());
+
+        final ArrayList<XTaskCompletion> selectedCompletions = getSelectedCompletions();
+
+        for(int i = 0;i<allCompletions.size();i++){
+
+            final XTaskCompletion completion = allCompletions.get(i);
+
+            boolean selected = selectedCompletions.indexOf(completion) > -1;
+
+            completeSelectionArray.add(i,selected);
+
+        }
+
+        return completeSelectionArray;
+
+    }
+
     @Override
-    void onDataSetChanged(OnSuccessListener<DriveFile> onSuccessListener) {
+    void onDataSetChanged() {
 
-        XDataUploader.uploadData(XDataConstants.TASKS_DATA_FILE_NAME, tasks, getContext(), onSuccessListener, new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
+        XDataUploader.uploadData(XDataConstants.TASKS_DATA_FILE_NAME, tasks, getContext());
 
-            }
-        });
+        XDataUploader.uploadData(XDataConstants.INSTANT_COMPLETIONS_DATA_FILE_NAME, instantCompletions, getContext());
 
     }
 }

@@ -31,7 +31,7 @@ import java.util.Date;
 
 class CompletionsTimelineAdapter extends TimelineAdapter {
 
-    private static final int completionViewResId = R.layout.template_timeline_completion_item;
+    private static final int completionViewResId = R.layout.template_completion;
 
     private ArrayList<XTaskCompletion> completions = new ArrayList<>();
 
@@ -84,6 +84,13 @@ class CompletionsTimelineAdapter extends TimelineAdapter {
         completionViewHolder.taskTitle.setText(taskIdentity.getName());
 
         completionViewHolder.completionDate.setText(DateFormatter.formatDateAndTime(completion.getDate()));
+
+        if(completion.isInstantCompletion()){
+            completionViewHolder.completionColorMarker.setVisibility(View.VISIBLE);
+            //ColorUtilities.setViewBackgroundColor(completionViewHolder.completionColorMarker);
+        }else{
+            completionViewHolder.completionColorMarker.setVisibility(View.GONE);
+        }
 
     }
 
@@ -166,6 +173,7 @@ class CompletionsTimelineAdapter extends TimelineAdapter {
         final TextView taskTitle;
         final TextView completionDate;
         final ImageView selectedMark;
+        final View completionColorMarker;
 
         private CompletionViewHolder(ConstraintLayout itemBaseLayout) {
             super(itemBaseLayout);
@@ -173,6 +181,7 @@ class CompletionsTimelineAdapter extends TimelineAdapter {
             taskTitle = itemBaseLayout.findViewById(R.id.completion_item_title);
             completionDate = itemBaseLayout.findViewById(R.id.completion_item_date);
             selectedMark = itemBaseLayout.findViewById(R.id.completion_item_selected_mark);
+            completionColorMarker = itemBaseLayout.findViewById(R.id.instant_completion_color_marker);
         }
     }
 

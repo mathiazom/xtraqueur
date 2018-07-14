@@ -7,6 +7,13 @@
     android:layout_height="wrap_content"
     app:layout_constraintTop_toBottomOf="@id/timeline_item_date_header">
 
+    <View
+        android:id="@+id/instant_completion_color_marker"
+        android:layout_width="10dp"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:background="@color/colorInstantCompletion"/>
+
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -16,7 +23,7 @@
         android:paddingStart="20dp"
         android:paddingTop="10dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
+        app:layout_constraintStart_toEndOf="@id/instant_completion_color_marker">
 
         <LinearLayout
             android:layout_width="wrap_content"

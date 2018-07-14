@@ -14,7 +14,7 @@ import java.net.URL;
 
 // AsyncTask that retrieves image bitmap from url string
 // Uses an interface to return the result
-class GAccountPhotoRetriever extends AsyncTask<String,Void,File> {
+class GoogleAccountPhotoRetriever extends AsyncTask<String,Void,File> {
 
     private final static String TAG = "Xtraqueur-ImageFromUrl";
 
@@ -28,7 +28,7 @@ class GAccountPhotoRetriever extends AsyncTask<String,Void,File> {
         void onTaskFinished(File file);
     }
 
-    GAccountPhotoRetriever(AsyncURLImageRetrieverListener asyncURLImageRetrieverListener, String path){
+    GoogleAccountPhotoRetriever(AsyncURLImageRetrieverListener asyncURLImageRetrieverListener, String path){
         this.mAsyncURLImageRetrieverListener = asyncURLImageRetrieverListener;
         this.path = path;
     }
@@ -53,14 +53,14 @@ class GAccountPhotoRetriever extends AsyncTask<String,Void,File> {
         // Get bitmap byte array to store on device
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         imageBitmap.compress(Bitmap.CompressFormat.PNG,0,bos);
-        byte[] bitmapdata = bos.toByteArray();
+        byte[] bitmapData = bos.toByteArray();
 
         File file = new File(path);
 
         // Store bitmap data inside file on device
         try {
             FileOutputStream fileOutputStream = new FileOutputStream(file);
-            fileOutputStream.write(bitmapdata);
+            fileOutputStream.write(bitmapData);
             fileOutputStream.flush();
             fileOutputStream.close();
         } catch (Exception e) {

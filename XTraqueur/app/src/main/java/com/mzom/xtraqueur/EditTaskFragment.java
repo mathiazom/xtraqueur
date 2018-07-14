@@ -36,6 +36,8 @@ public class EditTaskFragment extends BaseEditFragment {
 
     private ArrayList<XPayment> payments;
 
+    private ArrayList<XTaskCompletion> instantCompletions;
+
     // Current task being edited
     private XTask task;
 
@@ -48,65 +50,15 @@ public class EditTaskFragment extends BaseEditFragment {
     final static String TAG = "Xtraqueur-EditFrag";
 
     // Constructor that enables MainActivity to pass arguments to the fragments field variables on creation
-    public static EditTaskFragment newInstance(ArrayList<XTask> tasks, ArrayList<XPayment> payments, XTask task, int index) {
+    public static EditTaskFragment newInstance(ArrayList<XTask> tasks, ArrayList<XPayment> payments,  ArrayList<XTaskCompletion> instantCompletions, XTask task, int index) {
         EditTaskFragment fragment = new EditTaskFragment();
         fragment.taskIndex = index;
         fragment.task = task;
         fragment.tasks = tasks;
         fragment.payments = payments;
+        fragment.instantCompletions = instantCompletions;
         fragment.temp_color = task.getTaskIdentity().getColor();
         return fragment;
-    }
-
-    private void initMaterialColorList(){
-
-        ConstraintLayout colorButton = fragmentView.findViewById(R.id.edittask_color_button);
-        colorButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                final MaterialColorDialog materialColorDialog = new MaterialColorDialog(getContext(), temp_color,new MaterialColorDialog.MaterialColorDialogListener() {
-                    @Override
-                    public void onColorPicked(int color) {
-                        onColorChanged(color);
-                    }
-                });
-                materialColorDialog.show();
-            }
-        });
-
-        LinearLayout marker = fragmentView.findViewById(R.id.edittask_color_button_marker);
-        Drawable background = marker.getBackground();
-        background.setColorFilter(temp_color, PorterDuff.Mode.SRC_ATOP);
-        marker.setBackground(background);
-
-        TextView colorTitle = fragmentView.findViewById(R.id.edittask_color_button_title);
-        String sColor = String.format("#%06X", (0xFFFFFF & temp_color));
-        colorTitle.setText(sColor);
-
-    }
-
-    // Triggered when user picks a color in the color picker
-    private void onColorChanged(final int color) {
-
-        temp_color = color;
-
-        notifyItemColorChange();
-
-        // Manage button
-        Drawable manage_drawable = mManageButton.getBackground();
-        manage_drawable.setColorFilter(temp_color, PorterDuff.Mode.SRC_ATOP);
-        mManageButton.setBackground(manage_drawable);
-
-        // Color marker
-        LinearLayout marker = fragmentView.findViewById(R.id.edittask_color_button_marker);
-        Drawable background = marker.getBackground();
-        background.setColorFilter(temp_color, PorterDuff.Mode.SRC_ATOP);
-        marker.setBackground(background);
-
-        // Color title
-        TextView colorTitle = fragmentView.findViewById(R.id.edittask_color_button_title);
-        String sColor = String.format("#%06X", (0xFFFFFF & temp_color));
-        colorTitle.setText(sColor);
     }
 
     @NonNull
@@ -157,14 +109,58 @@ public class EditTaskFragment extends BaseEditFragment {
                     return;
                 }
 
-                FragmentLoader.loadFragment(TasksCompletionsFragment.newInstance(tasks,payments,task.getTaskIdentity()),getContext(),R.anim.enter_from_bottom, R.anim.exit_to_top, R.anim.enter_from_top, R.anim.exit_to_bottom, true);
+                FragmentLoader.loadFragment(TasksCompletionsFragment.newInstance(tasks,payments,instantCompletions,task.getTaskIdentity()),getContext(),R.anim.enter_from_bottom, R.anim.exit_to_top, R.anim.enter_from_top, R.anim.exit_to_bottom, true);
             }
         });
 
 
         initMaterialColorList();
 
+        onColorChanged(temp_color);
+
         return fragmentView;
+    }
+
+    private void initMaterialColorList(){
+
+        ConstraintLayout colorButton = fragmentView.findViewById(R.id.edittask_color_button);
+        colorButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final MaterialColorDialog materialColorDialog = new MaterialColorDialog(getContext(), temp_color,new MaterialColorDialog.MaterialColorDialogListener() {
+                    @Override
+                    public void onColorPicked(int color) {
+                        onColorChanged(color);
+                    }
+                });
+                materialColorDialog.show();
+            }
+        });
+
+    }
+
+    // Triggered when user picks a color in the color picker
+    private void onColorChanged(final int color) {
+
+        temp_color = color;
+
+        notifyItemColorChange();
+
+        // Manage button
+        Drawable manage_drawable = mManageButton.getBackground();
+        manage_drawable.setColorFilter(temp_color, PorterDuff.Mode.SRC_ATOP);
+        mManageButton.setBackground(manage_drawable);
+
+        // Color marker
+        LinearLayout marker = fragmentView.findViewById(R.id.edittask_color_button_marker);
+        Drawable background = marker.getBackground();
+        background.setColorFilter(temp_color, PorterDuff.Mode.SRC_ATOP);
+        marker.setBackground(background);
+
+        // Color title
+        TextView colorTitle = fragmentView.findViewById(R.id.edittask_color_button_title);
+        String sColor = String.format("#%06X", (0xFFFFFF & temp_color));
+        colorTitle.setText(sColor);
     }
 
     @Override

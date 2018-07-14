@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorPrimaryWhite"
+    tools:context="com.mzom.xtraqueur.WelcomeActivity">
+
+    <android.support.v4.view.ViewPager
+        android:id="@+id/welcome_view_pager"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@id/bottom_bar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <RelativeLayout
+        android:id="@+id/bottom_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="5dp"
+        android:paddingEnd="15dp"
+        android:paddingStart="15dp"
+        android:paddingTop="5dp"
+        android:background="@color/colorWhite"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <Button
+            android:id="@+id/welcome_page_button_back"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:background="@android:color/transparent"
+            android:text="@string/welcome_page_back"
+            android:textColor="@color/colorPrimaryGrey"
+            android:textSize="15sp" />
+
+        <LinearLayout
+            android:id="@+id/welcome_page_indicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:orientation="horizontal">
+
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/welcome_page_button_next"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:background="@android:color/transparent"
+            android:text="@string/welcome_page_next"
+            android:textColor="@color/colorPrimaryDark"
+            android:textSize="15sp" />
+
+        <Button
+            android:id="@+id/welcome_page_button_finish"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:background="@android:color/transparent"
+            android:text="@string/welcome_page_finish"
+            android:textColor="@color/colorAccent"
+            android:textSize="15sp"
+            android:visibility="gone" />
+
+
+    </RelativeLayout>
+
+</android.support.constraint.ConstraintLayout>

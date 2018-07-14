@@ -4,8 +4,11 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.content.Context;
 import android.support.v4.app.FragmentTransaction;
+import android.util.Log;
 
 class FragmentLoader{
+
+    private static final String TAG = "XTQ-FragmentLoader";
 
     interface FragmentLoadable{
 
@@ -20,7 +23,7 @@ class FragmentLoader{
         loadFragment(fragment,context,true);
     }
 
-    private static void loadFragment(Fragment fragment,Context context,boolean addToBackStack){
+    static void loadFragment(Fragment fragment,Context context,boolean addToBackStack){
         loadFragment(fragment,context,0,0,0,0,addToBackStack);
     }
 
@@ -37,13 +40,20 @@ class FragmentLoader{
             transaction.addToBackStack(fragment.getClass().getSimpleName());
         }
 
-        transaction.commit();
+        //transaction.commit();
+
+        transaction.commitAllowingStateLoss();
 
     }
 
     static void reverseLoading(Context context){
 
-        getFragmentLoadableFromContext(context).onFragmentBackPressed();
+        final FragmentLoadable fragmentLoadable = getFragmentLoadableFromContext(context);
+
+        if(fragmentLoadable != null){
+            fragmentLoadable.onFragmentBackPressed();
+        }
+
     }
 
     private static FragmentLoadable getFragmentLoadableFromContext(Context context){

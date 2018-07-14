@@ -17,10 +17,12 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.drive.Drive;
 import com.google.android.gms.drive.DriveClient;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 
 public class SignInActivity extends AppCompatActivity implements SignInFragment.SignInFragmentListener {
 
@@ -34,6 +36,9 @@ public class SignInActivity extends AppCompatActivity implements SignInFragment.
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
+
+        Log.i(TAG,"SignInActivity onCreate");
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_in);
 
@@ -41,7 +46,7 @@ public class SignInActivity extends AppCompatActivity implements SignInFragment.
 
             Toast.makeText(this,"No internet connection",Toast.LENGTH_LONG).show();
 
-            loadWelcomeFragment();
+            loadSignInFragment();
 
             return;
         }
@@ -73,8 +78,7 @@ public class SignInActivity extends AppCompatActivity implements SignInFragment.
 
         if (!signedIn) {
             // No Google accounts signed in, load SignInFragment to let the user sign in
-            Log.i(TAG, "No signed in account, loading welcome-page");
-            loadWelcomeFragment();
+            loadSignInFragment();
         } else {
             // Google Drive API client sign in
             signIn();
@@ -105,13 +109,68 @@ public class SignInActivity extends AppCompatActivity implements SignInFragment.
         switch (requestCode) {
             case REQUEST_CODE_SIGN_IN:
 
-                startSignIn(resultCode);
+                // Start ProgressBar loading
+                showActivityProgressBar();
+
+                //startSignIn(resultCode);
+
+                Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+                handleSignInResult(task);
 
                 break;
         }
     }
 
-    private void startSignIn(int resultCode){
+    private void handleSignInResult(Task<GoogleSignInAccount> completedTask) {
+
+        try {
+
+            mGoogleSignInAccount = completedTask.getResult(ApiException.class);
+
+            // Signed in successfully, show authenticated UI.
+            Log.i(TAG, "Google Drive API: Account: " + mGoogleSignInAccount.getDisplayName() + ", " + mGoogleSignInAccount.getEmail());
+
+            DriveClient mDriveClient = Drive.getDriveClient(this, mGoogleSignInAccount);
+
+            mDriveClient.requestSync()
+                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+
+                            hideActivityProgressBar();
+
+                            launchMainActivity();
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+
+                            Log.e(TAG, "Google Drive API: Sync failed", e);
+                            Toast.makeText(SignInActivity.this, e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+
+                            hideActivityProgressBar();
+
+                            launchMainActivity();
+                        }
+                    });
+
+        } catch (ApiException e) {
+            // The ApiException status code indicates the detailed failure reason.
+            // Please refer to the GoogleSignInStatusCodes class reference for more information.
+            Log.w(TAG, "Google Drive API: Sign in failed. Failed code: " + e.getStatusCode());
+
+            // Stop ProgressBar loading
+            hideActivityProgressBar();
+
+            // Go back to log in to let user try again
+            loadSignInFragment();
+
+
+        }
+    }
+
+    /*private void startSignIn(int resultCode){
         // Start ProgressBar loading
         showActivityProgressBar();
 
@@ -158,12 +217,12 @@ public class SignInActivity extends AppCompatActivity implements SignInFragment.
             hideActivityProgressBar();
 
             // Go back to log in to let user try again
-            loadWelcomeFragment();
+            loadSignInFragment();
         }
-    }
+    }*/
 
     // Fragment that lets the user sign in to a Google account to use with the app
-    private void loadWelcomeFragment() {
+    private void loadSignInFragment() {
         SignInFragment mSignInFragment = new SignInFragment();
         getSupportFragmentManager().beginTransaction().replace(R.id.sign_in_frame_layout, mSignInFragment).commit();
     }
@@ -186,8 +245,13 @@ public class SignInActivity extends AppCompatActivity implements SignInFragment.
         Intent intent = new Intent(this, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         intent.putExtra("GOOGLE_SIGN_IN_ACCOUNT", mGoogleSignInAccount);
+
         startActivity(intent);
+
         finish();
-        overridePendingTransition(R.anim.fade_in,R.anim.fade_out);
+
+        overridePendingTransition(0, 0);
+
+        //overridePendingTransition(R.anim.fade_in,R.anim.fade_out);
     }
 }

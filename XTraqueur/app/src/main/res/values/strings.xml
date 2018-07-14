@@ -91,4 +91,22 @@
     <string name="completion_of">Completion of</string>
     <string name="register_new_completion">Register new completion</string>
     <string name="register">Register</string>
+    <string name="total_unpaid_earnings">Total unpaid earnings</string>
+    <string name="TEMPLATE_earnings_title" translatable="false">kr 500,00</string>
+    <string name="instant_completion">Instant completion</string>
+    <string name="payment">Payment</string>
+    <string name="welcome_page_next">NEXT</string>
+    <string name="welcome_page_finish">SIGN IN</string>
+    <string name="welcome_page_back">BACK</string>
+    <string name="welcome_page_text_intro">You just made you life a tiny bit easier! You can now elegantly manage your chores with customized task types, payment registration and more.</string>
+    <string name="welcome_page_title_intro">Welcome!</string>
+    <string name="welcome_page_title_custom_tasks">Custom tasks</string>
+    <string name="welcome_page_text_custom_tasks">By creating a custom <i>task</i>  you can specify a name, fee and color to sort all your completed chores. By doing this you can simply click the plus-sign whenever you complete this task.</string>
+    <string name="welcome_page_text_instant_completions">To avoid using up to much space, less frequent chores can easily be registered as \"instant completions\". This is done by clicking the lightning-icon on the main screen.</string>
+    <string name="welcome_page_title_instant_completions">Instant completions</string>
+    <string name="welcome_page_title_google_account">Safe cloud storage</string>
+    <string name="welcome_page_text_google_account">This app uses Google Account Sign-in to safely store your app data with Google Drive.</string>
+    <string name="welcome_page_text_payments">Whenever you get paid for your hard work, you may archive the registered completions as a payment. This way you control which completions have been paid for or not.</string>
+    <string name="welcome_page_title_payments">Registering payments</string>
+    <string name="sign_in_with_google">Sign in with Google</string>
 </resources>

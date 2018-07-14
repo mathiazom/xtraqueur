@@ -18,14 +18,13 @@
             android:id="@+id/payment_item_title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:paddingBottom="17dp"
+            android:paddingBottom="15dp"
             android:paddingEnd="25dp"
             android:paddingStart="25dp"
-            android:paddingTop="17dp"
+            android:paddingTop="15dp"
             android:text="500 kr"
-            android:textColor="@color/colorWhite"
+            android:textColor="@color/colorPrimaryWhite"
             android:textSize="25sp"
-            android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"/>
 
@@ -48,8 +47,9 @@
     <com.mzom.xtraqueur.PaymentDiagram
         android:id="@+id/payment_horizontal_diagram_view"
         android:layout_width="match_parent"
-        android:layout_height="5dp"
+        android:layout_height="10dp"
         android:orientation="horizontal"
+        android:visibility="gone"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"/>
 

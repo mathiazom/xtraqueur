@@ -18,7 +18,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
-public class RegisterCompletionDialog extends AlertDialog {
+class RegisterCompletionDialog extends AlertDialog {
 
     private XTask task;
 
@@ -90,6 +90,7 @@ public class RegisterCompletionDialog extends AlertDialog {
             @Override
             public void onClick(View v) {
                 mCallback.onCompletionRegistered(tempCompletionDate);
+                dismiss();
             }
         });
 

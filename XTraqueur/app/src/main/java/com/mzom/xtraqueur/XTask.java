@@ -68,7 +68,7 @@ class XTask implements Serializable {
         }
 
         // Add new completion to list
-        XTaskCompletion completion = new XTaskCompletion(date.getTime(), taskIdentity);
+        XTaskCompletion completion = new XTaskCompletion(date.getTime(), taskIdentity, false);
         this.completions.add(completion);
     }
 

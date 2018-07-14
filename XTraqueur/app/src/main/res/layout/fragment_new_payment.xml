@@ -34,7 +34,7 @@
         android:id="@+id/register_payment_completions"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:background="@color/colorPrimary"
+        android:background="@color/colorPrimaryWhite"
         android:divider="@null"
         android:dividerHeight="0dp"
         android:orientation="vertical"

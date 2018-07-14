@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.MenuItem;
 
 import com.google.android.gms.drive.DriveFile;
@@ -38,12 +39,12 @@ public class PaymentCompletionsFragment extends BaseCompletionsFragment {
     }
 
     @Override
-    void deleteCompletion(XTaskCompletion completion, final OnSuccessListener<DriveFile> onSuccessListener){
-
-        // Delete completion from payment completions
-        if (!payment.deleteCompletion(completion)) return;
+    void deleteCompletion(XTaskCompletion completion){
 
         // Update changes in payments data set if deletion was successful
+
+        payment.deleteCompletion(completion);
+
         payments.set(paymentIndex, payment);
 
         final ArrayList<XTaskCompletion> allCompletions = payments.get(paymentIndex).getCompletions();
@@ -54,31 +55,8 @@ public class PaymentCompletionsFragment extends BaseCompletionsFragment {
 
         loadCompletions();
 
-        XDataUploader.uploadData(XDataConstants.PAYMENTS_DATA_FILE_NAME, payments, getContext(), onSuccessListener, new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
+        XDataUploader.uploadData(XDataConstants.PAYMENTS_DATA_FILE_NAME, payments, getContext());
 
-            }
-        });
-
-    }
-
-    @Override
-    void editCompletionDate(XTaskCompletion completion, long editedCompletionDate, OnSuccessListener<DriveFile> onSuccessListener){
-
-        int index = payment.getCompletions().indexOf(completion);
-        if(index == -1) return;
-
-        completion.setDate(editedCompletionDate);
-
-        payment.getCompletions().set(index,completion);
-
-        XDataUploader.uploadData(XDataConstants.PAYMENTS_DATA_FILE_NAME, payments, getContext(), onSuccessListener, new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-
-            }
-        });
     }
 
     @Override
@@ -123,14 +101,22 @@ public class PaymentCompletionsFragment extends BaseCompletionsFragment {
     }
 
     @Override
-    void onDataSetChanged(OnSuccessListener<DriveFile> onSuccessListener) {
+    void onDataSetChanged() {
 
-        XDataUploader.uploadData(XDataConstants.PAYMENTS_DATA_FILE_NAME, payments, getContext(), onSuccessListener, new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
+        if(payment.getCompletions().size() == 0){
+            payments.remove(payment);
+            FragmentLoader.reverseLoading(getContext());
+        }
 
-            }
-        });
+        XDataUploader.uploadData(XDataConstants.PAYMENTS_DATA_FILE_NAME, payments, getContext());
+
+    }
+
+    @Override
+    void onCompletionClicked(XTaskCompletion completion, int yPos) {
+
+        // Edit payment completion
+        FragmentLoader.loadFragment(EditPaymentCompletionFragment.newInstance(completion,payment,payments), getContext());
 
     }
 }

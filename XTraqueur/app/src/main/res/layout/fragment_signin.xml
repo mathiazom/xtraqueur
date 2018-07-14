@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/colorPrimary">
+    android:background="@color/colorPrimaryWhite">
 
     <android.support.constraint.ConstraintLayout
         android:layout_width="wrap_content"
@@ -15,8 +15,8 @@
 
         <ImageView
             android:id="@+id/signin_image"
-            android:layout_width="80dp"
-            android:layout_height="80dp"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
             android:src="@mipmap/ic_launcher_round"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -29,7 +29,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
             android:text="@string/app_name"
-            android:textColor="#eee"
+            android:textColor="@color/colorPrimaryGrey"
             android:textSize="35sp"
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
@@ -42,19 +42,56 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
             android:text="@string/welcome_app_desc"
-            android:textColor="#eee"
+            android:textColor="@color/colorPrimaryGrey"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/signin_text_app_name" />
 
-        <com.google.android.gms.common.SignInButton
+        <!--<com.shobhitpuri.custombuttons.GoogleSignInButton
             android:id="@+id/signin_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="@string/sign_in_with_google"
+            app:isDarkTheme="true"
             android:layout_marginTop="70dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/signin_text_sub_title" />
+            app:layout_constraintTop_toBottomOf="@id/signin_text_sub_title" />-->
+
+        <LinearLayout
+            android:id="@+id/signin_button"
+            android:orientation="horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="70dp"
+            android:paddingStart="18dp"
+            android:paddingEnd="18dp"
+            android:paddingTop="13dp"
+            android:paddingBottom="13dp"
+            android:gravity="center"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="@drawable/white_rounded"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/signin_text_sub_title">
+
+            <ImageView
+                android:layout_width="25dp"
+                android:layout_height="25dp"
+                android:src="@drawable/google_logo"/>
+
+            <TextView
+                android:layout_marginStart="20dp"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/colorPrimaryGrey"
+                android:text="@string/sign_in_with_google"/>
+
+        </LinearLayout>
 
     </android.support.constraint.ConstraintLayout>
 

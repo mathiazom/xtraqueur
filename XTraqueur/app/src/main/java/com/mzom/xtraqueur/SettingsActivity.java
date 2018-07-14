@@ -1,5 +1,6 @@
 package com.mzom.xtraqueur;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -42,12 +43,16 @@ public class SettingsActivity extends AppCompatActivity
 
     private ArrayList<XTask> tasks;
 
+    private ArrayList<XTaskCompletion> instantCompletions;
+
     // Google sign in account
     private GoogleSignInAccount mGoogleSignInAccount;
     private Bitmap mGoogleAccountPhoto;
 
     // Google Drive Clients
     private DriveResourceClient mDriveResourceClient;
+
+    private SettingsFragment settingsFragment;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -61,14 +66,22 @@ public class SettingsActivity extends AppCompatActivity
 
     private void loadData(Intent intent) {
 
-        final String json = intent.getStringExtra("TASKS_DATA");
+        // Tasks data
+        final String tasksData = intent.getStringExtra("TASKS_DATA");
 
-        ArrayList<XTask> intentTasks = new Gson().fromJson(json, new TypeToken<ArrayList<XTask>>() {
+        ArrayList<XTask> intentTasks = new Gson().fromJson(tasksData, new TypeToken<ArrayList<XTask>>() {
         }.getType());
 
-        if (intentTasks == null) return;
+        if (intentTasks != null) tasks = intentTasks;
 
-        tasks = intentTasks;
+        // Instant completions data
+        final String instantCompletionsData = intent.getStringExtra("INSTANT_COMPLETIONS_DATA");
+
+        ArrayList<XTaskCompletion> intentInstantCompletions = new Gson().fromJson(instantCompletionsData, new TypeToken<ArrayList<XTaskCompletion>>() {
+        }.getType());
+
+        if (intentTasks != null) instantCompletions = intentInstantCompletions;
+
 
         loadSettingsFragment();
 
@@ -116,7 +129,7 @@ public class SettingsActivity extends AppCompatActivity
         }
 
         // Download bitmap with AsyncTask (from url) to store account photo on device
-        new GAccountPhotoRetriever(new GAccountPhotoRetriever.AsyncURLImageRetrieverListener() {
+        new GoogleAccountPhotoRetriever(new GoogleAccountPhotoRetriever.AsyncURLImageRetrieverListener() {
             @Override
             public void onTaskFinished(File file) {
                 if (file == null) {
@@ -137,25 +150,8 @@ public class SettingsActivity extends AppCompatActivity
 
     // Fragment to change app settings
     private void loadSettingsFragment() {
-        FragmentLoader.loadFragment(SettingsFragment.newInstance(tasks, mGoogleSignInAccount, mGoogleAccountPhoto), this);
-    }
-
-    private void updateTasksDataOnDrive() {
-
-        final Context context = this;
-
-        XDataUploader.uploadData(XDataConstants.TASKS_DATA_FILE_NAME,tasks, context, new OnSuccessListener<DriveFile>() {
-            @Override
-            public void onSuccess(DriveFile driveFile) {
-                loadSettingsFragment();
-            }
-        }, new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-
-                Snackbar.make(findViewById(R.id.main_frame_layout), "Error: Could not update tasks data", Snackbar.LENGTH_LONG);
-            }
-        });
+        settingsFragment = SettingsFragment.newInstance(tasks, instantCompletions, mGoogleSignInAccount, mGoogleAccountPhoto);
+        FragmentLoader.loadFragment(settingsFragment, this);
     }
 
 
@@ -177,6 +173,8 @@ public class SettingsActivity extends AppCompatActivity
                         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
                         startActivity(intent);
                         finish();
+
+                        overridePendingTransition(0,0);
                     }
                 });
     }
@@ -191,45 +189,6 @@ public class SettingsActivity extends AppCompatActivity
                         .build();
         return GoogleSignIn.getClient(this, signInOptions);
     }
-
-
-    // Danger zone: Delete all completions
-    @Override
-    public void deleteAllCompletions() {
-
-        // Delete all completions from tasks data
-        for (XTask t : tasks) {
-            t.setCompletions(new ArrayList<XTaskCompletion>());
-        }
-
-        // Upload updated tasks data
-        updateTasksDataOnDrive();
-
-        notifyTasksDataChanged();
-    }
-
-    // Danger zone: Delete all tasks
-    @Override
-    public void deleteAllTasks() {
-        tasks = new ArrayList<>();
-
-        // Upload updated tasks data
-        updateTasksDataOnDrive();
-
-        notifyTasksDataChanged();
-    }
-
-    private void notifyTasksDataChanged() {
-
-        Intent intent = new Intent();
-        intent.setAction("TASKS_DATA_CHANGED_IN_SETTINGS");
-
-        final String tasks_data = new Gson().toJson(tasks);
-        intent.putExtra("TASKS_DATA", tasks_data);
-
-        sendBroadcast(intent);
-    }
-
 
     @Override
     public int getFragmentFrameResId() {
@@ -246,11 +205,15 @@ public class SettingsActivity extends AppCompatActivity
         return mDriveResourceClient;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void dataUploading(HashMap<String, ArrayList<?>> dataMap) {
 
         if(dataMap.get(XDataConstants.TASKS_DATA_FILE_NAME) != null){
             tasks = (ArrayList<XTask>) dataMap.get(XDataConstants.TASKS_DATA_FILE_NAME);
+        }
+        if(dataMap.get(XDataConstants.INSTANT_COMPLETIONS_DATA_FILE_NAME) != null){
+            instantCompletions = (ArrayList<XTaskCompletion>) dataMap.get(XDataConstants.INSTANT_COMPLETIONS_DATA_FILE_NAME);
         }
 
     }
@@ -259,6 +222,18 @@ public class SettingsActivity extends AppCompatActivity
     public void onBackPressed() {
 
         if (getSupportFragmentManager().getBackStackEntryCount() <= 1) {
+
+            //notifyTasksDataChanged();
+
+            Intent resultIntent = new Intent();
+
+            final String tasks_data = new Gson().toJson(tasks);
+            resultIntent.putExtra("TASKS_DATA", tasks_data);
+
+            final String instant_completions_data = new Gson().toJson(instantCompletions);
+            resultIntent.putExtra("INSTANT_COMPLETIONS_DATA", instant_completions_data);
+
+            setResult(Activity.RESULT_OK,resultIntent);
 
             // Finish activity if backstack is empty of fragments on back button press
             finish();

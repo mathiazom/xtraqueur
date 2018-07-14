@@ -2,7 +2,6 @@ package com.mzom.xtraqueur;
 
 import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -11,39 +10,23 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-public class EditCompletionFragment extends BaseEditFragment {
+abstract class BaseEditCompletionFragment extends BaseEditFragment {
 
-    private XTaskCompletion completion;
 
-    private int completionColor;
+    abstract void editCompletionDate(XTaskCompletion completion, long editedCompletionDate);
 
-    private long tempCompletionDate;
+    abstract void deleteCompletion(XTaskCompletion completion);
+
+
+    XTaskCompletion completion;
+
+    int completionColor;
+
+    long tempCompletionDate;
 
     private EditText completionDateEdit;
     private EditText completionTimeEdit;
 
-    private EditCompletionFragmentListener editCompletionFragmentListener;
-
-    interface EditCompletionFragmentListener{
-
-        void onEditCompletionDate(XTaskCompletion completion, long editedCompletionDate, final OnFinishedListener onFinishedListener);
-
-        void onDeleteCompletion(XTaskCompletion completion, final OnFinishedListener onFinishedListener);
-    }
-
-    interface OnFinishedListener{
-        void onFinished();
-    }
-
-    public static EditCompletionFragment newInstance(XTaskCompletion completion, EditCompletionFragmentListener editCompletionFragmentListener) {
-
-        EditCompletionFragment fragment = new EditCompletionFragment();
-        fragment.completion = completion;
-        fragment.completionColor = fragment.completion.getTaskIdentity().getColor();
-        fragment.tempCompletionDate = completion.getDate();
-        fragment.editCompletionFragmentListener = editCompletionFragmentListener;
-        return fragment;
-    }
 
     @NonNull
     @Override
@@ -113,26 +96,14 @@ public class EditCompletionFragment extends BaseEditFragment {
         // Check if any changes have been made
         if(!itemDataIsChanged()) return;
 
-        editCompletionFragmentListener.onEditCompletionDate(completion, tempCompletionDate, new OnFinishedListener() {
-            @Override
-            public void onFinished() {
-                returnToItemsList();
-            }
-        });
+        editCompletionDate(completion, tempCompletionDate);
 
 
     }
 
     @Override
     void deleteItem() {
-
-        editCompletionFragmentListener.onDeleteCompletion(completion, new OnFinishedListener() {
-            @Override
-            public void onFinished() {
-                Log.i("XTQ-EditCompletion","Completion deleted");
-                returnToItemsList();
-            }
-        });
+        deleteCompletion(completion);
     }
 
     @Override

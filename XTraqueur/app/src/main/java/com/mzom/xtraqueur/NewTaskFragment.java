@@ -17,6 +17,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -26,6 +28,7 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 
 public class NewTaskFragment extends XFragment {
 
@@ -40,6 +43,8 @@ public class NewTaskFragment extends XFragment {
 
     private ArrayList<XPayment> payments;
 
+    private ArrayList<XTaskCompletion> instantCompletions;
+
     // Task name input field
     private TextInputEditText mNameEditText;
     private TextInputLayout mNameLayout;
@@ -48,17 +53,26 @@ public class NewTaskFragment extends XFragment {
     private TextInputEditText mFeeEditText;
     private TextInputLayout mFeeLayout;
 
+    private CheckBox checkBox;
+    private boolean isInstantCompletion;
+
     // Current unsaved task color value
     private int temp_color;
 
     // Log tag for debugging
     private final static String TAG = "Xtraqueur-NewTask";
 
+    public static NewTaskFragment newInstance(ArrayList<XTask> tasks, ArrayList<XPayment> payments,ArrayList<XTaskCompletion> instantCompletions, int temp_color) {
+        return newInstance(tasks,payments,instantCompletions,false,temp_color);
+    }
+
     // Custom constructor to pass required fragment variables
-    public static NewTaskFragment newInstance(ArrayList<XTask> tasks, ArrayList<XPayment> payments, int temp_color) {
+    public static NewTaskFragment newInstance(ArrayList<XTask> tasks, ArrayList<XPayment> payments,ArrayList<XTaskCompletion> instantCompletions, boolean isInstantCompletion, int temp_color) {
         NewTaskFragment fragment = new NewTaskFragment();
         fragment.tasks = tasks;
         fragment.payments = payments;
+        fragment.instantCompletions = instantCompletions;
+        fragment.isInstantCompletion = isInstantCompletion;
         fragment.temp_color = temp_color;
         return fragment;
     }
@@ -80,14 +94,18 @@ public class NewTaskFragment extends XFragment {
         mNameEditText = view.findViewById(R.id.newtask_edit_name);
         mFeeEditText = view.findViewById(R.id.newtask_edit_fee);
 
+
         // Initialize toolbar field variable and add action buttons with listeners
         initToolbar();
+
+        initInstantCompletionCheckBox();
 
         // Color list
         initMaterialColorList();
 
         // Paint fragment views with task color
-        initColorFilters();
+        //initColorFilters();
+        onColorChanged(temp_color);
 
         // Open keyboard to let user edit task name immediately
         focusTaskNameEditText();
@@ -120,32 +138,61 @@ public class NewTaskFragment extends XFragment {
                 switch (item.getItemId()) {
                     case R.id.newtaks_new_task_icon:
 
-                        // Generate task object
-                        XTask newTask = createTaskFromInputs();
+                        if(checkBox.isChecked()){
 
-                        if(newTask == null) return false;
+                            final XTaskCompletion instantCompletion = createInstantCompletionFromInputs();
 
-                        // Add new task to tasks ArrayList
-                        tasks.add(newTask);
+                            if(instantCompletion == null) return false;
 
-                        // Update tasks_data.txt on Google Drive with updated ArrayList
-                        XDataUploader.uploadData(XDataConstants.TASKS_DATA_FILE_NAME,tasks, getContext(), new OnSuccessListener<DriveFile>() {
-                            @Override
-                            public void onSuccess(DriveFile driveFile) {
+                            instantCompletions.add(instantCompletion);
 
-                                // Return to TasksFragment
-                                //newTaskFragmentListener.loadTasksFragment();
-                                FragmentLoader.loadFragment(TasksFragment.newInstance(tasks,payments),getContext());
-                            }
-                        }, new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
+                            // Update instant_completion_data.txt on Google Drive with updated ArrayList
+                            XDataUploader.uploadData(XDataConstants.INSTANT_COMPLETIONS_DATA_FILE_NAME,instantCompletions, getContext(), new OnSuccessListener<DriveFile>() {
+                                @Override
+                                public void onSuccess(DriveFile driveFile) {
 
-                                if(getView() == null) return;
+                                    // Return to TasksFragment
+                                    FragmentLoader.loadFragment(TasksFragment.newInstance(tasks,payments, instantCompletions),getContext());
+                                }
+                            }, new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
 
-                                Snackbar.make(getView(), R.string.error_could_not_create_new_task,Snackbar.LENGTH_LONG);
-                            }
-                        });
+                                    if(getView() == null) return;
+
+                                    Snackbar.make(getView(), R.string.error_could_not_create_new_task,Snackbar.LENGTH_LONG);
+                                }
+                            });
+
+                        }else{
+
+                            // Generate task object
+                            final XTask newTask = createTaskFromInputs();
+
+                            if(newTask == null) return false;
+
+                            // Add new task to tasks ArrayList
+                            tasks.add(newTask);
+
+                            // Update tasks_data.txt on Google Drive with updated ArrayList
+                            XDataUploader.uploadData(XDataConstants.TASKS_DATA_FILE_NAME,tasks, getContext(), new OnSuccessListener<DriveFile>() {
+                                @Override
+                                public void onSuccess(DriveFile driveFile) {
+
+                                    // Return to TasksFragment
+                                    FragmentLoader.loadFragment(TasksFragment.newInstance(tasks,payments, instantCompletions),getContext());
+                                }
+                            }, new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+
+                                    if(getView() == null) return;
+
+                                    Snackbar.make(getView(), R.string.error_could_not_create_new_task,Snackbar.LENGTH_LONG);
+                                }
+                            });
+
+                        }
 
                         hideKeyboard();
 
@@ -153,6 +200,17 @@ public class NewTaskFragment extends XFragment {
                 return false;
             }
         });
+    }
+
+    void initInstantCompletionCheckBox(){
+        checkBox = view.findViewById(R.id.new_instant_completion_check_box);
+        checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                onColorChanged(temp_color);
+            }
+        });
+        checkBox.setChecked(isInstantCompletion);
     }
 
     private void initMaterialColorList(){
@@ -173,28 +231,6 @@ public class NewTaskFragment extends XFragment {
             }
         });
 
-        LinearLayout marker = view.findViewById(R.id.newtask_color_button_marker);
-        Drawable background = marker.getBackground();
-        background.setColorFilter(temp_color, PorterDuff.Mode.SRC_ATOP);
-        marker.setBackground(background);
-
-        TextView colorTitle = view.findViewById(R.id.newtask_color_button_title);
-        String sColor = String.format("#%06X", (0xFFFFFF & temp_color));
-        colorTitle.setText(sColor);
-
-
-    }
-
-    // Apply task color filters
-    private void initColorFilters() {
-
-        //Top toolbar
-        mToolbar.setBackground(new ColorDrawable(temp_color));
-
-        // ScrollView background
-        ScrollView scrollView = view.findViewById(R.id.newtask_main_scroll);
-        Drawable scrollDrawable = new ColorDrawable(ColorUtilities.getDarkerColor(temp_color));
-        scrollView.setBackground(scrollDrawable);
     }
 
     // Focus task name EditText and show Soft Keyboard to let user quickly create the task
@@ -219,7 +255,7 @@ public class NewTaskFragment extends XFragment {
         }
     }
 
-    // Chcek if name string is in use by another task
+    // Check if name string is in use by another task
     boolean isNameUsed(String name) {
         for (XTask t : tasks) {
             if (t.getTaskIdentity().getName().equals(name)) {
@@ -236,7 +272,7 @@ public class NewTaskFragment extends XFragment {
 
     // Create task object according to input and add it to the tasks ArrayList
     // Tell MainActivity to update Google Drive and SharedPreferences
-    XTask createTaskFromInputs() {
+    private XTask createTaskFromInputs() {
 
         // Get name from TextInputEditText (with leading and trailing white space removed)
         String name = getNameInput();
@@ -253,6 +289,26 @@ public class NewTaskFragment extends XFragment {
 
         // Create new task according to inputs
         return new XTask(new XTaskIdentity(name, fee, temp_color));
+    }
+
+    // Create instant completion object according to input and add it to the instant completions ArrayList
+    private XTaskCompletion createInstantCompletionFromInputs() {
+
+        // Get name from TextInputEditText (with leading and trailing white space removed)
+        String name = getNameInput();
+
+        // Notify user if the inputted name is invalid
+        boolean invalidName = displayNameError(name);
+
+        Double fee = getFeeInput();
+
+        // Cancel task creation if any of the inputted values are invalid
+        if (invalidName || fee == null) {
+            return null;
+        }
+
+        // Create new instant completion according to inputs
+        return new XTaskCompletion(Calendar.getInstance().getTime().getTime(),new XTaskIdentity(name,fee,temp_color), true);
     }
 
     String getNameInput(){
@@ -310,9 +366,17 @@ public class NewTaskFragment extends XFragment {
         // Change toolbar background to picked color
         mToolbar.setBackground(new ColorDrawable(temp_color));
 
-        // Change ScrollView background to picked color
         ScrollView scrollView = view.findViewById(R.id.newtask_main_scroll);
-        Drawable scrollDrawable = new ColorDrawable(ColorUtilities.getDarkerColor(color));
+
+        Drawable scrollDrawable;
+
+        if(checkBox.isChecked() && getContext() != null){
+            scrollDrawable = new ColorDrawable(getContext().getResources().getColor(R.color.colorInstantCompletion));
+
+        }else{
+            scrollDrawable = new ColorDrawable(ColorUtilities.getDarkerColor(color));
+        }
+
         scrollView.setBackground(scrollDrawable);
 
         LinearLayout marker = view.findViewById(R.id.newtask_color_button_marker);

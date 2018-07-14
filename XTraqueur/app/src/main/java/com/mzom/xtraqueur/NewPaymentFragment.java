@@ -48,22 +48,28 @@ public class NewPaymentFragment extends XFragment {
 
     private ArrayList<XTaskCompletion> completions;
 
-    public static NewPaymentFragment newInstance(ArrayList<XTask> tasks, ArrayList<XPayment> payments) {
+    private ArrayList<XTaskCompletion> instantCompletions;
+
+    public static NewPaymentFragment newInstance(ArrayList<XTask> tasks, ArrayList<XPayment> payments,ArrayList<XTaskCompletion> instantCompletions) {
 
         NewPaymentFragment fragment = new NewPaymentFragment();
         fragment.tasks = tasks;
         fragment.payments = payments;
         fragment.completions = fragment.getCompletionsFromTasks(tasks);
+        fragment.completions.addAll(instantCompletions);
+        fragment.instantCompletions = instantCompletions;
         fragment.initSelectionArray();
         return fragment;
     }
 
-    public static NewPaymentFragment newInstance(ArrayList<XTask> tasks, ArrayList<XPayment> payments, ArrayList<Boolean> selectionArray) {
+    public static NewPaymentFragment newInstance(ArrayList<XTask> tasks, ArrayList<XPayment> payments,ArrayList<XTaskCompletion> instantCompletions, ArrayList<Boolean> selectionArray) {
 
         NewPaymentFragment fragment = new NewPaymentFragment();
         fragment.tasks = tasks;
         fragment.payments = payments;
         fragment.completions = fragment.getCompletionsFromTasks(tasks);
+        fragment.completions.addAll(instantCompletions);
+        fragment.instantCompletions = instantCompletions;
         fragment.selectionArray = selectionArray;
         return fragment;
     }
@@ -331,13 +337,20 @@ public class NewPaymentFragment extends XFragment {
             final XTask task = completion.findTask(tasks);
 
             // Remove completion from this task
-            if(task != null) task.removeCompletion(completion);
+            if(task != null){
+                task.removeCompletion(completion);
+            }else{
+                int index = instantCompletions.indexOf(completion);
+                instantCompletions.remove(index);
+            }
 
 
         }
 
         // Save changes
         XDataUploader.uploadData(XDataConstants.TASKS_DATA_FILE_NAME, tasks,getContext());
+
+        XDataUploader.uploadData(XDataConstants.INSTANT_COMPLETIONS_DATA_FILE_NAME,instantCompletions,getContext());
 
         // Create payment with selected completions
         XPayment newPayment = new XPayment(getSelectedCompletions(), paymentDate.getTime());
@@ -352,16 +365,11 @@ public class NewPaymentFragment extends XFragment {
                 // Show the new payment on the timeline
                 FragmentLoader.loadFragment(PaymentsFragment.newInstance(payments),getContext(),R.anim.enter_from_right, R.anim.exit_to_left, R.anim.enter_from_left, R.anim.exit_to_right,false);
             }
-        }, new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-
-            }
         });
 
     }
 
-    // Use SparseBooleanArray to get RecyclerView's currently selected payments
+    // Use selectionArray to get RecyclerView's currently selected completions
     private ArrayList<XTaskCompletion> getSelectedCompletions() {
         ArrayList<XTaskCompletion> selectedCompletions = new ArrayList<>();
 

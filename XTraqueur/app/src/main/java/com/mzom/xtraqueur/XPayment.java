@@ -37,13 +37,12 @@ class XPayment {
         return value;
     }
 
-    boolean deleteCompletion(XTaskCompletion completion) {
+    void deleteCompletion(XTaskCompletion completion) {
 
         int index = completions.indexOf(completion);
-        if (index == -1) return false;
+        if (index == -1) return;
 
         completions.remove(index);
-        return true;
     }
 
 

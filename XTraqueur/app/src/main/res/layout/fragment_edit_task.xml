@@ -50,6 +50,7 @@
         android:layout_marginTop="20dp"
         android:layout_width="match_parent"
         android:text="@string/new_task_completions"
+        android:textColor="@color/colorPrimaryWhite"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/edittask_layout_fee" />
 
@@ -71,11 +72,12 @@
         android:layout_marginTop="20dp"
         android:layout_width="match_parent"
         android:text="@string/new_task_color"
+        android:textColor="@color/colorPrimaryWhite"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/button_manage_completions" />
 
     <android.support.constraint.ConstraintLayout
-        android:background="@drawable/white_rounded_2dp"
+        android:background="@drawable/primary_white_rounded"
         android:id="@+id/edittask_color_button"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
@@ -109,7 +111,7 @@
     </android.support.constraint.ConstraintLayout>
 
     <Button
-        android:background="@drawable/dark_rounded_2dp"
+        android:background="@drawable/primary_white_rounded"
         android:id="@+id/delete_task"
         android:layout_height="36dp"
         android:layout_marginTop="32dp"
@@ -117,6 +119,7 @@
         android:paddingEnd="16dp"
         android:paddingStart="16dp"
         android:text="@string/delete_task"
+        android:textColor="@color/colorPrimaryGrey"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/edittask_color_button" />
 

@@ -1,6 +1,7 @@
 package com.mzom.xtraqueur;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
@@ -14,7 +15,7 @@ import java.util.Date;
 
 class PaymentsTimelineAdapter extends TimelineAdapter {
 
-    private static final int paymentsViewResId = R.layout.template_timeline_payment_item;
+    private static final int paymentsViewResId = R.layout.template_payment;
 
     private final ArrayList<XPayment> payments;
 
@@ -89,7 +90,7 @@ class PaymentsTimelineAdapter extends TimelineAdapter {
         if (selected) {
             // Selected item background
             Drawable itemBackground = holder.itemDataLayout.getBackground();
-            itemBackground.setColorFilter(ColorUtilities.getDarkerColor(context.getResources().getColor(R.color.colorGrey)), PorterDuff.Mode.SRC_ATOP);
+            itemBackground.setColorFilter(ColorUtilities.getDarkerColor(context.getResources().getColor(R.color.colorPayment)), PorterDuff.Mode.SRC_ATOP);
             holder.itemDataLayout.setBackground(itemBackground);
 
             // Show selection check mark
@@ -99,7 +100,7 @@ class PaymentsTimelineAdapter extends TimelineAdapter {
         else {
             // Regular item background
             Drawable itemBackground = holder.itemDataLayout.getBackground();
-            itemBackground.setColorFilter(context.getResources().getColor(R.color.colorGrey), PorterDuff.Mode.SRC_ATOP);
+            itemBackground.setColorFilter(context.getResources().getColor(R.color.colorPayment), PorterDuff.Mode.SRC_ATOP);
             holder.itemDataLayout.setBackground(itemBackground);
 
             // Hide selection check mark
@@ -140,7 +141,8 @@ class PaymentsTimelineAdapter extends TimelineAdapter {
 
     @Override
     int getItemColor(int position) {
-        return context.getResources().getColor(R.color.colorAccent);
+
+        return context.getResources().getColor(R.color.colorPayment);
     }
 
     @Override

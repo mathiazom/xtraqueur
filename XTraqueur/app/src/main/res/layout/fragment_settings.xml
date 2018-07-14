@@ -3,15 +3,16 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/colorPrimary">
+    android:background="@color/colorPrimaryWhite">
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="@color/colorPrimary"
+        android:background="@color/colorPrimaryWhite"
         app:navigationContentDescription="@string/go_back_to_all_tasks"
-        app:navigationIcon="@drawable/ic_back"
+        app:navigationIcon="@drawable/ic_back_grey"
+        app:titleTextColor="@color/colorPrimaryGrey"
         app:title="@string/menu_icon_title_settings">
 
     </android.support.v7.widget.Toolbar>
@@ -36,6 +37,7 @@
                 android:id="@+id/settings_section_title_google_account"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:textColor="@color/colorPrimaryGrey"
                 android:text="@string/settings_section_google_account"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"/>
@@ -109,6 +111,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="40dp"
                 android:text="@string/settings_section_resetting"
+                android:textColor="@color/colorPrimaryGrey"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/settings_section_google_account" />
 

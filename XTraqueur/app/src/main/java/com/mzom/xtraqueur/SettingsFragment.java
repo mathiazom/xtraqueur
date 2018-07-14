@@ -31,6 +31,8 @@ public class SettingsFragment extends android.support.v4.app.Fragment {
 
     private ArrayList<XTask> tasks;
 
+    private ArrayList<XTaskCompletion> instantCompletions;
+
     // Google sign in account
     private GoogleSignInAccount mGoogleSignInAccount;
     private Bitmap mAccountPhoto;
@@ -45,18 +47,15 @@ public class SettingsFragment extends android.support.v4.app.Fragment {
 
         void signOut();
 
-        void deleteAllCompletions();
-
-        void deleteAllTasks();
-
         void onFragmentBackPressed();
     }
 
     // Custom constructor to pass Google sign in account arguments
-    public static SettingsFragment newInstance(ArrayList<XTask> tasks, GoogleSignInAccount googleSignInAccount, Bitmap acccountPhoto) {
+    public static SettingsFragment newInstance(ArrayList<XTask> tasks, ArrayList<XTaskCompletion> instantCompletions, GoogleSignInAccount googleSignInAccount, Bitmap acccountPhoto) {
 
         SettingsFragment fragment = new SettingsFragment();
         fragment.tasks = tasks;
+        fragment.instantCompletions = instantCompletions;
         fragment.mGoogleSignInAccount = googleSignInAccount;
         fragment.mAccountPhoto = acccountPhoto;
 
@@ -129,7 +128,7 @@ public class SettingsFragment extends android.support.v4.app.Fragment {
 
     }
 
-    private void deleteAllCompletionsListener(){
+    void deleteAllCompletionsListener(){
 
         // Delete all completions button
         Button delete_completions_button = view.findViewById(R.id.button_delete_all_completions);
@@ -138,6 +137,7 @@ public class SettingsFragment extends android.support.v4.app.Fragment {
         for(XTask t : tasks){
             completions += t.getCompletionsCount();
         }
+        completions += instantCompletions.size();
 
         // Disable button if user doesn't have any task payments
         if(completions == 0){
@@ -152,7 +152,7 @@ public class SettingsFragment extends android.support.v4.app.Fragment {
                             .setPositiveButton(R.string.delete_button, new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialogInterface, int i) {
-                                    settingsFragmentListener.deleteAllCompletions();
+                                    deleteAllCompletions();
                                 }
                             })
                             .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
@@ -171,7 +171,15 @@ public class SettingsFragment extends android.support.v4.app.Fragment {
         }
     }
 
-    private void deleteAllTasksListener(){
+    void setTasks(ArrayList<XTask> tasks){
+        this.tasks = tasks;
+    }
+
+    void setInstantCompletions(ArrayList<XTaskCompletion> instantCompletions){
+        this.instantCompletions = instantCompletions;
+    }
+
+    void deleteAllTasksListener(){
 
         // Delete all tasks button
         Button delete_tasks_button = view.findViewById(R.id.button_delete_all_tasks);
@@ -187,7 +195,7 @@ public class SettingsFragment extends android.support.v4.app.Fragment {
                             .setPositiveButton(R.string.delete_button, new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialogInterface, int i) {
-                                    settingsFragmentListener.deleteAllTasks();
+                                    deleteAllTasks();
                                 }
                             })
                             .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
@@ -206,15 +214,48 @@ public class SettingsFragment extends android.support.v4.app.Fragment {
         }
     }
 
+    // Danger zone: Delete all completions
+    public void deleteAllCompletions() {
+
+        // Delete all completions from tasks data
+        for (XTask t : tasks) {
+            t.setCompletions(new ArrayList<XTaskCompletion>());
+        }
+        instantCompletions = new ArrayList<>();
+
+        deleteAllCompletionsListener();
+
+        // Upload updated tasks data
+        updateTasksDataOnDrive();
+    }
+
+    // Danger zone: Delete all tasks
+    public void deleteAllTasks() {
+
+        tasks = new ArrayList<>();
+
+        setTasks(tasks);
+
+        deleteAllTasksListener();
+
+        // Upload updated tasks data
+        updateTasksDataOnDrive();
+    }
+
+    private void updateTasksDataOnDrive() {
+
+        XDataUploader.uploadData(XDataConstants.TASKS_DATA_FILE_NAME,tasks, getContext());
+
+        XDataUploader.uploadData(XDataConstants.INSTANT_COMPLETIONS_DATA_FILE_NAME,instantCompletions, getContext());
+    }
+
     private void disableButton(Button btn){
+
         // Disable button
         btn.setEnabled(false);
 
         // Disabled button background
-        btn.setBackground(new ColorDrawable(Color.parseColor("#0CFFFFFF")));
-
-        // Disabled button text
-        btn.setTextColor(Color.parseColor("#1EFFFFFF"));
+        ColorUtilities.setViewBackgroundColor(btn,Color.parseColor("#AAFFFFFF"));
     }
 
     // Fill views with account info

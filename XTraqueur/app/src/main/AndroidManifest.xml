@@ -24,6 +24,8 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".WelcomeActivity"/>
+
         <activity android:name=".SignInActivity"/>
 
         <activity android:name=".MainActivity"/>

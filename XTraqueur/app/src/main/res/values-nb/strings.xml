@@ -85,4 +85,21 @@
     <string name="hint_task">Oppgave</string>
     <string name="completion_of">"Utførelse av "</string>
     <string name="register_new_completion">Registrer ny utførelse</string>
+    <string name="total_unpaid_earnings">Ubetalte inntekter</string>
+    <string name="instant_completion">Engangsutførelse</string>
+    <string name="payment">Betaling</string>
+    <string name="welcome_page_next">NESTE</string>
+    <string name="welcome_page_finish">LOGG IN</string>
+    <string name="welcome_page_back">TILBAKE</string>
+    <string name="welcome_page_text_intro">Du har nettopp gjort livet ditt litt enklere! Med egendefinerte oppgaver og oversikt over betalinger tilbyr denne appen deg en elegant måte å håndtere dine arbeidsoppgaver.</string>
+    <string name="welcome_page_title_intro">Velkommen!</string>
+    <string name="welcome_page_title_custom_tasks">Egendefinerte oppgaver</string>
+    <string name="welcome_page_text_custom_tasks">Ved å opprette egendefinerte oppgaver kan du velge navn, avgift og farge til å sortere dine mest vanlige oppgaver. Da er det bare å trykke på pluss-ikonet hver gang du utfører denne oppgaven.</string>
+    <string name="welcome_page_text_instant_completions">For å holde appens startskjerm rydding, kan mindre vanlige oppgaver registreres som \"engangsutførelser\" ved å trykke på lyn-ikonet.</string>
+    <string name="welcome_page_title_instant_completions">Engangsutførelser</string>
+    <string name="welcome_page_title_google_account">Trygg skylagring</string>
+    <string name="welcome_page_text_google_account">Denne appen bruke innlogging med Google-bruker for å trygt lagre dine app-dataer med Google Drive.</string>
+    <string name="welcome_page_text_payments">Når du får betalt for det harde arbeidet, kan du arkivere de registrerte utførelsene som en betaling. På den måten har du kontroll over hvilke utførelser som er betalt eller ikke.</string>
+    <string name="welcome_page_title_payments">Registering av betalinger</string>
+    <string name="sign_in_with_google">Logg inn med Google</string>
 </resources>

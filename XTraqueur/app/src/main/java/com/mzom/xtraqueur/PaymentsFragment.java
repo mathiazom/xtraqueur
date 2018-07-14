@@ -3,6 +3,7 @@ package com.mzom.xtraqueur;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.constraint.ConstraintLayout;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -14,8 +15,6 @@ import java.util.Collections;
 import java.util.Comparator;
 
 public class PaymentsFragment extends XFragment {
-
-    private static final String TAG = "XTQ-PaymentsFragment";
 
     private ArrayList<XPayment> payments;
 
@@ -40,7 +39,7 @@ public class PaymentsFragment extends XFragment {
 
         setRetainInstance(true);
 
-        this.view = inflater.inflate(R.layout.fragment_payments_timeline, container, false);
+        this.view = inflater.inflate(R.layout.fragment_payments, container, false);
 
         initToolbar();
 
@@ -94,10 +93,40 @@ public class PaymentsFragment extends XFragment {
 
     }
 
+    private void displayNoPaymentsMessage(boolean visible){
+
+        final ConstraintLayout noPaymentsGraphic = view.findViewById(R.id.no_payments_graphic);
+        if(visible) noPaymentsGraphic.setVisibility(View.VISIBLE);
+        else noPaymentsGraphic.setVisibility(View.GONE);
+
+    }
+
     private void loadPayments() {
+
+        // Make sure there are any payments to display
+        if(payments.size() == 0){
+            // If not, return to EarningsFragment
+            displayNoPaymentsMessage(true);
+            return;
+        }else{
+            displayNoPaymentsMessage(false);
+        }
 
         // Load recycler view
         TimelineRecycler mRecyclerView = view.findViewById(R.id.timeline_recycler);
+
+        ArrayList<XPayment> toRemove = new ArrayList<>();
+
+        for(XPayment payment : payments){
+            if(payment.getCompletions().size() == 0){
+                toRemove.add(payment);
+            }
+        }
+
+        if(toRemove.size() > 0){
+            payments.removeAll(toRemove);
+            XDataUploader.uploadData(XDataConstants.PAYMENTS_DATA_FILE_NAME,payments,getContext());
+        }
 
         // Sort payments based on recency
         Collections.sort(payments, new Comparator<XPayment>() {
@@ -124,6 +153,9 @@ public class PaymentsFragment extends XFragment {
 
             @Override
             public void onItemsDataChanged() {
+
+                displayNoPaymentsMessage(payments.size() == 0);
+
                 XDataUploader.uploadData(XDataConstants.PAYMENTS_DATA_FILE_NAME, payments, getContext());
 
             }

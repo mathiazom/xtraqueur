@@ -2,11 +2,18 @@
 <resources>
     <color name="colorPrimary">#212121</color>
     <color name="colorPrimaryDark">#111111</color>
+
+    <color name="colorPrimaryGrey">#616161</color>
+
     <color name="colorAccent">#00838f</color>
     <color name="colorAccentDark">#005662</color>
+
+    <color name="colorPrimaryWhite">#ffffff</color>
 
     <color name="colorWhite">#eee</color>
     <color name="colorWhiteDark">#bbbbbb</color>
     <color name="colorPayment">#c43e00</color>
     <color name="colorGrey">#424242</color>
+
+    <color name="colorInstantCompletion">#212121</color>
 </resources>

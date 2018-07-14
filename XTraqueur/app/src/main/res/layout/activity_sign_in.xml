@@ -4,13 +4,14 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/colorPrimaryWhite"
     tools:context="com.mzom.xtraqueur.SignInActivity">
 
     <android.support.constraint.ConstraintLayout
         android:id="@+id/sign_in_activity_progress_bar_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/colorPrimary"
+        android:background="@color/colorPrimaryWhite"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -36,6 +37,7 @@
             android:layout_marginTop="20dp"
             android:text="@string/collecting_tasks_data"
             android:textSize="18sp"
+            android:textColor="@color/colorPrimaryGrey"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/sign_in_activity_progress_bar" />

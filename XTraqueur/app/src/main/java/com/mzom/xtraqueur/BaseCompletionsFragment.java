@@ -23,15 +23,15 @@ abstract class BaseCompletionsFragment extends XFragment {
 
 
 
-    abstract void deleteCompletion(XTaskCompletion completion, OnSuccessListener<DriveFile> onSuccessListener);
-
-    abstract void editCompletionDate(XTaskCompletion completion, long completionDate, OnSuccessListener<DriveFile> onSuccessListener);
+    abstract void deleteCompletion(XTaskCompletion completion);
 
     abstract int getSelectionMenuResId();
 
     abstract Toolbar.OnMenuItemClickListener getSelectionMenuItemClickListener();
 
-    abstract void onDataSetChanged(OnSuccessListener<DriveFile> onSuccessListener);
+    abstract void onDataSetChanged();
+
+    abstract void onCompletionClicked(XTaskCompletion completion, int yPos);
 
 
 
@@ -50,13 +50,16 @@ abstract class BaseCompletionsFragment extends XFragment {
     private XTaskIdentity filterTaskIdentity;
 
     private Toolbar mToolbar;
+
     private Toolbar mSelectionModeToolbar;
 
     private CompletionsTimelineAdapter.CompletionsTimelineAdapterListener completionsTimelineAdapterListener = new CompletionsTimelineAdapter.CompletionsTimelineAdapterListener() {
         @Override
         public void onSelectionChanged(int totalSelected, final boolean isSelecting) {
 
-            // Update toolbar title based on number of selected
+            if(getContext() == null) return;
+
+                // Update toolbar title based on number of selected
             String toolbar_title;
             if (totalSelected == 0 && isSelecting) {
                 toolbar_title = getString(R.string.select_completions);
@@ -78,55 +81,23 @@ abstract class BaseCompletionsFragment extends XFragment {
         @Override
         public void onDeleteCompletion(XTaskCompletion completion) {
 
-            deleteCompletion(completion, new OnSuccessListener<DriveFile>() {
-                @Override
-                public void onSuccess(DriveFile driveFile) {
-
-                }
-            });
+            deleteCompletion(completion);
 
         }
 
         @Override
         public void onItemsDataChanged() {
 
-            onDataSetChanged(new OnSuccessListener<DriveFile>() {
-                @Override
-                public void onSuccess(DriveFile driveFile) {
-
-                }
-            });
+            onDataSetChanged();
 
         }
 
         @Override
-        public void onItemClicked(final int position, int yPos) {
+        public void onItemClicked(int position, int yPos) {
 
-            // Get completion represented by clicked item
-            final XTaskCompletion completion = filteredCompletions.get(position);
+            XTaskCompletion completion = filteredCompletions.get(position);
 
-            // Use EditCompletionFragment to let user edit properties of clicked completion
-            FragmentLoader.loadFragment(EditCompletionFragment.newInstance(completion, new EditCompletionFragment.EditCompletionFragmentListener() {
-                @Override
-                public void onEditCompletionDate(XTaskCompletion completion, long editedCompletionDate, final EditCompletionFragment.OnFinishedListener onFinishedListener) {
-                    editCompletionDate(completion, editedCompletionDate, new OnSuccessListener<DriveFile>() {
-                        @Override
-                        public void onSuccess(DriveFile driveFile) {
-                            onFinishedListener.onFinished();
-                        }
-                    });
-                }
-
-                @Override
-                public void onDeleteCompletion(XTaskCompletion completion, final EditCompletionFragment.OnFinishedListener onFinishedListener) {
-                    deleteCompletion(completion, new OnSuccessListener<DriveFile>() {
-                        @Override
-                        public void onSuccess(DriveFile driveFile) {
-                            onFinishedListener.onFinished();
-                        }
-                    });
-                }
-            }),getContext());
+            onCompletionClicked(completion,yPos);
 
         }
     };
@@ -135,8 +106,6 @@ abstract class BaseCompletionsFragment extends XFragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
         setRetainInstance(true);
-
-        Log.i(TAG,"OnCreateView");
 
         this.view = inflater.inflate(R.layout.fragment_completions, container, false);
 
@@ -163,7 +132,6 @@ abstract class BaseCompletionsFragment extends XFragment {
     final void setFilterTaskIdentity(XTaskIdentity taskIdentity){
         this.filterTaskIdentity = taskIdentity;
     }
-
 
     // Initialize toolbar field variable and add action buttons with listeners
     private void initToolbar() {
@@ -236,7 +204,10 @@ abstract class BaseCompletionsFragment extends XFragment {
     // Display all filteredCompletions sorted from newest to oldest
     final void loadCompletions() {
 
-        Log.i(TAG,"Loading " + String.valueOf(allCompletions.size()) + " completions: " + new Gson().toJson(allCompletions));
+        if(allCompletions.size() == 0){
+            FragmentLoader.reverseLoading(getContext());
+            return;
+        }
 
         // Load recycler view
         final TimelineRecycler mRecyclerView = view.findViewById(R.id.completions_recycler);
@@ -245,6 +216,20 @@ abstract class BaseCompletionsFragment extends XFragment {
         if (filterTaskIdentity != null) {
 
             filteredCompletions = filterTaskIdentity.findCompletions(allCompletions);
+
+            if(filteredCompletions.size() == 0){
+
+                // Update task identity filter
+                filterTaskIdentity = null;
+
+                // Reload completions adapter to reflect filter change
+                loadCompletions();
+
+                // Reflect filter change in UI elements
+                displayCurrentTasksFilter();
+
+                return;
+            }
 
         } else {
             filteredCompletions = allCompletions;
@@ -266,6 +251,25 @@ abstract class BaseCompletionsFragment extends XFragment {
         // Item loading animation
         mRecyclerView.startLayoutAnimation();
 
+    }
+
+    ArrayList<XTaskCompletion> getFilteredCompletions() {
+        return filteredCompletions;
+    }
+
+    // Use selectionArray to get RecyclerView's currently selected completions
+    ArrayList<XTaskCompletion> getSelectedCompletions() {
+
+        final ArrayList<XTaskCompletion> filteredCompletions = getFilteredCompletions();
+
+        ArrayList<XTaskCompletion> selectedCompletions = new ArrayList<>();
+
+        for (int c = 0; c < filteredCompletions.size(); c++) {
+            if (getAdapter().getSelectionArray().get(c)) {
+                selectedCompletions.add(filteredCompletions.get(c));
+            }
+        }
+        return selectedCompletions;
     }
 
     // Visually display current tasks filter

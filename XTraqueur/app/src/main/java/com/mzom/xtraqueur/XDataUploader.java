@@ -61,6 +61,15 @@ class XDataUploader extends AsyncTask<HashMap<String,ArrayList<?>>, Void, Void> 
         });
     }
 
+    static void uploadData(@NonNull String fileName,@NonNull ArrayList<?> data, Context context,@NonNull OnSuccessListener<DriveFile> onSuccessListener){
+        uploadData(fileName,data, context, onSuccessListener, new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+
+            }
+        });
+    }
+
     static void uploadData(@NonNull String fileName,@NonNull ArrayList<?> data, Context context, @NonNull OnSuccessListener<DriveFile> onSuccessListener, @NonNull OnFailureListener onFailureListener){
 
         if(context == null) return;

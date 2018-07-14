@@ -45,7 +45,15 @@ class XDataRetriever extends AsyncTask<String, Void, ArrayList<?>> {
 
         void onPaymentsDataRetrieved(@NonNull ArrayList<XPayment> payments);
 
+        void onInstantCompletionsDataRetrieved(@NonNull ArrayList<XTaskCompletion> instantCompletions);
+
         void onDataNotFound(String dataFileName);
+
+        ArrayList<XTask> getTasks();
+
+        ArrayList<XTaskCompletion> getInstantCompletions();
+
+        ArrayList<XPayment> getPayments();
     }
 
     private static XDataFeedable getInterfaceFromContext(Context context){
@@ -193,6 +201,18 @@ class XDataRetriever extends AsyncTask<String, Void, ArrayList<?>> {
                 mXDataFeedable.onPaymentsDataRetrieved(payments);
 
                 break;
+
+            case XDataConstants.INSTANT_COMPLETIONS_DATA_FILE_NAME:
+
+                ArrayList<XTaskCompletion> instantCompletions = new Gson().fromJson(json,new TypeToken<ArrayList<XTaskCompletion>>(){}.getType());
+
+                if(instantCompletions == null){
+                    instantCompletions = new ArrayList<>();
+                }
+
+                retrievedData = instantCompletions;
+
+                mXDataFeedable.onInstantCompletionsDataRetrieved(instantCompletions);
 
         }
 

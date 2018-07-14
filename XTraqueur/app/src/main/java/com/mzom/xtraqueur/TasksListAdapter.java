@@ -1,10 +1,7 @@
 package com.mzom.xtraqueur;
 
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.graphics.PorterDuff;
-import android.graphics.drawable.ColorDrawable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
@@ -13,11 +10,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
-import android.widget.ScrollView;
 import android.widget.TextView;
 import java.util.ArrayList;
-import java.util.Date;
 
 class TasksListAdapter extends ArrayAdapter<XTask> {
 
@@ -29,8 +23,6 @@ class TasksListAdapter extends ArrayAdapter<XTask> {
 
     // Data set holding all tasks
     private final ArrayList<XTask> tasks;
-
-    private static final String TAG = "Xtraqueur-ListAdapter";
 
     public interface XTaskListAdapterListener {
 
@@ -80,12 +72,10 @@ class TasksListAdapter extends ArrayAdapter<XTask> {
         // Task name
         TextView tv_name = holder.mTaskName;
         tv_name.setText(taskIdentity.getName());
-        tv_name.setTextColor(getContext().getResources().getColor(R.color.colorWhite));
 
         // Task payments count
         TextView tv_completions = holder.mTaskCompletions;
         tv_completions.setText(String.valueOf(task.getCompletionsCount()));
-        tv_completions.setTextColor(getContext().getResources().getColor(R.color.colorWhite));
 
         // Addition button
         ImageButton button_add = holder.mAddButton;
@@ -106,7 +96,7 @@ class TasksListAdapter extends ArrayAdapter<XTask> {
             }
         });
 
-        button_add.setOnLongClickListener(new View.OnLongClickListener() {
+        /*button_add.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
 
@@ -125,10 +115,10 @@ class TasksListAdapter extends ArrayAdapter<XTask> {
                 // Consume long click to prevent firing regular on click
                 return true;
             }
-        });
+        });*/
 
         // Set task view background according to task color
-        convertView.setBackground(new ColorDrawable(taskIdentity.getColor()));
+        ColorUtilities.setViewBackgroundColor(convertView.findViewById(R.id.xtask),taskIdentity.getColor());
 
         return convertView;
     }

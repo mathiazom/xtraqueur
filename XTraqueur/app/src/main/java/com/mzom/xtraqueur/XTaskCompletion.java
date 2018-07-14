@@ -14,9 +14,12 @@ class XTaskCompletion {
     // Attributes of the completion's associated task
     private XTaskIdentity taskIdentity;
 
-    XTaskCompletion(long date, final XTaskIdentity taskIdentity) {
+    private boolean isInstantCompletion;
+
+    XTaskCompletion(long date, final XTaskIdentity taskIdentity, boolean isInstantCompletion) {
         this.date = date;
         this.taskIdentity = taskIdentity;
+        this.isInstantCompletion = isInstantCompletion;
     }
 
 
@@ -28,10 +31,17 @@ class XTaskCompletion {
         return this.taskIdentity;
     }
 
+    boolean isInstantCompletion(){
+        return isInstantCompletion;
+    }
+
     // Search tasks data set for XTask with XTaskIdentity equalling XTaskIdentity of this completion
     // (returns null if no such task is found)
     @Nullable
     XTask findTask(ArrayList<XTask> tasks){
+
+        if(isInstantCompletion) return null;
+
         for(XTask task : tasks){
             if(taskIdentity.equals(task.getTaskIdentity())){
                 return task;

@@ -4,12 +4,14 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/colorPrimaryWhite"
     tools:context="com.mzom.xtraqueur.MainActivity">
 
     <android.support.constraint.ConstraintLayout
+        android:id="@+id/main_activity_progress_bar_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/colorPrimary"
+        android:background="@color/colorPrimaryWhite"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

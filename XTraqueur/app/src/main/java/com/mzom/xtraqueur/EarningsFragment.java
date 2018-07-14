@@ -17,13 +17,13 @@ import java.util.Locale;
 
 public class EarningsFragment extends XFragment {
 
-    private static final String TAG = "Xtraqueur-EarningsFrag";
-
     private View view;
 
     private ArrayList<XTask> tasks;
 
     private ArrayList<XPayment> payments;
+
+    private ArrayList<XTaskCompletion> instantCompletions;
 
     @Nullable
     @Override
@@ -42,11 +42,12 @@ public class EarningsFragment extends XFragment {
     }
 
 
-    public static EarningsFragment newInstance(ArrayList<XTask> tasks, ArrayList<XPayment> payments) {
+    public static EarningsFragment newInstance(ArrayList<XTask> tasks, ArrayList<XPayment> payments,ArrayList<XTaskCompletion> instantCompletions) {
 
         EarningsFragment fragment = new EarningsFragment();
         fragment.tasks = tasks;
         fragment.payments = payments;
+        fragment.instantCompletions = instantCompletions;
         return fragment;
     }
 
@@ -54,7 +55,7 @@ public class EarningsFragment extends XFragment {
     private void initToolbar() {
 
         // Initialize toolbar field variable
-        Toolbar mToolbar = view.findViewById(R.id.toolbar);
+        final Toolbar mToolbar = view.findViewById(R.id.toolbar);
 
         mToolbar.setVisibility(View.VISIBLE);
 
@@ -73,17 +74,17 @@ public class EarningsFragment extends XFragment {
     private void initListeners() {
 
         // New Payment
-        Button button_new_payment = view.findViewById(R.id.button_total_earnings_new_payment);
+        final Button button_new_payment = view.findViewById(R.id.button_total_earnings_new_payment);
         button_new_payment.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                FragmentLoader.loadFragment(NewPaymentFragment.newInstance(tasks,payments),getContext(), R.anim.enter_from_top, R.anim.exit_to_bottom, R.anim.enter_from_bottom, R.anim.exit_to_top, true);
+                FragmentLoader.loadFragment(NewPaymentFragment.newInstance(tasks,payments,instantCompletions),getContext(), R.anim.enter_from_right, R.anim.exit_to_left, R.anim.enter_from_left, R.anim.exit_to_right, true);
             }
         });
 
 
         // Payment timeline
-        Button button_payments_timeline = view.findViewById(R.id.button_total_earnings_payments_timeline);
+        final Button button_payments_timeline = view.findViewById(R.id.button_total_earnings_payments_timeline);
         button_payments_timeline.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -96,7 +97,7 @@ public class EarningsFragment extends XFragment {
     private void loadEarnings() {
 
         // Show earnings layout
-        ConstraintLayout totalEarningsContainer = view.findViewById(R.id.total_earnings_container);
+        final ConstraintLayout totalEarningsContainer = view.findViewById(R.id.total_earnings_container);
         totalEarningsContainer.setVisibility(View.VISIBLE);
 
         if (tasks == null) {
@@ -105,10 +106,17 @@ public class EarningsFragment extends XFragment {
 
         // Total value of all tasks
         double total = 0;
+        boolean anyCompletions = instantCompletions.size() != 0;
 
         // Loop trough data set and add task value to total value
         for (XTask task : tasks) {
             total += task.getValue();
+            if(task.getCompletions().size() != 0){
+                anyCompletions = true;
+            }
+        }
+        for(XTaskCompletion instantCompletion : instantCompletions){
+            total += instantCompletion.getTaskIdentity().getFee();
         }
 
         // Get currency format
@@ -116,13 +124,13 @@ public class EarningsFragment extends XFragment {
         String totalString = nf.format(total);
 
         // Display total
-        TextView total_earning_text = view.findViewById(R.id.total_earnings_value);
+        final TextView total_earning_text = view.findViewById(R.id.total_earnings_value);
         total_earning_text.setText(totalString);
 
-        Button button_new_payment = view.findViewById(R.id.button_total_earnings_new_payment);
-        button_new_payment.setEnabled(total != 0);
+        final Button button_new_payment = view.findViewById(R.id.button_total_earnings_new_payment);
+        button_new_payment.setEnabled(anyCompletions);
 
-        Button button_payments_timeline = view.findViewById(R.id.button_total_earnings_payments_timeline);
+        final Button button_payments_timeline = view.findViewById(R.id.button_total_earnings_payments_timeline);
         button_payments_timeline.setEnabled(payments.size() > 0);
 
     }

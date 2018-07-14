@@ -1,5 +1,6 @@
 package com.mzom.xtraqueur;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
@@ -38,10 +39,9 @@ public class TasksFragment extends XFragment {
 
     private ArrayList<XPayment> payments;
 
-    private TasksListAdapter mListAdapter;
+    private ArrayList<XTaskCompletion> instantCompletions;
 
-    // Log tag for debugging
-    private final static String TAG = "XTQ-TasksFrag";
+    private TasksListAdapter mListAdapter;
 
     // Interface instance to communicate with MainActivity
     private TasksFragmentListener tasksFragmentListener;
@@ -52,10 +52,12 @@ public class TasksFragment extends XFragment {
     }
 
     // Custom constructor to pass required fragment variables
-    public static TasksFragment newInstance(ArrayList<XTask> tasks,ArrayList<XPayment> payments) {
+    public static TasksFragment newInstance(@NonNull ArrayList<XTask> tasks,@NonNull ArrayList<XPayment> payments, @NonNull ArrayList<XTaskCompletion> instantCompletions) {
+
         TasksFragment fragment = new TasksFragment();
         fragment.tasks = tasks;
         fragment.payments = payments;
+        fragment.instantCompletions = instantCompletions;
         return fragment;
     }
 
@@ -91,8 +93,6 @@ public class TasksFragment extends XFragment {
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
 
-        Log.i(TAG,"OnActivityCreated");
-
         // Show fragment toolbar with appropriate item listeners
         initToolbar();
 
@@ -101,7 +101,6 @@ public class TasksFragment extends XFragment {
 
         super.onActivityCreated(savedInstanceState);
     }
-
 
     private void initToolbar() {
 
@@ -118,9 +117,7 @@ public class TasksFragment extends XFragment {
                         break;
                     case R.id.tasks_timeline_icon:
 
-                        //tasksFragmentListener.loadTasksCompletionsFragment(tasks);
-
-                        FragmentLoader.loadFragment(TasksCompletionsFragment.newInstance(tasks,payments),getContext(),R.anim.enter_from_bottom, R.anim.exit_to_top, R.anim.enter_from_top, R.anim.exit_to_bottom, true);
+                        FragmentLoader.loadFragment(TasksCompletionsFragment.newInstance(tasks,payments,instantCompletions),getContext(),R.anim.enter_from_bottom, R.anim.exit_to_top, R.anim.enter_from_top, R.anim.exit_to_bottom, true);
 
                         break;
                 }
@@ -136,34 +133,39 @@ public class TasksFragment extends XFragment {
         view.findViewById(R.id.new_task_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                FragmentLoader.loadFragment(NewTaskFragment.newInstance(tasks, payments,ColorUtilities.getRandomMaterialColor(getContext())),getContext(), R.anim.enter_from_top, R.anim.exit_to_bottom, R.anim.enter_from_bottom, R.anim.exit_to_top,true);
+                FragmentLoader.loadFragment(NewTaskFragment.newInstance(tasks, payments,instantCompletions,false,ColorUtilities.getRandomMaterialColor(getContext())),getContext(), R.anim.enter_from_top, R.anim.exit_to_bottom, R.anim.enter_from_bottom, R.anim.exit_to_top,true);
             }
         });
 
-        view.findViewById(R.id.new_single_use_task_button).setOnClickListener(new View.OnClickListener() {
+        view.findViewById(R.id.new_instant_completion_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                FragmentLoader.loadFragment(NewTaskFragment.newInstance(tasks,payments, ColorUtilities.getRandomMaterialColor(getContext())),getContext(), R.anim.enter_from_top, R.anim.exit_to_bottom, R.anim.enter_from_bottom, R.anim.exit_to_top,true);
+                FragmentLoader.loadFragment(NewTaskFragment.newInstance(tasks,payments,instantCompletions,true,ColorUtilities.getRandomMaterialColor(getContext())),getContext(), R.anim.enter_from_top, R.anim.exit_to_bottom, R.anim.enter_from_bottom, R.anim.exit_to_top,true);
             }
         });
 
         view.findViewById(R.id.tasks_total_value).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                FragmentLoader.loadFragment(EarningsFragment.newInstance(tasks,payments),getContext(),R.anim.enter_from_bottom, R.anim.exit_to_top, R.anim.enter_from_top, R.anim.exit_to_bottom, true);
+                FragmentLoader.loadFragment(EarningsFragment.newInstance(tasks,payments,instantCompletions),getContext(),R.anim.enter_from_bottom, R.anim.exit_to_top, R.anim.enter_from_top, R.anim.exit_to_bottom, true);
 
             }
         });
     }
 
     // Update dataset before loading tasks
-    void loadTasks(ArrayList<XTask> tasks){
+    void setTasks(ArrayList<XTask> tasks){
         this.tasks = tasks;
-        loadTasks();
+    }
+
+
+    void setInstantCompletions(ArrayList<XTaskCompletion> instantCompletions){
+        this.instantCompletions = instantCompletions;
     }
 
     // Fill ListView with items representing the tasks
-    private void loadTasks() {
+    @SuppressLint("ClickableViewAccessibility")
+    void loadTasks() {
 
         // Create empty ArrayList if data set is null
         if (tasks == null) {
@@ -226,8 +228,6 @@ public class TasksFragment extends XFragment {
                     tasks.add(i1, item);
 
                     // Update tasks order changes to drive
-                    //XDataUploader.uploadData(XDataConstants.TASKS_DATA_FILE_NAME, tasks,getContext());
-
                     XDataUploader.uploadData(XDataConstants.TASKS_DATA_FILE_NAME,tasks,getContext());
                 }
             }
@@ -241,6 +241,8 @@ public class TasksFragment extends XFragment {
                 editTask(index, y);
             }
         });
+
+        if(getContext() != null) controller.setBackgroundColor(getContext().getResources().getColor(android.R.color.transparent));
 
         controller.setDragHandleId(R.id.xtask);
         controller.setRemoveEnabled(false);
@@ -266,7 +268,7 @@ public class TasksFragment extends XFragment {
 
             @Override
             public void onAnimationEnd(Animation animation) {
-                FragmentLoader.loadFragment(EditTaskFragment.newInstance(tasks, payments,task, index),getContext());
+                FragmentLoader.loadFragment(EditTaskFragment.newInstance(tasks, payments,instantCompletions,task, index),getContext());
             }
 
             @Override
@@ -318,6 +320,9 @@ public class TasksFragment extends XFragment {
         for (XTask task : tasks) {
             total += task.getValue();
         }
+        for(XTaskCompletion instantCompletion : instantCompletions){
+            total += instantCompletion.getTaskIdentity().getFee();
+        }
 
         // Get currency format
         NumberFormat nf = NumberFormat.getCurrencyInstance(Locale.getDefault());
@@ -346,6 +351,7 @@ public class TasksFragment extends XFragment {
         for(XTask t:tasks){
             totalCompletions += t.getCompletionsCount();
         }
+        totalCompletions += instantCompletions.size();
 
         MenuItem timeline_icon = mToolbar.getMenu().findItem(R.id.tasks_timeline_icon);
         timeline_icon.setEnabled(totalCompletions > 0);
