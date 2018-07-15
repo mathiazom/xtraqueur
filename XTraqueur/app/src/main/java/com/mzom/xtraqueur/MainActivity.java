@@ -68,7 +68,7 @@ public class MainActivity extends AppCompatActivity
 
         setContentView(R.layout.activity_main);
 
-        showActivityProgressBar();
+        //showActivityProgressBar();
 
         // Retrieve all data saved before configuration changes (onSaveInstanceState)
         if (!restoreFromSavedInstanceState(savedInstanceState)) {

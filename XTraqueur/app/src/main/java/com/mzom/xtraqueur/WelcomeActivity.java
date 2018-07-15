@@ -1,8 +1,10 @@
 package com.mzom.xtraqueur;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.PersistableBundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
@@ -158,6 +160,11 @@ public class WelcomeActivity extends AppCompatActivity {
 
 
     public void loadSignInActivity() {
+
+        // Welcome pages have now been completed
+        // Make sure they won't be displayed next time user opens app
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        sharedPreferences.edit().putBoolean("COMPLETED_WELCOME_PAGES_PREF_NAME",true).apply();
 
         startActivity(new Intent(this,SignInActivity.class));
         finish();

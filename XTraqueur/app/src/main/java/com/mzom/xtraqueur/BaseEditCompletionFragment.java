@@ -26,6 +26,7 @@ abstract class BaseEditCompletionFragment extends BaseEditFragment {
 
     private EditText completionDateEdit;
     private EditText completionTimeEdit;
+    private EditText completionFeeEdit;
 
 
     @NonNull
@@ -73,6 +74,10 @@ abstract class BaseEditCompletionFragment extends BaseEditFragment {
                 newTimePicker(new Date(tempCompletionDate));
             }
         });
+
+        completionFeeEdit = editLayout.findViewById(R.id.edit_completion_fee);
+        final String completionFeeString = String.valueOf(completion.getTaskIdentity().getFee());
+        completionFeeEdit.setText(completionFeeString);
 
         return editLayout;
 
